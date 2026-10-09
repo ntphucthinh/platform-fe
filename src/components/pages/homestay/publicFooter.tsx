@@ -34,7 +34,7 @@ export const PublicFooter: React.FC = () => {
                 <CottageIcon fontSize="small" />
               </Box>
               <Typography variant="h6" sx={{ color: "#FFFFFF", fontWeight: 700 }}>
-                HavenStays
+                HomeStays
               </Typography>
             </Box>
             <Typography variant="body2" sx={{ lineHeight: 1.7, maxWidth: 320 }}>
@@ -70,12 +70,6 @@ export const PublicFooter: React.FC = () => {
               <Link href="/" underline="hover" color="inherit" variant="body2">
                 Tất Cả Homestay
               </Link>
-              <Link href="/admin/login" underline="hover" color="inherit" variant="body2">
-                Đăng Nhập Quản Trị
-              </Link>
-              <Link href="/admin/homestay" underline="hover" color="inherit" variant="body2">
-                Trang Quản Lý Homestay
-              </Link>
             </Box>
           </Grid>
 
@@ -84,7 +78,7 @@ export const PublicFooter: React.FC = () => {
               Liên Hệ & Hỗ Trợ
             </Typography>
             <Typography variant="body2" sx={{ lineHeight: 1.7 }}>
-              Hỗ trợ 24/7: support@havenstays.example.com
+              Hỗ trợ 24/7: nguyentranphucthinh1508@gmail.com
             </Typography>
             <Typography variant="body2" sx={{ mt: 1 }}>
               Hotline: +84 (0) 1800 8888
@@ -96,7 +90,7 @@ export const PublicFooter: React.FC = () => {
 
         <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 2 }}>
           <Typography variant="caption" sx={{ color: "#64748B" }}>
-            © 2026 HavenStays Platform. Bảo lưu mọi quyền.
+            © 2026 HomeStays Platform. Bảo lưu mọi quyền.
           </Typography>
           <Typography variant="caption" sx={{ color: "#64748B" }}>
             Chế độ giao diện trải nghiệm dữ liệu mẫu

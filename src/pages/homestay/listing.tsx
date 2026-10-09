@@ -6,10 +6,6 @@ import {
   Grid,
   TextField,
   InputAdornment,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
   Button,
   Paper,
   Chip,
@@ -23,16 +19,10 @@ import { HomestayCard } from "@/components/pages/homestay/homestayCard";
 
 import type { IHomestayItem } from "@/types/pages/homestay/homestay";
 import { getHomestays } from "@/services/homestayService";
-import { useSearchParams } from "react-router-dom";
 
 export const HomestayListingPage: React.FC = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const initialLocation = searchParams.get("location") || "";
-
   const [dbHomestays, setDbHomestays] = useState<IHomestayItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState(initialLocation);
-  const [sortOrder, setSortOrder] = useState<"featured" | "priceLow" | "priceHigh" | "rating">("featured");
 
   useEffect(() => {
     let isMounted = true;
@@ -48,45 +38,20 @@ export const HomestayListingPage: React.FC = () => {
 
   const homestayList = dbHomestays;
 
-  const locations = useMemo(() => {
-    const locSet = new Set(
-      homestayList.map((h) => (h.address || h.location || "").split(",")[0].trim()).filter(Boolean)
-    );
-    return Array.from(locSet);
-  }, [homestayList]);
-
   const filteredHomestays = useMemo(() => {
     return homestayList.filter((h) => {
       const locStr = h.address || h.location || "";
-      const matchesSearch =
+      return (
         (h.name ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
         locStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (h.description ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (h.shortDescription && h.shortDescription.toLowerCase().includes(searchTerm.toLowerCase()));
-
-      const matchesLocation =
-        !selectedLocation ||
-        locStr.toLowerCase().includes(selectedLocation.toLowerCase());
-
-      return matchesSearch && matchesLocation;
-    }).sort((a, b) => {
-      const priceA = a.pricePerNight ?? 0;
-      const priceB = b.pricePerNight ?? 0;
-      const ratingA = a.rating ?? 0;
-      const ratingB = b.rating ?? 0;
-
-      if (sortOrder === "priceLow") return priceA - priceB;
-      if (sortOrder === "priceHigh") return priceB - priceA;
-      if (sortOrder === "rating") return ratingB - ratingA;
-      return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
+        (h.shortDescription && h.shortDescription.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
     });
-  }, [homestayList, searchTerm, selectedLocation, sortOrder]);
+  }, [homestayList, searchTerm]);
 
   const handleResetFilters = () => {
     setSearchTerm("");
-    setSelectedLocation("");
-    setSortOrder("featured");
-    setSearchParams({});
   };
 
   return (
@@ -108,7 +73,7 @@ export const HomestayListingPage: React.FC = () => {
         <Container maxWidth="xl" sx={{ position: "relative", zIndex: 1 }}>
           <Box sx={{ maxWidth: 720, mx: "auto", textAlign: "center" }}>
             <Chip
-              label="Chào mừng bạn đến với HavenStays ✨"
+              label="Chào mừng bạn đến với HomeStays ✨"
               size="small"
               sx={{
                 bgcolor: "rgba(37, 99, 235, 0.2)",
@@ -155,8 +120,6 @@ export const HomestayListingPage: React.FC = () => {
                 bgcolor: "#FFFFFF",
                 color: "#0F172A",
                 display: "flex",
-                flexDirection: { xs: "column", sm: "row" },
-                gap: 2,
                 alignItems: "center",
                 boxShadow: "0 20px 25px -5px rgba(0,0,0,0.3)",
               }}
@@ -183,40 +146,6 @@ export const HomestayListingPage: React.FC = () => {
                   },
                 }}
               />
-
-              <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 180 } }}>
-                <InputLabel id="location-filter-label">Điểm Đến</InputLabel>
-                <Select
-                  labelId="location-filter-label"
-                  value={selectedLocation}
-                  label="Điểm Đến"
-                  onChange={(e) => setSelectedLocation(e.target.value)}
-                  sx={{ borderRadius: "10px", bgcolor: "#F8FAFC" }}
-                >
-                  <MenuItem value="">Tất cả điểm đến</MenuItem>
-                  {locations.map((loc) => (
-                    <MenuItem key={loc} value={loc}>
-                      {loc}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 160 } }}>
-                <InputLabel id="sort-order-label">Sắp Xếp</InputLabel>
-                <Select
-                  labelId="sort-order-label"
-                  value={sortOrder}
-                  label="Sắp Xếp"
-                  onChange={(e) => setSortOrder(e.target.value as typeof sortOrder)}
-                  sx={{ borderRadius: "10px", bgcolor: "#F8FAFC" }}
-                >
-                  <MenuItem value="featured">Nổi Bật Nhất</MenuItem>
-                  <MenuItem value="priceLow">Giá: Thấp đến Cao</MenuItem>
-                  <MenuItem value="priceHigh">Giá: Cao đến Thấp</MenuItem>
-                  <MenuItem value="rating">Đánh Giá Cao Nhất</MenuItem>
-                </Select>
-              </FormControl>
             </Paper>
           </Box>
         </Container>
@@ -244,7 +173,7 @@ export const HomestayListingPage: React.FC = () => {
             </Typography>
           </Box>
 
-          {(searchTerm || selectedLocation || sortOrder !== "featured") && (
+          {searchTerm && (
             <Button
               variant="outlined"
               size="small"

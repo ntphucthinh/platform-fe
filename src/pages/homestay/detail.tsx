@@ -56,9 +56,25 @@ export const HomestayDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh", bgcolor: "#F8FAFC" }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100vh",
+          bgcolor: "#F8FAFC",
+        }}
+      >
         <PublicHeader />
-        <Container maxWidth="md" sx={{ py: 12, flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Container
+          maxWidth="md"
+          sx={{
+            py: 12,
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <CircularProgress size={40} />
         </Container>
         <PublicFooter />
@@ -68,9 +84,25 @@ export const HomestayDetailPage: React.FC = () => {
 
   if (!homestay) {
     return (
-      <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh", bgcolor: "#F8FAFC" }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100vh",
+          bgcolor: "#F8FAFC",
+        }}
+      >
         <PublicHeader />
-        <Container maxWidth="md" sx={{ py: 10, flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Container
+          maxWidth="md"
+          sx={{
+            py: 10,
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <Paper
             elevation={0}
             sx={{
@@ -98,18 +130,26 @@ export const HomestayDetailPage: React.FC = () => {
             >
               <ErrorOutlinedIcon sx={{ fontSize: 36 }} />
             </Box>
-            <Typography variant="h5" sx={{ fontWeight: 800, color: "#0F172A", mb: 1 }}>
+            <Typography
+              variant="h5"
+              sx={{ fontWeight: 800, color: "#0F172A", mb: 1 }}
+            >
               Không Tìm Thấy Homestay
             </Typography>
             <Typography variant="body2" sx={{ color: "#64748B", mb: 3 }}>
-              Không tìm thấy homestay với mã &quot;{id}&quot;. Homestay này có thể đã bị xóa hoặc liên kết không hợp lệ.
+              Không tìm thấy homestay với mã &quot;{id}&quot;. Homestay này có
+              thể đã bị xóa hoặc liên kết không hợp lệ.
             </Typography>
             <Button
               variant="contained"
               color="primary"
               startIcon={<ArrowBackIcon />}
               onClick={() => navigate("/")}
-              sx={{ textTransform: "none", borderRadius: "10px", fontWeight: 700 }}
+              sx={{
+                textTransform: "none",
+                borderRadius: "10px",
+                fontWeight: 700,
+              }}
             >
               Quay Lại Danh Sách Homestay
             </Button>
@@ -120,16 +160,33 @@ export const HomestayDetailPage: React.FC = () => {
     );
   }
 
-  const mapUrl = (homestay.googleMapsUrl || homestay.googleMapLink || "").trim() || null;
+  const mapUrl =
+    (homestay.googleMapsUrl || homestay.googleMapLink || "").trim() || null;
   const addressStr = homestay.address || homestay.location;
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh", bgcolor: "#F8FAFC" }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh",
+        bgcolor: "#F8FAFC",
+      }}
+    >
       <PublicHeader />
 
       <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
         {/* Navigation Breadcrumbs & Back Button */}
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3, flexWrap: "wrap", gap: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            mb: 3,
+            flexWrap: "wrap",
+            gap: 2,
+          }}
+        >
           <Breadcrumbs separator="›" aria-label="breadcrumb">
             <MuiLink
               underline="hover"
@@ -139,7 +196,10 @@ export const HomestayDetailPage: React.FC = () => {
             >
               Homestay
             </MuiLink>
-            <Typography color="text.primary" sx={{ fontSize: "0.875rem", fontWeight: 600 }}>
+            <Typography
+              color="text.primary"
+              sx={{ fontSize: "0.875rem", fontWeight: 600 }}
+            >
               {homestay.name}
             </Typography>
           </Breadcrumbs>
@@ -163,19 +223,43 @@ export const HomestayDetailPage: React.FC = () => {
 
         {/* Title Header */}
         <Box sx={{ mb: 3 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap", mb: 1 }}>
-            <Typography variant="h4" component="h1" sx={{ fontWeight: 800, color: "#0F172A", letterSpacing: "-0.02em" }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+              flexWrap: "wrap",
+              mb: 1,
+            }}
+          >
+            <Typography
+              variant="h4"
+              component="h1"
+              sx={{
+                fontWeight: 800,
+                color: "#0F172A",
+                letterSpacing: "-0.02em",
+              }}
+            >
               {homestay.name}
             </Typography>
             {homestay.featured && (
-              <Chip label="Homestay Nổi Bật" color="primary" size="small" sx={{ fontWeight: 700, borderRadius: "6px" }} />
+              <Chip
+                label="Homestay Nổi Bật"
+                color="primary"
+                size="small"
+                sx={{ fontWeight: 700, borderRadius: "6px" }}
+              />
             )}
           </Box>
 
           {addressStr && (
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
               <LocationOnIcon sx={{ color: "#2563EB", fontSize: 20 }} />
-              <Typography variant="body2" sx={{ color: "#475569", fontWeight: 600 }}>
+              <Typography
+                variant="body2"
+                sx={{ color: "#475569", fontWeight: 600 }}
+              >
                 {addressStr}
               </Typography>
             </Box>
@@ -257,9 +341,16 @@ export const HomestayDetailPage: React.FC = () => {
                       display: "block",
                     }}
                   >
-                    Giá thuê
+                    Giá thuê nè
                   </Typography>
-                  <Typography sx={{ fontWeight: 800, fontSize: "1.25rem", color: "#1D4ED8", lineHeight: 1.2 }}>
+                  <Typography
+                    sx={{
+                      fontWeight: 800,
+                      fontSize: "1.25rem",
+                      color: "#1D4ED8",
+                      lineHeight: 1.2,
+                    }}
+                  >
                     {homestay.price && homestay.price.trim() !== ""
                       ? homestay.price
                       : "Liên hệ để biết giá"}
@@ -269,7 +360,10 @@ export const HomestayDetailPage: React.FC = () => {
 
               {/* 2. Homestay Description (Immediately below Price) */}
               <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 800, color: "#0F172A" }}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{ fontWeight: 800, color: "#0F172A" }}
+                >
                   Giới thiệu về homestay
                 </Typography>
                 {homestay.description && homestay.description.trim() !== "" ? (
@@ -285,7 +379,10 @@ export const HomestayDetailPage: React.FC = () => {
                     {homestay.description}
                   </Typography>
                 ) : (
-                  <Typography variant="body2" sx={{ color: "#94A3B8", fontStyle: "italic" }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "#94A3B8", fontStyle: "italic" }}
+                  >
                     Chưa có thông tin mô tả chi tiết cho homestay này.
                   </Typography>
                 )}

@@ -15,7 +15,6 @@ import {
 } from "@mui/material";
 import CottageIcon from "@mui/icons-material/Cottage";
 import MenuIcon from "@mui/icons-material/Menu";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import { useNavigate, useLocation } from "react-router-dom";
 
 export const PublicHeader: React.FC = () => {
@@ -84,7 +83,7 @@ export const PublicHeader: React.FC = () => {
                   lineHeight: 1.1,
                 }}
               >
-                HavenStays
+                HomeStays
               </Typography>
               <Typography
                 variant="caption"
@@ -130,32 +129,6 @@ export const PublicHeader: React.FC = () => {
             })}
           </Box>
 
-          {/* Desktop Admin Portal Button */}
-          <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 1.5 }}>
-            <Button
-              variant="outlined"
-              color="primary"
-              startIcon={<AdminPanelSettingsIcon />}
-              onClick={() => navigate("/admin/login")}
-              sx={{
-                textTransform: "none",
-                fontWeight: 600,
-                borderRadius: "10px",
-                px: 2.2,
-                py: 0.9,
-                borderColor: "#CBD5E1",
-                color: "#334155",
-                "&:hover": {
-                  borderColor: "#2563EB",
-                  bgcolor: "#EFF6FF",
-                  color: "#2563EB",
-                },
-              }}
-            >
-              Trang Quản Trị
-            </Button>
-          </Box>
-
           {/* Mobile Hamburger */}
           <Box sx={{ display: { xs: "flex", md: "none" } }}>
             <IconButton onClick={handleDrawerToggle} sx={{ color: "#334155" }}>
@@ -176,7 +149,7 @@ export const PublicHeader: React.FC = () => {
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, pb: 2, mb: 2, borderBottom: "1px solid #E2E8F0" }}>
             <CottageIcon sx={{ color: "#2563EB" }} />
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              HavenStays
+              HomeStays
             </Typography>
           </Box>
           <List>
@@ -194,21 +167,6 @@ export const PublicHeader: React.FC = () => {
               </ListItem>
             ))}
           </List>
-          <Box sx={{ mt: "auto", pt: 2, borderTop: "1px solid #E2E8F0" }}>
-            <Button
-              fullWidth
-              variant="contained"
-              color="primary"
-              startIcon={<AdminPanelSettingsIcon />}
-              onClick={() => {
-                navigate("/admin/login");
-                setMobileOpen(false);
-              }}
-              sx={{ textTransform: "none", borderRadius: "8px", fontWeight: 600 }}
-            >
-              Trang Quản Trị
-            </Button>
-          </Box>
         </Box>
       </Drawer>
     </AppBar>
