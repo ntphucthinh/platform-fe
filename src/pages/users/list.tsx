@@ -31,8 +31,9 @@ function CustomNoRowsOverlay() {
         alignItems: "center",
         justifyContent: "center",
         height: "100%",
-        minHeight: 200,
-        py: 6,
+        py: 3,
+        px: 2,
+        textAlign: "center",
       }}
     >
       <Typography variant="body1" sx={{ fontWeight: 600, color: "#334155" }}>

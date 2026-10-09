@@ -14,6 +14,8 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useNavigate } from "react-router-dom";
 import type { IHomestayItem } from "@/types/pages/homestay/homestay";
 
+import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
+
 export interface HomestayCardProps {
   homestay: IHomestayItem;
 }
@@ -21,7 +23,8 @@ export interface HomestayCardProps {
 export const HomestayCard: React.FC<HomestayCardProps> = ({ homestay }) => {
   const navigate = useNavigate();
 
-  const coverImage = homestay.mainImage ?? homestay.images[0] ?? "";
+  const rawCover = homestay.mainImage || (homestay.images && homestay.images.length > 0 ? homestay.images[0] : null);
+  const coverImage = rawCover && rawCover.trim() !== "" ? rawCover : DEFAULT_NO_IMAGE;
 
   const handleCardClick = () => {
     navigate(`/homestay/${homestay.id}`);
@@ -63,6 +66,9 @@ export const HomestayCard: React.FC<HomestayCardProps> = ({ homestay }) => {
           image={coverImage}
           alt={homestay.name}
           className="card-media"
+          onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+            e.currentTarget.src = DEFAULT_NO_IMAGE;
+          }}
           sx={{
             position: "absolute",
             top: 0,

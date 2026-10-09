@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Box,
   Container,
@@ -20,34 +20,53 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { PublicHeader } from "@/components/pages/homestay/publicHeader";
 import { PublicFooter } from "@/components/pages/homestay/publicFooter";
 import { HomestayCard } from "@/components/pages/homestay/homestayCard";
-import { MOCK_HOMESTAYS } from "@/constants/homestayConstant";
+
 import type { IHomestayItem } from "@/types/pages/homestay/homestay";
+import { getHomestays } from "@/services/homestayService";
 import { useSearchParams } from "react-router-dom";
 
 export const HomestayListingPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialLocation = searchParams.get("location") || "";
 
+  const [dbHomestays, setDbHomestays] = useState<IHomestayItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocation, setSelectedLocation] = useState(initialLocation);
   const [sortOrder, setSortOrder] = useState<"featured" | "priceLow" | "priceHigh" | "rating">("featured");
 
-  const locations = useMemo(() => {
-    const locSet = new Set(MOCK_HOMESTAYS.map((h) => h.location.split(",")[0].trim()));
-    return Array.from(locSet);
+  useEffect(() => {
+    let isMounted = true;
+    getHomestays().then(({ data }) => {
+      if (isMounted && data && data.length > 0) {
+        setDbHomestays(data);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
+  const homestayList = dbHomestays;
+
+  const locations = useMemo(() => {
+    const locSet = new Set(
+      homestayList.map((h) => (h.address || h.location || "").split(",")[0].trim()).filter(Boolean)
+    );
+    return Array.from(locSet);
+  }, [homestayList]);
+
   const filteredHomestays = useMemo(() => {
-    return MOCK_HOMESTAYS.filter((h) => {
+    return homestayList.filter((h) => {
+      const locStr = h.address || h.location || "";
       const matchesSearch =
-        h.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        h.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (h.name ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        locStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (h.description ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
         (h.shortDescription && h.shortDescription.toLowerCase().includes(searchTerm.toLowerCase()));
 
       const matchesLocation =
         !selectedLocation ||
-        h.location.toLowerCase().includes(selectedLocation.toLowerCase());
+        locStr.toLowerCase().includes(selectedLocation.toLowerCase());
 
       return matchesSearch && matchesLocation;
     }).sort((a, b) => {
@@ -61,7 +80,7 @@ export const HomestayListingPage: React.FC = () => {
       if (sortOrder === "rating") return ratingB - ratingA;
       return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
     });
-  }, [searchTerm, selectedLocation, sortOrder]);
+  }, [homestayList, searchTerm, selectedLocation, sortOrder]);
 
   const handleResetFilters = () => {
     setSearchTerm("");
@@ -221,7 +240,7 @@ export const HomestayListingPage: React.FC = () => {
               Danh Sách Homestay
             </Typography>
             <Typography variant="body2" sx={{ color: "#64748B", mt: 0.5 }}>
-              Hiển thị {filteredHomestays.length} trên tổng số {MOCK_HOMESTAYS.length} homestay
+              Hiển thị {filteredHomestays.length} trên tổng số {homestayList.length} homestay
             </Typography>
           </Box>
 

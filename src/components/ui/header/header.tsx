@@ -18,8 +18,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useNavigate } from "react-router-dom";
 import { HeaderTitleContext } from "@/components/ui/header/headerTitleContext";
-
-import { setAdminAuthenticated } from "@/utils/auth";
+import { clearAdminAuthenticated, getStoredAdminUser } from "@/utils/auth";
 
 export interface HeaderProps {
   onToggleSidebar: () => void;
@@ -31,12 +30,20 @@ export const Header = ({ onToggleSidebar }: HeaderProps) => {
   const headerTitle = context?.headerTitle;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
+  const storedUser = getStoredAdminUser();
+  const displayName = storedUser?.fullName || storedUser?.username || "Admin";
+  const initials = displayName
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
+
   const handleOpenUserMenu = (event: MouseEvent<HTMLElement>) =>
     setAnchorEl(event.currentTarget);
   const handleCloseUserMenu = () => setAnchorEl(null);
   const handleLogout = () => {
     handleCloseUserMenu();
-    setAdminAuthenticated(false);
+    clearAdminAuthenticated();
     navigate("/admin/login");
   };
 
@@ -132,7 +139,7 @@ export const Header = ({ onToggleSidebar }: HeaderProps) => {
                     fontWeight: 700,
                   }}
                 >
-                  AD
+                  {initials || "AD"}
                 </Avatar>
               </IconButton>
             </Tooltip>
@@ -162,8 +169,13 @@ export const Header = ({ onToggleSidebar }: HeaderProps) => {
                   noWrap
                   sx={{ fontWeight: 600, color: "text.primary" }}
                 >
-                  Admin User
+                  {displayName}
                 </Typography>
+                {storedUser?.email && (
+                  <Typography variant="caption" noWrap sx={{ color: "text.secondary" }}>
+                    {storedUser.email}
+                  </Typography>
+                )}
               </Box>
               <Divider />
               <MenuItem onClick={handleCloseUserMenu}>

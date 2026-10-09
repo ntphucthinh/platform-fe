@@ -20,8 +20,8 @@ import {
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate } from "react-router-dom";
-import type { HttpError } from "@refinedev/core";
 import { setAdminAuthenticated } from "@/utils/auth";
+import { loginWithEmail } from "@/services/authService";
 import { loginSchema } from "@/schemas/auth/loginSchema";
 import type { ILoginFormData } from "@/types/pages/auth/login";
 
@@ -44,15 +44,24 @@ export const Login: React.FC = () => {
   });
 
   const onSubmit = async (data: ILoginFormData) => {
+    setErrorMsg(null);
     try {
-      setErrorMsg(null);
-      console.log("Login attempt:", data);
-      setAdminAuthenticated(true);
+      const result = await loginWithEmail(data.email, data.password);
+
+      if (!result.success) {
+        setErrorMsg(result.message);
+        return;
+      }
+
+      // Store minimal user profile + JWT token — password never stored.
+      setAdminAuthenticated(true, result.user, result.accessToken);
       navigate("/admin/homestay");
     } catch (err: unknown) {
-      const error = err as HttpError;
-
-      setErrorMsg(error.message || "Login failed. Please try again.");
+      const message =
+        err instanceof Error
+          ? err.message
+          : "An unexpected error occurred. Please try again.";
+      setErrorMsg(message);
     }
   };
 

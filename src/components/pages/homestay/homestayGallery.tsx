@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Box, CardMedia, Grid, Paper } from "@mui/material";
+import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
 
 export interface HomestayGalleryProps {
   mainImage: string;
@@ -12,9 +13,12 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
   images,
   title,
 }) => {
-  const allImages = Array.from(new Set([mainImage, ...(images || [])]));
+  const validImages = (images || []).filter((img) => Boolean(img) && img.trim() !== "");
+  const fallbackImage = mainImage || validImages[0] || DEFAULT_NO_IMAGE;
+  const allImages = validImages.length > 0 ? Array.from(new Set(validImages)) : [DEFAULT_NO_IMAGE];
+
   const [selectedImage, setSelectedImage] = useState<string>(
-    allImages[0] || mainImage
+    allImages[0] || fallbackImage
   );
 
   return (
@@ -33,8 +37,11 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
       >
         <CardMedia
           component="img"
-          image={selectedImage}
+          image={selectedImage || DEFAULT_NO_IMAGE}
           alt={title}
+          onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+            e.currentTarget.src = DEFAULT_NO_IMAGE;
+          }}
           sx={{
             position: "absolute",
             top: 0,

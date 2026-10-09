@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -12,6 +12,7 @@ import {
   Avatar,
   Link,
   Chip,
+  CircularProgress,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import SearchIcon from "@mui/icons-material/Search";
@@ -19,14 +20,18 @@ import AddIcon from "@mui/icons-material/Add";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import PhotoSizeSelectActualIcon from "@mui/icons-material/PhotoSizeSelectActual";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { tableSx } from "@/components/ui/table/tableStyles";
-import { MOCK_HOMESTAYS } from "@/constants/homestayConstant";
-import type { IHomestayFormData, IHomestayItem } from "@/types/pages/homestay/homestay";
+import type {
+  IHomestayFormData,
+  IHomestayItem,
+} from "@/types/pages/homestay/homestay";
 import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
 import { HomestayFormDialog } from "@/components/pages/homestay/homestayFormDialog";
 import { HomestayDetailDialog } from "@/components/pages/homestay/homestayDetailDialog";
+import * as homestayService from "@/services/homestayService";
+import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
 
 function CustomNoRowsOverlay() {
   return (
@@ -37,32 +42,40 @@ function CustomNoRowsOverlay() {
         alignItems: "center",
         justifyContent: "center",
         height: "100%",
-        minHeight: 220,
-        py: 6,
+        py: 3,
+        px: 2,
+        textAlign: "center",
       }}
     >
       <Typography variant="body1" sx={{ fontWeight: 600, color: "#334155" }}>
         Không tìm thấy homestay nào
       </Typography>
       <Typography variant="body2" sx={{ color: "#94A3B8", mt: 0.5 }}>
-        Thử tìm kiếm với từ khóa khác.
+        Chưa có dữ liệu homestay trong cơ sở dữ liệu Supabase hoặc từ khóa tìm
+        kiếm không khớp.
       </Typography>
     </Box>
   );
 }
 
 export const AdminHomestayPage: React.FC = () => {
-  const [homestays, setHomestays] = useState<IHomestayItem[]>(MOCK_HOMESTAYS);
+  const [homestays, setHomestays] = useState<IHomestayItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   // Modal dialog states
   const [formDialogOpen, setFormDialogOpen] = useState(false);
-  const [selectedHomestay, setSelectedHomestay] = useState<IHomestayItem | null>(null);
+  const [selectedHomestay, setSelectedHomestay] =
+    useState<IHomestayItem | null>(null);
 
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const [homestayToView, setHomestayToView] = useState<IHomestayItem | null>(null);
+  const [homestayToView, setHomestayToView] = useState<IHomestayItem | null>(
+    null,
+  );
 
-  const [homestayToDelete, setHomestayToDelete] = useState<IHomestayItem | null>(null);
+  const [homestayToDelete, setHomestayToDelete] =
+    useState<IHomestayItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Toast notification state
@@ -76,18 +89,56 @@ export const AdminHomestayPage: React.FC = () => {
     severity: "success",
   });
 
-  const handleShowSnackbar = (
-    message: string,
-    severity: "success" | "info" | "warning" | "error" = "success"
-  ) => {
-    setSnackbar({ open: true, message, severity });
-  };
+  const handleShowSnackbar = useCallback(
+    (
+      message: string,
+      severity: "success" | "info" | "warning" | "error" = "success",
+    ) => {
+      setSnackbar({ open: true, message, severity });
+    },
+    [],
+  );
 
+  // Fetch homestays list from Supabase
+  const loadHomestays = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+
+    const { data, error } = await homestayService.getHomestays();
+
+    if (error) {
+      setFetchError(error);
+      handleShowSnackbar(error, "error");
+    } else {
+      setHomestays(data);
+    }
+    setIsLoading(false);
+  }, [handleShowSnackbar]);
+
+  useEffect(() => {
+    let active = true;
+    homestayService.getHomestays().then(({ data, error }) => {
+      if (!active) return;
+      if (error) {
+        setFetchError(error);
+        handleShowSnackbar(error, "error");
+      } else {
+        setHomestays(data);
+      }
+      setIsLoading(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [handleShowSnackbar]);
+
+  // Client-side search filtering
   const filteredHomestays = homestays.filter((h) => {
+    const term = searchTerm.toLowerCase();
     return (
-      h.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      h.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (h.description ?? "").toLowerCase().includes(searchTerm.toLowerCase())
+      (h.name ?? "").toLowerCase().includes(term) ||
+      (h.address ?? h.location ?? "").toLowerCase().includes(term) ||
+      (h.description ?? "").toLowerCase().includes(term)
     );
   });
 
@@ -109,55 +160,69 @@ export const AdminHomestayPage: React.FC = () => {
     setDetailDialogOpen(true);
   };
 
-  // Confirm Delete
+  // Confirm Delete Operation with Supabase
   const handleConfirmDelete = async () => {
     if (!homestayToDelete) return;
     setIsDeleting(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      setHomestays((prev) => prev.filter((item) => item.id !== homestayToDelete.id));
-      handleShowSnackbar(`Đã xóa homestay "${homestayToDelete.name}" thành công`, "success");
-      setHomestayToDelete(null);
+      const { success, error } = await homestayService.deleteHomestay(
+        homestayToDelete.id,
+      );
+
+      if (success) {
+        handleShowSnackbar(
+          `Đã xóa homestay "${homestayToDelete.name}" thành công`,
+          "success",
+        );
+        setHomestayToDelete(null);
+        await loadHomestays();
+      } else {
+        handleShowSnackbar(
+          error || `Không thể xóa homestay "${homestayToDelete.name}".`,
+          "error",
+        );
+      }
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // Handle Form Submit (Create or Update)
-  const handleFormSubmit = (data: IHomestayFormData) => {
+  // Handle Form Submit (Create or Update with Supabase Storage)
+  const handleFormSubmit = async (formData: IHomestayFormData) => {
     if (selectedHomestay) {
       // Edit mode
-      setHomestays((prev) =>
-        prev.map((item) =>
-          item.id === selectedHomestay.id
-            ? {
-                ...item,
-                name: data.name,
-                location: data.location,
-                description: data.description,
-                images: data.images,
-                price: data.price,
-                googleMapLink: data.googleMapLink ?? null,
-              }
-            : item
-        )
+      const { data, error } = await homestayService.updateHomestay(
+        selectedHomestay.id,
+        formData,
+        selectedHomestay.imageRecords || [],
       );
-      handleShowSnackbar(`Đã cập nhật homestay "${data.name}" thành công`, "success");
+
+      if (error) {
+        handleShowSnackbar(error, "error");
+        return;
+      }
+
+      handleShowSnackbar(
+        `Đã cập nhật homestay "${data?.name ?? formData.name}" thành công`,
+        "success",
+      );
     } else {
       // Create mode
-      const newItem: IHomestayItem = {
-        id: `hs-${Date.now()}`,
-        name: data.name,
-        location: data.location,
-        description: data.description,
-        images: data.images,
-        price: data.price,
-        googleMapLink: data.googleMapLink ?? null,
-      };
-      setHomestays((prev) => [newItem, ...prev]);
-      handleShowSnackbar(`Đã tạo homestay "${data.name}" thành công`, "success");
+      const { data, error } = await homestayService.createHomestay(formData);
+
+      if (error) {
+        handleShowSnackbar(error, "error");
+        return;
+      }
+
+      handleShowSnackbar(
+        `Đã tạo homestay "${data?.name ?? formData.name}" thành công`,
+        "success",
+      );
     }
+
     setFormDialogOpen(false);
+    await loadHomestays();
   };
 
   const columns: GridColDef<IHomestayItem>[] = [
@@ -168,35 +233,30 @@ export const AdminHomestayPage: React.FC = () => {
       sortable: false,
       filterable: false,
       renderCell: ({ row }) => {
-        const firstImage = row.images && row.images.length > 0 ? row.images[0] : null;
+        const firstImage =
+          row.images && row.images.length > 0 && row.images[0]
+            ? row.images[0]
+            : DEFAULT_NO_IMAGE;
         return (
           <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
-            {firstImage ? (
-              <Avatar
-                variant="rounded"
-                src={firstImage}
-                alt={row.name}
-                sx={{
-                  width: 48,
-                  height: 44,
-                  borderRadius: "8px",
-                  bgcolor: "#E2E8F0",
-                }}
-              />
-            ) : (
-              <Avatar
-                variant="rounded"
-                sx={{
-                  width: 48,
-                  height: 44,
-                  borderRadius: "8px",
-                  bgcolor: "#F1F5F9",
-                  color: "#94A3B8",
-                }}
-              >
-                <PhotoSizeSelectActualIcon fontSize="small" />
-              </Avatar>
-            )}
+            <Avatar
+              variant="rounded"
+              src={firstImage}
+              alt={row.name}
+              sx={{
+                width: 48,
+                height: 44,
+                borderRadius: "8px",
+                bgcolor: "#E2E8F0",
+              }}
+              slotProps={{
+                img: {
+                  onError: (e: React.SyntheticEvent<HTMLImageElement>) => {
+                    e.currentTarget.src = DEFAULT_NO_IMAGE;
+                  },
+                },
+              }}
+            />
           </Box>
         );
       },
@@ -220,10 +280,11 @@ export const AdminHomestayPage: React.FC = () => {
       ),
     },
     {
-      field: "location",
+      field: "address",
       headerName: "Địa Điểm",
       flex: 1.2,
       minWidth: 160,
+      valueGetter: (_value, row) => row.address || row.location || "",
       renderCell: ({ value }) => (
         <Typography
           noWrap
@@ -233,7 +294,7 @@ export const AdminHomestayPage: React.FC = () => {
             fontWeight: 500,
           }}
         >
-          {value as string}
+          {(value as string) || "—"}
         </Typography>
       ),
     },
@@ -251,19 +312,23 @@ export const AdminHomestayPage: React.FC = () => {
             {value as string}
           </Typography>
         ) : (
-          <Typography sx={{ color: "#CBD5E1", fontSize: "12px", fontStyle: "italic" }}>
+          <Typography
+            sx={{ color: "#CBD5E1", fontSize: "12px", fontStyle: "italic" }}
+          >
             Chưa có giá
           </Typography>
         ),
     },
     {
-      field: "googleMapLink",
+      field: "googleMapsUrl",
       headerName: "Google Map",
       width: 130,
       sortable: false,
       filterable: false,
       align: "center",
       headerAlign: "center",
+      valueGetter: (_value, row) =>
+        row.googleMapsUrl || row.googleMapLink || null,
       renderCell: ({ value }) =>
         value ? (
           <Tooltip title={value as string}>
@@ -306,7 +371,7 @@ export const AdminHomestayPage: React.FC = () => {
             fontSize: "12.5px",
           }}
         >
-          {value as string}
+          {(value as string) || "—"}
         </Typography>
       ),
     },
@@ -384,7 +449,22 @@ export const AdminHomestayPage: React.FC = () => {
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       <HeaderTitle>Quản Lý Homestay</HeaderTitle>
 
-      {/* Control Bar Card (Search & Create Button) */}
+      {/* Error Banner if fetch failed */}
+      {fetchError && (
+        <Alert
+          severity="error"
+          action={
+            <Button color="inherit" size="small" onClick={loadHomestays}>
+              Thử lại
+            </Button>
+          }
+          sx={{ borderRadius: "10px" }}
+        >
+          {fetchError}
+        </Alert>
+      )}
+
+      {/* Control Bar Card (Search & Create Button & Refresh) */}
       <Card
         elevation={1}
         sx={{
@@ -406,7 +486,10 @@ export const AdminHomestayPage: React.FC = () => {
             input: {
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon fontSize="small" sx={{ color: "text.secondary" }} />
+                  <SearchIcon
+                    fontSize="small"
+                    sx={{ color: "text.secondary" }}
+                  />
                 </InputAdornment>
               ),
             },
@@ -414,15 +497,35 @@ export const AdminHomestayPage: React.FC = () => {
           sx={{ width: { xs: "100%", sm: 360 } }}
         />
 
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={handleOpenCreate}
-          sx={{ textTransform: "none", fontWeight: 600, borderRadius: "8px" }}
-        >
-          Thêm Homestay Mới
-        </Button>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Tooltip title="Tải lại dữ liệu">
+            <Button
+              variant="outlined"
+              color="inherit"
+              onClick={loadHomestays}
+              disabled={isLoading}
+              sx={{
+                minWidth: 40,
+                width: 40,
+                height: 40,
+                p: 0,
+                borderRadius: "8px",
+              }}
+            >
+              <RefreshIcon fontSize="small" />
+            </Button>
+          </Tooltip>
+
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={handleOpenCreate}
+            sx={{ textTransform: "none", fontWeight: 600, borderRadius: "8px" }}
+          >
+            Thêm Homestay Mới
+          </Button>
+        </Box>
       </Card>
 
       {/* DataGrid */}
@@ -439,9 +542,11 @@ export const AdminHomestayPage: React.FC = () => {
         <DataGrid
           rows={filteredHomestays}
           columns={columns}
+          getRowId={(row) => row.id}
+          loading={isLoading}
           pageSizeOptions={[5, 10, 25]}
           initialState={{
-            pagination: { paginationModel: { pageSize: 5, page: 0 } },
+            pagination: { paginationModel: { pageSize: 10, page: 0 } },
           }}
           rowHeight={64}
           columnHeaderHeight={48}
@@ -452,19 +557,36 @@ export const AdminHomestayPage: React.FC = () => {
           disableRowSelectionOnClick
           slots={{
             noRowsOverlay: CustomNoRowsOverlay,
+            loadingOverlay: () => (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "100%",
+                  minHeight: 200,
+                }}
+              >
+                <CircularProgress size={32} />
+              </Box>
+            ),
           }}
           sx={tableSx}
         />
       </Card>
 
       {/* Modals & Dialogs */}
-      <HomestayFormDialog
-        key={formDialogOpen ? (selectedHomestay?.id || "create") : "closed"}
-        open={formDialogOpen}
-        initialData={selectedHomestay}
-        onClose={() => setFormDialogOpen(false)}
-        onSubmit={handleFormSubmit}
-      />
+      {formDialogOpen && (
+        <HomestayFormDialog
+          key={
+            selectedHomestay?.id ? `edit-${selectedHomestay.id}` : "create-new"
+          }
+          open={formDialogOpen}
+          initialData={selectedHomestay}
+          onClose={() => setFormDialogOpen(false)}
+          onSubmit={handleFormSubmit}
+        />
+      )}
 
       <HomestayDetailDialog
         open={detailDialogOpen}

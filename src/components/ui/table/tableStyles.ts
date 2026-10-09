@@ -155,4 +155,12 @@ export const tableSx: SxProps<Theme> = {
     '&:hover': { bgcolor: '#F1F5F9' },
     '&.Mui-disabled': { color: '#CBD5E1' },
   },
+
+  // ── Overlay (No rows / Loading) ─────────────────────────────────────────────
+  '& .MuiDataGrid-overlayWrapper': {
+    minHeight: '180px',
+  },
+  '& .MuiDataGrid-overlay': {
+    bgcolor: '#FFFFFF',
+  },
 };

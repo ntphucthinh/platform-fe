@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
@@ -9,6 +9,7 @@ import {
   Chip,
   Breadcrumbs,
   Link as MuiLink,
+  CircularProgress,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
@@ -19,16 +20,51 @@ import { useParams, useNavigate } from "react-router-dom";
 import { PublicHeader } from "@/components/pages/homestay/publicHeader";
 import { PublicFooter } from "@/components/pages/homestay/publicFooter";
 import { HomestayGallery } from "@/components/pages/homestay/homestayGallery";
-import { MOCK_HOMESTAYS } from "@/constants/homestayConstant";
 import type { IHomestayItem } from "@/types/pages/homestay/homestay";
+import { getHomestayById } from "@/services/homestayService";
+import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
 
 export const HomestayDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const homestay: IHomestayItem | undefined = useMemo(() => {
-    return MOCK_HOMESTAYS.find((h) => String(h.id) === String(id));
+  const [homestay, setHomestay] = useState<IHomestayItem | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const numericId = Number(id);
+
+    if (!isNaN(numericId) && numericId > 0) {
+      getHomestayById(numericId).then(({ data }) => {
+        if (!isMounted) return;
+        setHomestay(data);
+        setLoading(false);
+      });
+    } else {
+      Promise.resolve().then(() => {
+        if (!isMounted) return;
+        setHomestay(null);
+        setLoading(false);
+      });
+    }
+
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
+
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh", bgcolor: "#F8FAFC" }}>
+        <PublicHeader />
+        <Container maxWidth="md" sx={{ py: 12, flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <CircularProgress size={40} />
+        </Container>
+        <PublicFooter />
+      </Box>
+    );
+  }
 
   if (!homestay) {
     return (
@@ -84,6 +120,9 @@ export const HomestayDetailPage: React.FC = () => {
     );
   }
 
+  const mapUrl = (homestay.googleMapsUrl || homestay.googleMapLink || "").trim() || null;
+  const addressStr = homestay.address || homestay.location;
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh", bgcolor: "#F8FAFC" }}>
       <PublicHeader />
@@ -133,12 +172,14 @@ export const HomestayDetailPage: React.FC = () => {
             )}
           </Box>
 
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-            <LocationOnIcon sx={{ color: "#2563EB", fontSize: 20 }} />
-            <Typography variant="body2" sx={{ color: "#475569", fontWeight: 600 }}>
-              {homestay.location}
-            </Typography>
-          </Box>
+          {addressStr && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <LocationOnIcon sx={{ color: "#2563EB", fontSize: 20 }} />
+              <Typography variant="body2" sx={{ color: "#475569", fontWeight: 600 }}>
+                {addressStr}
+              </Typography>
+            </Box>
+          )}
         </Box>
 
         {/* Main Layout: Gallery + Info */}
@@ -147,13 +188,22 @@ export const HomestayDetailPage: React.FC = () => {
           <Grid size={{ xs: 12, lg: 8 }}>
             <Box sx={{ mb: 4 }}>
               <HomestayGallery
-                mainImage={homestay.mainImage ?? homestay.images[0] ?? ""}
-                images={homestay.images}
+                mainImage={
+                  homestay.mainImage ||
+                  (homestay.images && homestay.images.length > 0
+                    ? homestay.images[0]
+                    : DEFAULT_NO_IMAGE)
+                }
+                images={
+                  homestay.images && homestay.images.length > 0
+                    ? homestay.images
+                    : [DEFAULT_NO_IMAGE]
+                }
                 title={homestay.name}
               />
             </Box>
 
-            {/* Description — chỉ hiện nếu có */}
+            {/* Description — only show if present */}
             {homestay.description && (
               <Paper elevation={0} sx={{ p: 3.5, borderRadius: "16px", bgcolor: "#FFFFFF", border: "1px solid #E2E8F0", mb: 4 }}>
                 <Typography variant="h6" sx={{ fontWeight: 800, color: "#0F172A", mb: 1.5 }}>
@@ -208,18 +258,18 @@ export const HomestayDetailPage: React.FC = () => {
               ) : (
                 <Box sx={{ p: 2, bgcolor: "#F8FAFC", borderRadius: "12px", border: "1px dashed #CBD5E1" }}>
                   <Typography variant="body2" sx={{ color: "#94A3B8", fontStyle: "italic", textAlign: "center" }}>
-                    Giá thuê chưa được cập nhật
+                    Liên hệ để biết giá thuê
                   </Typography>
                 </Box>
               )}
 
-              {/* Google Map */}
-              {homestay.googleMapLink ? (
+              {/* Google Map — only show if mapUrl is present */}
+              {mapUrl && (
                 <Button
                   fullWidth
                   variant="outlined"
                   startIcon={<MapIcon />}
-                  href={homestay.googleMapLink}
+                  href={mapUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   sx={{
@@ -234,10 +284,6 @@ export const HomestayDetailPage: React.FC = () => {
                 >
                   Xem trên Google Map
                 </Button>
-              ) : (
-                <Typography variant="caption" sx={{ color: "#CBD5E1", textAlign: "center", display: "block" }}>
-                  Chưa có liên kết Google Map
-                </Typography>
               )}
 
               {/* Back to list */}

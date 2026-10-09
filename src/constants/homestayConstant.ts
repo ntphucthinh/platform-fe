@@ -1,4 +1,6 @@
-import type { IHomestayItem } from "@/types/pages/homestay/homestay";
+import noImageAvailable from "@/assets/thumb/no-image-available.jpg";
+
+export const DEFAULT_NO_IMAGE = noImageAvailable;
 
 export const HomestayStatus = {
   Active: "Active",
@@ -21,6 +23,7 @@ export const AMENITY_OPTIONS = [
   "Ban Công",
 ] as const;
 
+/** Sample preset image URLs available for form image picker. */
 export const SAMPLE_IMAGE_PRESETS = [
   "https://images.unsplash.com/photo-1587061949409-02df41d5e562?q=80&w=1200&auto=format&fit=crop",
   "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1200&auto=format&fit=crop",
@@ -30,145 +33,4 @@ export const SAMPLE_IMAGE_PRESETS = [
   "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop",
   "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1200&auto=format&fit=crop",
   "https://images.unsplash.com/photo-1598228723793-52759bba239c?q=80&w=1200&auto=format&fit=crop",
-];
-
-export const MOCK_HOMESTAYS: IHomestayItem[] = [
-  {
-    id: "hs-101",
-    name: "Pine Forest Eco Villa",
-    location: "Đà Lạt, Lâm Đồng",
-    price: "2.500.000đ → 3.500.000đ / đêm",
-    googleMapLink: "https://maps.google.com/?q=Da+Lat+Lam+Dong",
-    description:
-      "Khu nghỉ dưỡng biệt lập giữa rừng thông với cửa kính tràn viền và ban công gỗ ngắm mây. Tọa lạc dưới những tán thông xanh mát tại vùng đồi yên bình Đà Lạt, Pine Forest Eco Villa mang đến không gian thư thái tách biệt khỏi sự xô xập phố thị. Giá thuê: $120/đêm. Sức chứa: 4 khách, 2 phòng ngủ, 2 phòng tắm. Tiện nghi: Wifi, Hướng núi, Lò nướng BBQ, Ban công, Bếp đầy đủ dụng cụ, Chỗ đỗ xe miễn phí, Smart TV.",
-    images: [
-      "https://images.unsplash.com/photo-1587061949409-02df41d5e562?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1598228723793-52759bba239c?q=80&w=1200&auto=format&fit=crop",
-    ],
-    pricePerNight: 120,
-    capacity: 4,
-    bedrooms: 2,
-    bathrooms: 2,
-    amenities: ["Wifi", "Hướng Núi", "Lò Nướng BBQ", "Ban Công", "Nhà Bếp", "Chỗ Đỗ Xe Miễn Phí", "Smart TV"],
-    status: "Active",
-    rating: 4.92,
-    reviewCount: 38,
-    featured: true,
-    createdAt: "2026-01-15",
-  },
-  {
-    id: "hs-102",
-    name: "Ocean Breeze Beachfront Residence",
-    location: "Đà Nẵng, Quảng Nam",
-    price: "6.500.000đ / đêm",
-    googleMapLink: "https://maps.google.com/?q=My+Khe+Beach+Da+Nang",
-    description:
-      "Biệt thự biển hiện đại cao cấp có lối đi thẳng ra bãi cát trắng và hồ bơi vô cực riêng. Tọa lạc ngay sát bờ biển Mỹ Khê xinh đẹp, biệt thự 4 phòng ngủ kết hợp thiết kế nhiệt đới hiện đại cùng tiện nghi 5 sao. Giá thuê: $280/đêm. Sức chứa: 8 khách, 4 phòng ngủ, 3 phòng tắm. Tiện nghi: Biển, Bể bơi riêng, Jacuzzi, Điều hòa, Wifi, Bếp nướng, Chỗ đỗ xe miễn phí.",
-    images: [
-      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1613977257363-707ba9348227?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop",
-    ],
-    pricePerNight: 280,
-    capacity: 8,
-    bedrooms: 4,
-    bathrooms: 3,
-    amenities: ["Trước Biển", "Bể Bơi", "Bồn Tắm Jacuzzi", "Điều Hòa", "Wifi", "Nhà Bếp", "Smart TV", "Chỗ Đỗ Xe Miễn Phí"],
-    status: "Active",
-    rating: 4.88,
-    reviewCount: 52,
-    featured: true,
-    createdAt: "2026-02-01",
-  },
-  {
-    id: "hs-103",
-    name: "Ancient Town Lantern House",
-    location: "Hội An, Quảng Nam",
-    price: "2.000.000đ / đêm",
-    googleMapLink: "https://maps.google.com/?q=Hoi+An+Old+Town",
-    description:
-      "Ngôi nhà vườn di sản ấm cúng trang trí bằng lồng đèn lụa thủ công truyền thống. Tận hưởng không gian văn hóa Hội An hoài cổ tại Ancient Town Lantern House. Chỉ cách phố cổ 5 phút đi bộ, ngôi nhà gỗ 100 năm tuổi có sân vườn xanh mát, hồ hoa sen, bồn tắm tre ngoài trời.",
-    images: [
-      "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1598228723793-52759bba239c?q=80&w=1200&auto=format&fit=crop",
-    ],
-    pricePerNight: 85,
-    capacity: 3,
-    bedrooms: 1,
-    bathrooms: 1,
-    amenities: ["Wifi", "Điều Hòa", "Nhà Bếp", "Ban Công", "Máy Giặt", "Chỗ Đỗ Xe Miễn Phí"],
-    status: "Active",
-    rating: 4.79,
-    reviewCount: 29,
-    createdAt: "2026-02-18",
-  },
-  {
-    id: "hs-104",
-    name: "Sapa Terrace Cloud Chalet",
-    location: "Sapa, Lào Cai",
-    price: "3.500.000đ → 5.000.000đ / đêm",
-    googleMapLink: null,
-    description:
-      "Chalet gỗ trên đồi cao ôm trọn tầm nhìn ra ruộng bậc thang và đỉnh Fansipan hùng vĩ. Tọa lạc trên sườn núi lộng gió của thung lũng Sapa, Cloud Chalet mang lại góc nhìn toàn cảnh mây vờn trên những thửa ruộng bậc thang chín vàng.",
-    images: [
-      "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1587061949409-02df41d5e562?q=80&w=1200&auto=format&fit=crop",
-    ],
-    pricePerNight: 150,
-    capacity: 6,
-    bedrooms: 3,
-    bathrooms: 2,
-    amenities: ["Hướng Núi", "Lò Nướng BBQ", "Wifi", "Nhà Bếp", "Ban Công", "Máy Giặt"],
-    status: "Active",
-    rating: 4.96,
-    reviewCount: 44,
-    featured: true,
-    createdAt: "2026-03-05",
-  },
-  {
-    id: "hs-105",
-    name: "Phú Quốc Tropical Pool Haven",
-    location: "Phú Quốc, Kiên Giang",
-    price: "4.800.000đ → 6.000.000đ / đêm",
-    googleMapLink: "https://maps.google.com/?q=Phu+Quoc+Kien+Giang",
-    description:
-      "Ốc đảo nhiệt đới yên bình ẩn mình giữa vườn dừa với hồ bơi riêng tư. Được bao bọc bởi vườn dừa xanh và hương hoa sứ nồng nàn, biệt thự sở hữu phòng khách mở thoáng đãng, hồ bơi riêng, vòi tắm mưa ngoài trời.",
-    images: [
-      "https://images.unsplash.com/photo-1613977257363-707ba9348227?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1200&auto=format&fit=crop",
-    ],
-    pricePerNight: 210,
-    capacity: 6,
-    bedrooms: 3,
-    bathrooms: 3,
-    amenities: ["Bể Bơi", "Điều Hòa", "Wifi", "Nhà Bếp", "Bồn Tắm Jacuzzi", "Lò Nướng BBQ", "Chỗ Đỗ Xe Miễn Phí"],
-    status: "Maintenance",
-    rating: 4.85,
-    reviewCount: 22,
-    createdAt: "2026-03-12",
-  },
-  {
-    id: "hs-106",
-    name: "Perfume River Garden Villa",
-    location: "TP. Huế, Thừa Thiên Huế",
-    price: "3.800.000đ / đêm",
-    googleMapLink: null,
-    description:
-      "Biệt thự nhà vườn ven sông Hương cổ kính có bến thuyền riêng và chòi trà thanh bình. Nằm êm đềm bên dòng sông Hương thơ mộng, khu nhà vườn mang đậm dấu ấn kiến trúc Cố đô Huế hòa quyện tinh tế cùng tiện nghi hiện đại.",
-    images: [
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1200&auto=format&fit=crop",
-    ],
-    pricePerNight: 165,
-    capacity: 5,
-    bedrooms: 2,
-    bathrooms: 2,
-    amenities: ["Wifi", "Nhà Bếp", "Điều Hòa", "Ban Công", "Chỗ Đỗ Xe Miễn Phí", "Smart TV", "Máy Giặt"],
-    status: "Inactive",
-    rating: 4.70,
-    reviewCount: 16,
-    createdAt: "2026-03-20",
-  },
 ];

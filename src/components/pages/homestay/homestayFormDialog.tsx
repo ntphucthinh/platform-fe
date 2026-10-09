@@ -12,29 +12,33 @@ import {
   Tooltip,
   Paper,
   Alert,
+  CircularProgress,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import CloseIcon from "@mui/icons-material/Close";
-import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import type { IHomestayFormData, IHomestayItem } from "@/types/pages/homestay/homestay";
+import type {
+  IHomestayFormData,
+  IHomestayItem,
+  IHomestayFormImageItem,
+} from "@/types/pages/homestay/homestay";
 import { homestaySchema } from "@/schemas/homestay/homestaySchema";
-import { SAMPLE_IMAGE_PRESETS } from "@/constants/homestayConstant";
 
 export interface HomestayFormDialogProps {
   open: boolean;
   initialData?: IHomestayItem | null;
   onClose: () => void;
-  onSubmit: (data: IHomestayFormData) => void;
+  onSubmit: (data: IHomestayFormData) => Promise<void> | void;
 }
 
-interface ImageItem {
+interface ImageItemUI {
   id: string;
   url: string;
   file?: File;
   isObjectUrl?: boolean;
+  imagePath?: string;
 }
 
 export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
@@ -46,41 +50,45 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
   const isEdit = Boolean(initialData);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [imageItems, setImageItems] = useState<ImageItem[]>(() => {
+  const [imageItems, setImageItems] = useState<ImageItemUI[]>(() => {
     if (initialData?.images && initialData.images.length > 0) {
-      return initialData.images.map((url, idx) => ({
-        id: `existing-${idx}-${url}`,
-        url,
-        isObjectUrl: false,
-      }));
+      return initialData.images.map((url, idx) => {
+        const rawRec = initialData.imageRecords?.[idx];
+        return {
+          id: `existing-${idx}-${url}`,
+          url,
+          imagePath: rawRec?.imagePath || url,
+          isObjectUrl: false,
+        };
+      });
     }
-    return [
-      { id: `default-0-${SAMPLE_IMAGE_PRESETS[0]}`, url: SAMPLE_IMAGE_PRESETS[0], isObjectUrl: false },
-      { id: `default-1-${SAMPLE_IMAGE_PRESETS[1]}`, url: SAMPLE_IMAGE_PRESETS[1], isObjectUrl: false },
-    ];
+    return [];
   });
 
   const [fileError, setFileError] = useState<string | null>(null);
+  const [isSubmittingAsync, setIsSubmittingAsync] = useState(false);
 
   const {
     register,
     handleSubmit,
     setValue,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<IHomestayFormData>({
     resolver: yupResolver(homestaySchema),
     defaultValues: {
       name: initialData?.name || "",
-      location: initialData?.location || "",
+      address: initialData?.address || initialData?.location || "",
+      location: initialData?.address || initialData?.location || "",
       description: initialData?.description || "",
-      images: initialData?.images || [SAMPLE_IMAGE_PRESETS[0], SAMPLE_IMAGE_PRESETS[1]],
+      images: initialData?.images || [],
       price: initialData?.price || "",
-      googleMapLink: initialData?.googleMapLink ?? "",
+      googleMapsUrl: initialData?.googleMapsUrl || initialData?.googleMapLink || "",
+      googleMapLink: initialData?.googleMapsUrl || initialData?.googleMapLink || "",
     },
   });
 
   // Sync image items to form on change
-  const syncImagesToForm = (items: ImageItem[]) => {
+  const syncImagesToForm = (items: ImageItemUI[]) => {
     const urls = items.map((item) => item.url);
     setValue("images", urls, { shouldValidate: true });
   };
@@ -96,24 +104,21 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
     };
   }, [imageItems]);
 
-  // Handle file selection from input
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
+  // Process array of File objects (from click input or drag-and-drop)
+  const processFiles = (files: FileList | File[]) => {
     if (!files || files.length === 0) return;
 
     setFileError(null);
-    const newItems: ImageItem[] = [];
+    const newItems: ImageItemUI[] = [];
     let hasTypeError = false;
 
     Array.from(files).forEach((file) => {
-      // Validate file type
       const validTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
       if (!validTypes.includes(file.type.toLowerCase())) {
         hasTypeError = true;
         return;
       }
 
-      // Check duplicates by file name & size
       const isDuplicate = imageItems.some(
         (item) => item.file && item.file.name === file.name && item.file.size === file.size
       );
@@ -133,13 +138,58 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
     }
 
     if (newItems.length > 0) {
-      const updated = [...imageItems, ...newItems];
-      setImageItems(updated);
-      syncImagesToForm(updated);
+      setImageItems((prev) => {
+        const updated = [...prev, ...newItems];
+        syncImagesToForm(updated);
+        return updated;
+      });
     }
+  };
 
+  // Handle file selection from input
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      processFiles(files);
+    }
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+  };
+
+  // Drag and drop handlers
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isSubmittingAsync) setIsDragging(true);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isSubmittingAsync) {
+      e.dataTransfer.dropEffect = "copy";
+      if (!isDragging) setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (isSubmittingAsync) return;
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFiles(e.dataTransfer.files);
     }
   };
 
@@ -156,22 +206,39 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
   };
 
   // Form submit
-  const handleFormSubmit = (data: IHomestayFormData) => {
-    const finalImages = imageItems.map((item) => item.url);
-    if (finalImages.length === 0) {
-      setFileError("Vui lòng chọn ít nhất 1 hình ảnh cho homestay.");
-      return;
+  const handleFormSubmit = async (data: IHomestayFormData) => {
+    const finalImageUrls = imageItems.map((item) => item.url);
+    const finalImageItems: IHomestayFormImageItem[] = imageItems.map((item) => ({
+      id: item.id,
+      url: item.url,
+      file: item.file,
+      isObjectUrl: item.isObjectUrl,
+      imagePath: item.imagePath,
+    }));
+
+    const rawMapUrl = typeof data.googleMapsUrl === "string" ? data.googleMapsUrl : data.googleMapLink ?? "";
+    const mapUrlValue = rawMapUrl.trim() ? rawMapUrl.trim() : null;
+
+    setIsSubmittingAsync(true);
+    try {
+      await handleExternalSubmit({
+        ...data,
+        address: data.address || data.location || "",
+        location: data.address || data.location || "",
+        googleMapsUrl: mapUrlValue,
+        googleMapLink: mapUrlValue,
+        images: finalImageUrls,
+        imageItems: finalImageItems,
+      });
+    } finally {
+      setIsSubmittingAsync(false);
     }
-    handleExternalSubmit({
-      ...data,
-      images: finalImages,
-    });
   };
 
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={isSubmittingAsync ? undefined : onClose}
       maxWidth="md"
       fullWidth
       slotProps={{
@@ -194,7 +261,12 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
         <Typography variant="h6" sx={{ fontWeight: 700, color: "#172033" }}>
           {isEdit ? "Chỉnh Sửa Homestay" : "Thêm Homestay Mới"}
         </Typography>
-        <IconButton onClick={onClose} size="small" aria-label="close modal">
+        <IconButton
+          onClick={onClose}
+          disabled={isSubmittingAsync}
+          size="small"
+          aria-label="close modal"
+        >
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
@@ -212,72 +284,121 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
               error={!!errors.name}
               helperText={errors.name?.message}
               size="small"
+              disabled={isSubmittingAsync}
             />
 
-            {/* 2. Location */}
+            {/* 2. Address / Location */}
             <TextField
               required
               fullWidth
               label="Địa Điểm / Địa Chỉ"
               placeholder="Nhập địa chỉ hoặc vị trí (ví dụ: Đà Lạt, Lâm Đồng)"
-              {...register("location")}
-              error={!!errors.location}
-              helperText={errors.location?.message}
+              {...register("address")}
+              error={!!errors.address}
+              helperText={errors.address?.message}
               size="small"
+              disabled={isSubmittingAsync}
             />
 
             {/* 3. Description (Multiline, optional) */}
             <TextField
               fullWidth
               multiline
-              rows={4}
+              rows={3}
               label="Mô Tả Chi Tiết (tùy chọn)"
               placeholder="Nhập thông tin chi tiết về homestay (tiện nghi, điểm nổi bật...)"
               {...register("description")}
               error={!!errors.description}
               helperText={errors.description?.message}
               size="small"
+              disabled={isSubmittingAsync}
             />
 
-            {/* 4. Price (optional string) */}
+            {/* 4. Price (string input, optional) */}
             <TextField
               fullWidth
-              label="Giá Thuê (tùy chọn)"
-              placeholder="Ví dụ: 100k → 500k, 2.500.000đ / đêm"
+              label="Giá Thuê (dạng chuỗi chữ, tùy chọn)"
+              placeholder="Ví dụ: 500.000đ, 100k → 500k, 1,500,000 VND"
               {...register("price")}
               error={!!errors.price}
-              helperText={errors.price?.message}
+              helperText={
+                errors.price?.message ??
+                "Nhập chuỗi văn bản tự do. Giá sẽ được lưu giữ chính xác theo chuỗi bạn nhập."
+              }
               size="small"
+              disabled={isSubmittingAsync}
             />
 
-            {/* 5. Google Map Link (optional, nullable) */}
+            {/* 5. Google Maps URL (optional) */}
             <TextField
               fullWidth
               label="Link Google Map (tùy chọn)"
               placeholder="https://maps.google.com/?q=..."
-              {...register("googleMapLink")}
-              error={!!errors.googleMapLink}
-              helperText={errors.googleMapLink?.message ?? "Để trống nếu chưa có"}
+              {...register("googleMapsUrl")}
+              error={!!errors.googleMapsUrl}
+              helperText={errors.googleMapsUrl?.message ?? "Để trống nếu chưa có"}
               size="small"
+              disabled={isSubmittingAsync}
             />
 
-            {/* 4. Unified Multiple Image Section */}
+            {/* 6. Multiple Image Section (Drag & Drop enabled, Supabase Storage) */}
             <Box>
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#334155" }}>
-                  Hình Ảnh Homestay (Chọn nhiều ảnh)
-                </Typography>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<CloudUploadIcon />}
-                  onClick={() => fileInputRef.current?.click()}
-                  sx={{ textTransform: "none", fontWeight: 600, borderRadius: "8px" }}
-                >
-                  Chọn Ảnh Từ Máy
-                </Button>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#334155", mb: 1 }}>
+                Hình Ảnh Homestay (Upload lên Supabase Storage)
+              </Typography>
 
-                {/* Hidden File Input */}
+              {/* Drag & Drop Dropzone */}
+              <Paper
+                elevation={0}
+                onDragEnter={handleDragEnter}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => !isSubmittingAsync && fileInputRef.current?.click()}
+                sx={{
+                  p: 3,
+                  textAlign: "center",
+                  borderRadius: "12px",
+                  border: `2px dashed ${isDragging ? "#2563EB" : "#CBD5E1"}`,
+                  bgcolor: isDragging ? "#EFF6FF" : "#F8FAFC",
+                  cursor: isSubmittingAsync ? "not-allowed" : "pointer",
+                  transition: "all 0.2s ease-in-out",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 0.8,
+                  mb: 2,
+                  "&:hover": {
+                    borderColor: isSubmittingAsync ? "#CBD5E1" : "#2563EB",
+                    bgcolor: isSubmittingAsync ? "#F8FAFC" : "#F1F5F9",
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: "50%",
+                    bgcolor: isDragging ? "#DBEAFE" : "#E2E8F0",
+                    color: isDragging ? "#2563EB" : "#64748B",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  <CloudUploadIcon sx={{ fontSize: 24 }} />
+                </Box>
+                <Typography variant="body2" sx={{ fontWeight: 700, color: isDragging ? "#1D4ED8" : "#334155" }}>
+                  {isDragging
+                    ? "Thả các tệp hình ảnh vào đây..."
+                    : "Kéo & thả nhiều hình ảnh vào đây hoặc nhấp để chọn tệp"}
+                </Typography>
+                <Typography variant="caption" sx={{ color: "#64748B" }}>
+                  Hỗ trợ chọn hoặc kéo thả 1 lúc nhiều tệp (PNG, JPG, JPEG, WebP)
+                </Typography>
+
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -286,7 +407,7 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                   style={{ display: "none" }}
                   onChange={handleFileSelect}
                 />
-              </Box>
+              </Paper>
 
               {fileError && (
                 <Alert severity="error" sx={{ mb: 2, borderRadius: "8px", fontSize: "0.85rem" }}>
@@ -294,14 +415,8 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                 </Alert>
               )}
 
-              {errors.images && !fileError && (
-                <Alert severity="error" sx={{ mb: 2, borderRadius: "8px", fontSize: "0.85rem" }}>
-                  {errors.images.message}
-                </Alert>
-              )}
-
               {/* Image Previews Grid */}
-              {imageItems.length > 0 ? (
+              {imageItems.length > 0 && (
                 <Box
                   sx={{
                     display: "grid",
@@ -311,7 +426,7 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                     bgcolor: "#F8FAFC",
                     borderRadius: "12px",
                     border: "1px solid #E2E8F0",
-                    maxHeight: 280,
+                    maxHeight: 240,
                     overflowY: "auto",
                   }}
                 >
@@ -366,7 +481,11 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                         <IconButton
                           size="small"
                           className="remove-btn"
-                          onClick={() => handleRemoveImage(item.id)}
+                          disabled={isSubmittingAsync}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveImage(item.id);
+                          }}
                           sx={{
                             position: "absolute",
                             top: 4,
@@ -388,48 +507,32 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                     </Paper>
                   ))}
                 </Box>
-              ) : (
-                <Paper
-                  elevation={0}
-                  onClick={() => fileInputRef.current?.click()}
-                  sx={{
-                    p: 4,
-                    textAlign: "center",
-                    borderRadius: "12px",
-                    border: "2px dashed #CBD5E1",
-                    bgcolor: "#F8FAFC",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    "&:hover": {
-                      borderColor: "#2563EB",
-                      bgcolor: "#EFF6FF",
-                    },
-                  }}
-                >
-                  <PhotoLibraryIcon sx={{ fontSize: 40, color: "#94A3B8", mb: 1 }} />
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: "#334155" }}>
-                    Chưa chọn hình ảnh nào
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: "#64748B" }}>
-                    Nhấp vào đây để chọn tệp hình ảnh (PNG, JPG, JPEG, WebP)
-                  </Typography>
-                </Paper>
               )}
             </Box>
           </Box>
         </DialogContent>
 
         <DialogActions sx={{ px: 3, py: 2 }}>
-          <Button onClick={onClose} variant="outlined" color="inherit">
+          <Button
+            onClick={onClose}
+            variant="outlined"
+            color="inherit"
+            disabled={isSubmittingAsync}
+          >
             Hủy Bỏ
           </Button>
           <Button
             type="submit"
             variant="contained"
             color="primary"
-            disabled={isSubmitting}
+            disabled={isSubmittingAsync}
+            startIcon={isSubmittingAsync ? <CircularProgress size={16} color="inherit" /> : null}
           >
-            {isEdit ? "Cập Nhật Homestay" : "Tạo Homestay"}
+            {isSubmittingAsync
+              ? "Đang lưu..."
+              : isEdit
+              ? "Cập Nhật Homestay"
+              : "Tạo Homestay"}
           </Button>
         </DialogActions>
       </Box>
