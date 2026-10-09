@@ -188,13 +188,17 @@ export const AdminHomestayPage: React.FC = () => {
   };
 
   // Handle Form Submit (Create or Update with Supabase Storage)
-  const handleFormSubmit = async (formData: IHomestayFormData) => {
+  const handleFormSubmit = async (
+    formData: IHomestayFormData,
+    onProgress?: (completed: number, total: number) => void,
+  ) => {
     if (selectedHomestay) {
       // Edit mode
       const { data, error } = await homestayService.updateHomestay(
         selectedHomestay.id,
         formData,
         selectedHomestay.imageRecords || [],
+        onProgress,
       );
 
       if (error) {
@@ -208,7 +212,10 @@ export const AdminHomestayPage: React.FC = () => {
       );
     } else {
       // Create mode
-      const { data, error } = await homestayService.createHomestay(formData);
+      const { data, error } = await homestayService.createHomestay(
+        formData,
+        onProgress,
+      );
 
       if (error) {
         handleShowSnackbar(error, "error");

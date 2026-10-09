@@ -313,34 +313,88 @@ export async function getHomestayById(
 }
 
 /**
- * Create a new homestay and upload images to Supabase Storage.
- *
- * Sequence:
- * 1. Insert main record into public.homestays -> get generated homestay ID.
- * 2. Upload any local File objects to 'homestay-images' bucket (path: homestays/{id}/{fileName}).
- * 3. Save uploaded storage paths into public.homestay_images.image_path.
- * 4. Never save blob: URLs into the database.
+ * Upload multiple files with bounded concurrency (default max 5 parallel uploads).
+ * Calls onProgress callback after each completed file.
+ */
+export async function uploadFilesConcurrently(
+  filesToUpload: { item: IHomestayFormImageItem; file: File }[],
+  homestayId: number,
+  concurrencyLimit: number = 5,
+  onProgress?: (completed: number, total: number) => void
+): Promise<{
+  successful: { item: IHomestayFormImageItem; path: string }[];
+  failed: { item: IHomestayFormImageItem; error: string }[];
+}> {
+  const successful: { item: IHomestayFormImageItem; path: string }[] = [];
+  const failed: { item: IHomestayFormImageItem; error: string }[] = [];
+  let completedCount = 0;
+  const total = filesToUpload.length;
+
+  if (total === 0) {
+    return { successful, failed };
+  }
+
+  let index = 0;
+
+  async function worker() {
+    while (index < filesToUpload.length) {
+      const currentIdx = index++;
+      const { item, file } = filesToUpload[currentIdx];
+
+      const res = await uploadImageToStorage(file, homestayId);
+      completedCount++;
+      if (onProgress) {
+        onProgress(completedCount, total);
+      }
+
+      if (res.error || !res.path) {
+        failed.push({ item, error: res.error || `Tải ảnh ${file.name} thất bại.` });
+      } else {
+        successful.push({ item, path: res.path });
+      }
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(concurrencyLimit, total) }, () => worker());
+  await Promise.all(workers);
+
+  return { successful, failed };
+}
+
+/**
+ * Create a new homestay record, upload images to Supabase Storage, and insert image metadata.
  */
 export async function createHomestay(
-  formData: IHomestayFormData
+  formData: IHomestayFormData,
+  onProgress?: (completed: number, total: number) => void
 ): Promise<{ data: IHomestayItem | null; error: string | null }> {
   try {
     const baseUrl = getBaseUrl();
-    const url = `${baseUrl}/rest/v1/homestays`;
+    const imageItems: IHomestayFormImageItem[] = formData.imageItems || [];
 
-    // 1. Insert main record into public.homestays
+    // Validation: max 50 images per homestay
+    if (imageItems.length > 50) {
+      return {
+        data: null,
+        error: "Homestay chỉ được phép có tối đa 50 hình ảnh. Vui lòng giảm số lượng ảnh trước khi tiếp tục.",
+      };
+    }
+
+    // 1. Insert main homestay record
     const payload = {
       name: formData.name.trim(),
       address: formData.address.trim(),
       description: formData.description?.trim() || null,
       price: formData.price?.trim() || null,
       google_maps_url: formData.googleMapsUrl?.trim() || null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
     const headers = getHeaders(true);
     headers["Prefer"] = "return=representation";
 
-    const response = await fetch(url, {
+    const response = await fetch(`${baseUrl}/rest/v1/homestays`, {
       method: "POST",
       headers,
       body: JSON.stringify(payload),
@@ -372,42 +426,49 @@ export async function createHomestay(
     const createdHomestay = insertedRows[0];
     const homestayId = createdHomestay.id;
 
-    // 2. Process image items (upload local files to Storage & gather storage paths)
-    const imageItems: IHomestayFormImageItem[] = formData.imageItems || [];
-    const imagePathsToInsert: string[] = [];
+    // 2. Separate items with File objects for bounded concurrent uploading
+    const filesToUpload = imageItems
+      .filter((item): item is IHomestayFormImageItem & { file: File } => Boolean(item.file))
+      .map((item) => ({ item, file: item.file }));
 
-    for (const item of imageItems) {
-      if (item.file) {
-        // Upload local File object to Supabase Storage
-        const uploadRes = await uploadImageToStorage(item.file, homestayId);
-        if (uploadRes.error || !uploadRes.path) {
-          // Rollback: delete created homestay to prevent inconsistent state
-          await deleteHomestay(homestayId);
-          return {
-            data: null,
-            error: uploadRes.error || "Tải ảnh lên Supabase Storage thất bại.",
-          };
-        }
-        imagePathsToInsert.push(uploadRes.path);
-      } else if (item.imagePath && !item.imagePath.startsWith("blob:")) {
-        imagePathsToInsert.push(item.imagePath);
-      } else if (item.url && !item.url.startsWith("blob:")) {
-        imagePathsToInsert.push(item.url);
+    const existingPaths = imageItems
+      .filter((item) => !item.file && item.imagePath && !item.imagePath.startsWith("blob:"))
+      .map((item) => item.imagePath as string);
+
+    // Perform bulk upload with max 5 concurrent requests
+    const uploadResult = await uploadFilesConcurrently(filesToUpload, homestayId, 5, onProgress);
+
+    // If any upload fails during creation, clean up newly uploaded files & delete created homestay
+    if (uploadResult.failed.length > 0) {
+      const successfulPaths = uploadResult.successful.map((s) => s.path);
+      if (successfulPaths.length > 0) {
+        await deleteStorageFiles(successfulPaths);
       }
+      await deleteHomestay(homestayId);
+
+      return {
+        data: null,
+        error: `Tải ảnh lên Supabase Storage thất bại cho ${uploadResult.failed.length}/${filesToUpload.length} tệp. Vui lòng thử lại.`,
+      };
     }
 
+    const allPathsToInsert = [
+      ...existingPaths,
+      ...uploadResult.successful.map((s) => s.path),
+    ];
+
     // Fallback: check string array if imageItems wasn't provided
-    if (imageItems.length === 0 && formData.images && formData.images.length > 0) {
+    if (allPathsToInsert.length === 0 && formData.images && formData.images.length > 0) {
       for (const url of formData.images) {
         if (url && !url.startsWith("blob:")) {
-          imagePathsToInsert.push(url);
+          allPathsToInsert.push(url);
         }
       }
     }
 
     // 3. Insert valid non-blob image paths into public.homestay_images
-    if (imagePathsToInsert.length > 0) {
-      const imagesPayload = imagePathsToInsert.map((path) => ({
+    if (allPathsToInsert.length > 0) {
+      const imagesPayload = allPathsToInsert.map((path) => ({
         homestay_id: homestayId,
         image_path: path,
       }));
@@ -442,11 +503,20 @@ export async function createHomestay(
 export async function updateHomestay(
   id: number,
   formData: IHomestayFormData,
-  existingImageRecords: HomestayImage[] = []
+  existingImageRecords: HomestayImage[] = [],
+  onProgress?: (completed: number, total: number) => void
 ): Promise<{ data: IHomestayItem | null; error: string | null }> {
   try {
     const baseUrl = getBaseUrl();
-    const url = `${baseUrl}/rest/v1/homestays?id=eq.${id}`;
+    const imageItems: IHomestayFormImageItem[] = formData.imageItems || [];
+
+    // Validation: max 50 images per homestay
+    if (imageItems.length > 50) {
+      return {
+        data: null,
+        error: "Homestay chỉ được phép có tối đa 50 hình ảnh. Vui lòng giảm số lượng ảnh trước khi tiếp tục.",
+      };
+    }
 
     // 1. Update main homestay record
     const payload = {
@@ -461,7 +531,7 @@ export async function updateHomestay(
     const headers = getHeaders(true);
     headers["Prefer"] = "return=representation";
 
-    const response = await fetch(url, {
+    const response = await fetch(`${baseUrl}/rest/v1/homestays?id=eq.${id}`, {
       method: "PATCH",
       headers,
       body: JSON.stringify(payload),
@@ -482,35 +552,38 @@ export async function updateHomestay(
       return { data: null, error: `Không thể cập nhật homestay (${response.status}).` };
     }
 
-    // 2. Process image changes
-    const imageItems: IHomestayFormImageItem[] = formData.imageItems || [];
-    const newStoragePathsToInsert: string[] = [];
+    // 2. Upload newly added File objects with concurrency = 5
+    const filesToUpload = imageItems
+      .filter((item): item is IHomestayFormImageItem & { file: File } => Boolean(item.file))
+      .map((item) => ({ item, file: item.file }));
 
-    // Upload newly added File objects to Supabase Storage
-    for (const item of imageItems) {
-      if (item.file) {
-        const uploadRes = await uploadImageToStorage(item.file, id);
-        if (uploadRes.error || !uploadRes.path) {
-          return {
-            data: null,
-            error: uploadRes.error || "Tải ảnh mới lên Supabase Storage thất bại.",
-          };
-        }
-        newStoragePathsToInsert.push(uploadRes.path);
+    const uploadResult = await uploadFilesConcurrently(filesToUpload, id, 5, onProgress);
+
+    // If any new upload fails, preserve existing images intact and report error without deleting existing images!
+    if (uploadResult.failed.length > 0) {
+      const newPathsToClean = uploadResult.successful.map((s) => s.path);
+      if (newPathsToClean.length > 0) {
+        await deleteStorageFiles(newPathsToClean);
       }
+
+      return {
+        data: null,
+        error: `Tải ảnh mới lên Supabase Storage thất bại cho ${uploadResult.failed.length}/${filesToUpload.length} tệp. Các ảnh cũ được giữ nguyên. Vui lòng thử lại.`,
+      };
     }
+
+    const newStoragePathsToInsert = uploadResult.successful.map((s) => s.path);
 
     // Determine kept image paths / URLs
     const keptPaths = imageItems
       .map((item) => item.imagePath || item.url)
       .filter((p): p is string => Boolean(p) && !p.startsWith("blob:"));
 
-    // Also include strings from formData.images if present
     const formDataImagesClean = (formData.images || []).filter(
       (img) => Boolean(img) && !img.startsWith("blob:")
     );
 
-    // Identify records to remove from DB and Storage
+    // Identify existing records explicitly removed by the user
     const recordsToDelete = existingImageRecords.filter((rec) => {
       const publicUrl = getPublicImageUrl(rec.imagePath);
       const isKept =

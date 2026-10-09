@@ -13,6 +13,8 @@ import {
   Paper,
   Alert,
   CircularProgress,
+  Chip,
+  LinearProgress,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
@@ -30,7 +32,10 @@ export interface HomestayFormDialogProps {
   open: boolean;
   initialData?: IHomestayItem | null;
   onClose: () => void;
-  onSubmit: (data: IHomestayFormData) => Promise<void> | void;
+  onSubmit: (
+    data: IHomestayFormData,
+    onProgress?: (completed: number, total: number) => void
+  ) => Promise<void> | void;
 }
 
 interface ImageItemUI {
@@ -104,15 +109,29 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
     };
   }, [imageItems]);
 
+  const [uploadProgress, setUploadProgress] = useState<{ completed: number; total: number } | null>(null);
+
   // Process array of File objects (from click input or drag-and-drop)
   const processFiles = (files: FileList | File[]) => {
     if (!files || files.length === 0) return;
 
     setFileError(null);
+    const filesArray = Array.from(files);
+
+    if (imageItems.length >= 50) {
+      setFileError("Homestay chỉ được phép có tối đa 50 hình ảnh. Vui lòng giảm số lượng ảnh trước khi tiếp tục.");
+      return;
+    }
+
+    if (imageItems.length + filesArray.length > 50) {
+      setFileError("Homestay chỉ được phép có tối đa 50 hình ảnh. Vui lòng giảm số lượng ảnh trước khi tiếp tục.");
+      return;
+    }
+
     const newItems: ImageItemUI[] = [];
     let hasTypeError = false;
 
-    Array.from(files).forEach((file) => {
+    filesArray.forEach((file) => {
       const validTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
       if (!validTypes.includes(file.type.toLowerCase())) {
         hasTypeError = true;
@@ -134,7 +153,7 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
     });
 
     if (hasTypeError) {
-      setFileError("Vui lòng chỉ chọn tệp hình ảnh có định dạng PNG, JPG, JPEG hoặc WebP.");
+      setFileError("Định dạng tệp không được hỗ trợ. Vui lòng chỉ chọn các hình ảnh có định dạng PNG, JPG, JPEG hoặc WebP.");
     }
 
     if (newItems.length > 0) {
@@ -163,13 +182,13 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isSubmittingAsync) setIsDragging(true);
+    if (!isSubmittingAsync && imageItems.length < 50) setIsDragging(true);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isSubmittingAsync) {
+    if (!isSubmittingAsync && imageItems.length < 50) {
       e.dataTransfer.dropEffect = "copy";
       if (!isDragging) setIsDragging(true);
     }
@@ -188,6 +207,11 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
     setIsDragging(false);
     if (isSubmittingAsync) return;
 
+    if (imageItems.length >= 50) {
+      setFileError("Homestay chỉ được phép có tối đa 50 hình ảnh. Vui lòng giảm số lượng ảnh trước khi tiếp tục.");
+      return;
+    }
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       processFiles(e.dataTransfer.files);
     }
@@ -195,6 +219,7 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
 
   // Remove individual image
   const handleRemoveImage = (idToRemove: string) => {
+    setFileError(null);
     const itemToRemove = imageItems.find((item) => item.id === idToRemove);
     if (itemToRemove && itemToRemove.isObjectUrl) {
       URL.revokeObjectURL(itemToRemove.url);
@@ -207,6 +232,11 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
 
   // Form submit
   const handleFormSubmit = async (data: IHomestayFormData) => {
+    if (imageItems.length > 50) {
+      setFileError("Homestay chỉ được phép có tối đa 50 hình ảnh. Vui lòng giảm số lượng ảnh trước khi tiếp tục.");
+      return;
+    }
+
     const finalImageUrls = imageItems.map((item) => item.url);
     const finalImageItems: IHomestayFormImageItem[] = imageItems.map((item) => ({
       id: item.id,
@@ -220,18 +250,25 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
     const mapUrlValue = rawMapUrl.trim() ? rawMapUrl.trim() : null;
 
     setIsSubmittingAsync(true);
+    setUploadProgress(null);
     try {
-      await handleExternalSubmit({
-        ...data,
-        address: data.address || data.location || "",
-        location: data.address || data.location || "",
-        googleMapsUrl: mapUrlValue,
-        googleMapLink: mapUrlValue,
-        images: finalImageUrls,
-        imageItems: finalImageItems,
-      });
+      await handleExternalSubmit(
+        {
+          ...data,
+          address: data.address || data.location || "",
+          location: data.address || data.location || "",
+          googleMapsUrl: mapUrlValue,
+          googleMapLink: mapUrlValue,
+          images: finalImageUrls,
+          imageItems: finalImageItems,
+        },
+        (completed, total) => {
+          setUploadProgress({ completed, total });
+        }
+      );
     } finally {
       setIsSubmittingAsync(false);
+      setUploadProgress(null);
     }
   };
 
@@ -341,11 +378,19 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
               disabled={isSubmittingAsync}
             />
 
-            {/* 6. Multiple Image Section (Drag & Drop enabled, Supabase Storage) */}
+            {/* 6. Multiple Image Section (Drag & Drop enabled, Supabase Storage, Max 50) */}
             <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#334155", mb: 1 }}>
-                Hình Ảnh Homestay (Upload lên Supabase Storage)
-              </Typography>
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#334155" }}>
+                  Hình Ảnh Homestay (Upload lên Supabase Storage)
+                </Typography>
+                <Chip
+                  label={`${imageItems.length}/50 ảnh`}
+                  size="small"
+                  color={imageItems.length > 50 ? "error" : imageItems.length === 50 ? "warning" : "default"}
+                  sx={{ fontWeight: 700, fontSize: "0.75rem", borderRadius: "6px" }}
+                />
+              </Box>
 
               {/* Drag & Drop Dropzone */}
               <Paper
@@ -354,14 +399,16 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                onClick={() => !isSubmittingAsync && fileInputRef.current?.click()}
+                onClick={() => !isSubmittingAsync && imageItems.length < 50 && fileInputRef.current?.click()}
                 sx={{
                   p: 3,
                   textAlign: "center",
                   borderRadius: "12px",
-                  border: `2px dashed ${isDragging ? "#2563EB" : "#CBD5E1"}`,
-                  bgcolor: isDragging ? "#EFF6FF" : "#F8FAFC",
-                  cursor: isSubmittingAsync ? "not-allowed" : "pointer",
+                  border: `2px dashed ${
+                    imageItems.length >= 50 ? "#CBD5E1" : isDragging ? "#2563EB" : "#CBD5E1"
+                  }`,
+                  bgcolor: imageItems.length >= 50 ? "#F1F5F9" : isDragging ? "#EFF6FF" : "#F8FAFC",
+                  cursor: isSubmittingAsync || imageItems.length >= 50 ? "not-allowed" : "pointer",
                   transition: "all 0.2s ease-in-out",
                   display: "flex",
                   flexDirection: "column",
@@ -370,8 +417,8 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                   gap: 0.8,
                   mb: 2,
                   "&:hover": {
-                    borderColor: isSubmittingAsync ? "#CBD5E1" : "#2563EB",
-                    bgcolor: isSubmittingAsync ? "#F8FAFC" : "#F1F5F9",
+                    borderColor: isSubmittingAsync || imageItems.length >= 50 ? "#CBD5E1" : "#2563EB",
+                    bgcolor: isSubmittingAsync || imageItems.length >= 50 ? "#F1F5F9" : "#F1F5F9",
                   },
                 }}
               >
@@ -380,8 +427,8 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                     width: 44,
                     height: 44,
                     borderRadius: "50%",
-                    bgcolor: isDragging ? "#DBEAFE" : "#E2E8F0",
-                    color: isDragging ? "#2563EB" : "#64748B",
+                    bgcolor: imageItems.length >= 50 ? "#E2E8F0" : isDragging ? "#DBEAFE" : "#E2E8F0",
+                    color: imageItems.length >= 50 ? "#94A3B8" : isDragging ? "#2563EB" : "#64748B",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -391,12 +438,16 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                   <CloudUploadIcon sx={{ fontSize: 24 }} />
                 </Box>
                 <Typography variant="body2" sx={{ fontWeight: 700, color: isDragging ? "#1D4ED8" : "#334155" }}>
-                  {isDragging
+                  {imageItems.length >= 50
+                    ? "Đã đạt giới hạn tối đa 50 hình ảnh"
+                    : isDragging
                     ? "Thả các tệp hình ảnh vào đây..."
                     : "Kéo & thả nhiều hình ảnh vào đây hoặc nhấp để chọn tệp"}
                 </Typography>
                 <Typography variant="caption" sx={{ color: "#64748B" }}>
-                  Hỗ trợ chọn hoặc kéo thả 1 lúc nhiều tệp (PNG, JPG, JPEG, WebP)
+                  {imageItems.length >= 50
+                    ? "Vui lòng xóa bớt ảnh trước khi thêm mới"
+                    : "Cho phép chọn hoặc kéo thả 1 lúc tối đa 50 tệp (PNG, JPG, JPEG, WebP)"}
                 </Typography>
 
                 <input
@@ -406,8 +457,23 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                   accept="image/png,image/jpeg,image/webp,image/jpg"
                   style={{ display: "none" }}
                   onChange={handleFileSelect}
+                  disabled={isSubmittingAsync || imageItems.length >= 50}
                 />
               </Paper>
+
+              {uploadProgress && uploadProgress.total > 0 && (
+                <Box sx={{ mb: 2, p: 1.5, bgcolor: "#EFF6FF", borderRadius: "8px", border: "1px solid #BFDBFE" }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: "#1E40AF", mb: 0.5 }}>
+                    Đang tải ảnh lên Supabase Storage... {uploadProgress.completed}/{uploadProgress.total} tệp (
+                    {Math.round((uploadProgress.completed / uploadProgress.total) * 100)}%)
+                  </Typography>
+                  <LinearProgress
+                    variant="determinate"
+                    value={(uploadProgress.completed / uploadProgress.total) * 100}
+                    sx={{ height: 6, borderRadius: 3 }}
+                  />
+                </Box>
+              )}
 
               {fileError && (
                 <Alert severity="error" sx={{ mb: 2, borderRadius: "8px", fontSize: "0.85rem" }}>
@@ -525,11 +591,13 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
             type="submit"
             variant="contained"
             color="primary"
-            disabled={isSubmittingAsync}
+            disabled={isSubmittingAsync || imageItems.length > 50}
             startIcon={isSubmittingAsync ? <CircularProgress size={16} color="inherit" /> : null}
           >
             {isSubmittingAsync
-              ? "Đang lưu..."
+              ? uploadProgress && uploadProgress.total > 0
+                ? `Đang tải ảnh (${uploadProgress.completed}/${uploadProgress.total})...`
+                : "Đang lưu..."
               : isEdit
               ? "Cập Nhật Homestay"
               : "Tạo Homestay"}

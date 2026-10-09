@@ -19,9 +19,13 @@ export const homestaySchema: ObjectSchema<IHomestayFormData> = object().shape({
   description: string().trim().nullable().optional(),
   images: array()
     .of(string().required())
+    .max(50, "Homestay chỉ được phép có tối đa 50 hình ảnh. Vui lòng giảm số lượng ảnh trước khi tiếp tục.")
     .optional()
     .default([]),
-  imageItems: array().of(imageItemSchema).optional(),
+  imageItems: array()
+    .of(imageItemSchema)
+    .max(50, "Homestay chỉ được phép có tối đa 50 hình ảnh. Vui lòng giảm số lượng ảnh trước khi tiếp tục.")
+    .optional(),
   price: string().trim().nullable().optional(),
   // Allow empty string or null; only validate URL format if a non-empty value is entered
   googleMapsUrl: string()
