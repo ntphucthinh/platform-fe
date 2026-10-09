@@ -21,6 +21,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate } from "react-router-dom";
 import type { HttpError } from "@refinedev/core";
+import { setAdminAuthenticated } from "@/utils/auth";
 import { loginSchema } from "@/schemas/auth/loginSchema";
 import type { ILoginFormData } from "@/types/pages/auth/login";
 
@@ -46,7 +47,8 @@ export const Login: React.FC = () => {
     try {
       setErrorMsg(null);
       console.log("Login attempt:", data);
-      navigate("/");
+      setAdminAuthenticated(true);
+      navigate("/admin/homestay");
     } catch (err: unknown) {
       const error = err as HttpError;
 

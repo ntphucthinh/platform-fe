@@ -19,6 +19,8 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useNavigate } from "react-router-dom";
 import { HeaderTitleContext } from "@/components/ui/header/headerTitleContext";
 
+import { setAdminAuthenticated } from "@/utils/auth";
+
 export interface HeaderProps {
   onToggleSidebar: () => void;
 }
@@ -34,7 +36,8 @@ export const Header = ({ onToggleSidebar }: HeaderProps) => {
   const handleCloseUserMenu = () => setAnchorEl(null);
   const handleLogout = () => {
     handleCloseUserMenu();
-    navigate("/login");
+    setAdminAuthenticated(false);
+    navigate("/admin/login");
   };
 
   return (

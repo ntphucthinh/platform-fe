@@ -3,7 +3,7 @@ import type { ResourceProps } from '@refinedev/core';
 export const resources: ResourceProps[] = [
   {
     name: 'dashboard',
-    list: '/',
+    list: '/admin/dashboard',
     meta: {
       label: 'Tong quan',
     },
@@ -15,6 +15,13 @@ export const resources: ResourceProps[] = [
     edit: '/users/edit/:id',
     meta: {
       label: 'Nguoi dung',
+    },
+  },
+  {
+    name: 'homestay',
+    list: '/admin/homestay',
+    meta: {
+      label: 'Homestay',
     },
   },
 ];

@@ -12,6 +12,7 @@ import {
 } from '@mui/material'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import PeopleIcon from '@mui/icons-material/People'
+import CottageIcon from '@mui/icons-material/Cottage'
 import InventoryIcon from '@mui/icons-material/Inventory'
 import AssessmentIcon from '@mui/icons-material/Assessment'
 import SettingsIcon from '@mui/icons-material/Settings'
@@ -43,7 +44,8 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  { title: 'Dashboard', path: '/', icon: <DashboardIcon /> },
+  { title: 'Dashboard', path: '/admin/dashboard', icon: <DashboardIcon /> },
+  { title: 'Homestays', path: '/admin/homestay', icon: <CottageIcon /> },
   {
     title: 'Users',
     icon: <PeopleIcon />,
