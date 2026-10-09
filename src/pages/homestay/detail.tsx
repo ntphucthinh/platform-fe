@@ -182,42 +182,28 @@ export const HomestayDetailPage: React.FC = () => {
           )}
         </Box>
 
-        {/* Main Layout: Gallery + Info */}
-        <Grid container spacing={4}>
-          {/* Left: Gallery */}
-          <Grid size={{ xs: 12, lg: 8 }}>
-            <Box sx={{ mb: 4 }}>
-              <HomestayGallery
-                mainImage={
-                  homestay.mainImage ||
-                  (homestay.images && homestay.images.length > 0
-                    ? homestay.images[0]
-                    : DEFAULT_NO_IMAGE)
-                }
-                images={
-                  homestay.images && homestay.images.length > 0
-                    ? homestay.images
-                    : [DEFAULT_NO_IMAGE]
-                }
-                title={homestay.name}
-              />
-            </Box>
-
-            {/* Description — only show if present */}
-            {homestay.description && (
-              <Paper elevation={0} sx={{ p: 3.5, borderRadius: "16px", bgcolor: "#FFFFFF", border: "1px solid #E2E8F0", mb: 4 }}>
-                <Typography variant="h6" sx={{ fontWeight: 800, color: "#0F172A", mb: 1.5 }}>
-                  Giới thiệu về homestay này
-                </Typography>
-                <Typography variant="body1" sx={{ color: "#334155", lineHeight: 1.8, whiteSpace: "pre-line" }}>
-                  {homestay.description}
-                </Typography>
-              </Paper>
-            )}
+        {/* Main Layout: Gallery (Left) + Information Panel (Right) */}
+        <Grid container spacing={4} sx={{ alignItems: "flex-start" }}>
+          {/* Left Column: Image Gallery */}
+          <Grid size={{ xs: 12, lg: 7 }}>
+            <HomestayGallery
+              mainImage={
+                homestay.mainImage ||
+                (homestay.images && homestay.images.length > 0
+                  ? homestay.images[0]
+                  : DEFAULT_NO_IMAGE)
+              }
+              images={
+                homestay.images && homestay.images.length > 0
+                  ? homestay.images
+                  : [DEFAULT_NO_IMAGE]
+              }
+              title={homestay.name}
+            />
           </Grid>
 
-          {/* Right: Info Sidebar */}
-          <Grid size={{ xs: 12, lg: 4 }}>
+          {/* Right Column: Homestay Information */}
+          <Grid size={{ xs: 12, lg: 5 }}>
             <Paper
               elevation={0}
               sx={{
@@ -225,45 +211,87 @@ export const HomestayDetailPage: React.FC = () => {
                 borderRadius: "20px",
                 bgcolor: "#FFFFFF",
                 border: "1px solid #E2E8F0",
-                position: "sticky",
+                position: { lg: "sticky" },
                 top: 96,
                 boxShadow: "0 10px 25px -5px rgba(15, 23, 42, 0.05)",
                 display: "flex",
                 flexDirection: "column",
-                gap: 2.5,
+                gap: 3,
               }}
             >
-              {/* Giá thuê */}
-              {homestay.price ? (
+              {/* 1. Rental Price */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  p: 2.5,
+                  bgcolor: "#EFF6FF",
+                  borderRadius: "14px",
+                  border: "1px solid #DBEAFE",
+                }}
+              >
                 <Box
                   sx={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: "10px",
+                    bgcolor: "#2563EB",
+                    color: "#FFFFFF",
                     display: "flex",
                     alignItems: "center",
-                    gap: 1.5,
-                    p: 2,
-                    bgcolor: "#EFF6FF",
-                    borderRadius: "12px",
+                    justifyContent: "center",
+                    flexShrink: 0,
                   }}
                 >
-                  <AttachMoneyIcon sx={{ color: "#2563EB", fontSize: 26 }} />
-                  <Box>
-                    <Typography variant="caption" sx={{ color: "#64748B", fontWeight: 600, display: "block" }}>
-                      Giá thuê
-                    </Typography>
-                    <Typography sx={{ fontWeight: 800, fontSize: "1.15rem", color: "#2563EB", lineHeight: 1.3 }}>
-                      {homestay.price}
-                    </Typography>
-                  </Box>
+                  <AttachMoneyIcon sx={{ fontSize: 26 }} />
                 </Box>
-              ) : (
-                <Box sx={{ p: 2, bgcolor: "#F8FAFC", borderRadius: "12px", border: "1px dashed #CBD5E1" }}>
-                  <Typography variant="body2" sx={{ color: "#94A3B8", fontStyle: "italic", textAlign: "center" }}>
-                    Liên hệ để biết giá thuê
+                <Box>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "#64748B",
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.04em",
+                      display: "block",
+                    }}
+                  >
+                    Giá thuê
+                  </Typography>
+                  <Typography sx={{ fontWeight: 800, fontSize: "1.25rem", color: "#1D4ED8", lineHeight: 1.2 }}>
+                    {homestay.price && homestay.price.trim() !== ""
+                      ? homestay.price
+                      : "Liên hệ để biết giá"}
                   </Typography>
                 </Box>
-              )}
+              </Box>
 
-              {/* Google Map — only show if mapUrl is present */}
+              {/* 2. Homestay Description (Immediately below Price) */}
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 800, color: "#0F172A" }}>
+                  Giới thiệu về homestay
+                </Typography>
+                {homestay.description && homestay.description.trim() !== "" ? (
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "#334155",
+                      lineHeight: 1.75,
+                      whiteSpace: "pre-line",
+                      fontSize: "0.9375rem",
+                    }}
+                  >
+                    {homestay.description}
+                  </Typography>
+                ) : (
+                  <Typography variant="body2" sx={{ color: "#94A3B8", fontStyle: "italic" }}>
+                    Chưa có thông tin mô tả chi tiết cho homestay này.
+                  </Typography>
+                )}
+              </Box>
+
+              {/* 3. Google Maps Button (below Description, if mapUrl is available) */}
               {mapUrl && (
                 <Button
                   fullWidth
@@ -277,16 +305,17 @@ export const HomestayDetailPage: React.FC = () => {
                     borderRadius: "12px",
                     fontWeight: 700,
                     py: 1.4,
+                    fontSize: "0.9375rem",
                     borderColor: "#2563EB",
                     color: "#2563EB",
-                    "&:hover": { bgcolor: "#EFF6FF" },
+                    "&:hover": { bgcolor: "#EFF6FF", borderColor: "#1D4ED8" },
                   }}
                 >
                   Xem trên Google Map
                 </Button>
               )}
 
-              {/* Back to list */}
+              {/* 4. Explore-more Homestays Button */}
               <Button
                 fullWidth
                 variant="contained"
@@ -297,8 +326,10 @@ export const HomestayDetailPage: React.FC = () => {
                   borderRadius: "12px",
                   fontWeight: 700,
                   py: 1.5,
-                  fontSize: "1rem",
-                  boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)",
+                  fontSize: "0.9375rem",
+                  bgcolor: "#2563EB",
+                  boxShadow: "0 4px 14px rgba(37, 99, 235, 0.25)",
+                  "&:hover": { bgcolor: "#1D4ED8" },
                 }}
               >
                 Khám Phá Thêm Homestay

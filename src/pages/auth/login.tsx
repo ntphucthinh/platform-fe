@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -20,7 +20,7 @@ import {
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate } from "react-router-dom";
-import { setAdminAuthenticated } from "@/utils/auth";
+import { isAuthenticated, setAdminAuthenticated } from "@/utils/auth";
 import { loginWithEmail } from "@/services/authService";
 import { loginSchema } from "@/schemas/auth/loginSchema";
 import type { ILoginFormData } from "@/types/pages/auth/login";
@@ -30,6 +30,12 @@ export const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (isAuthenticated()) {
+      navigate("/admin/homestay", { replace: true });
+    }
+  }, [navigate]);
+
   const {
     register,
     handleSubmit,
@@ -37,8 +43,8 @@ export const Login: React.FC = () => {
   } = useForm<ILoginFormData>({
     resolver: yupResolver(loginSchema),
     defaultValues: {
-      email: "admin@platform.com",
-      password: "password123",
+      email: "",
+      password: "",
       rememberMe: false,
     },
   });
