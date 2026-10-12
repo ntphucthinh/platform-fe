@@ -17,12 +17,17 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
   images,
   title,
 }) => {
-  const validImages = (images || []).filter((img) => Boolean(img) && img.trim() !== "");
+  const validImages = (images || []).filter(
+    (img) => Boolean(img) && img.trim() !== "" && img !== DEFAULT_NO_IMAGE,
+  );
   const fallbackImage = mainImage || validImages[0] || DEFAULT_NO_IMAGE;
 
   // Deduplicate and prepare image list
   const allImages =
     validImages.length > 0 ? Array.from(new Set(validImages)) : [fallbackImage];
+
+  // True when gallery has no real images — only showing the placeholder
+  const isNoImage = allImages.length === 1 && allImages[0] === DEFAULT_NO_IMAGE;
 
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState<boolean>(false);
@@ -88,7 +93,12 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!hasMultipleImages || dragStartX.current === null || dragStartY.current === null || e.touches.length !== 1) {
+    if (
+      !hasMultipleImages ||
+      dragStartX.current === null ||
+      dragStartY.current === null ||
+      e.touches.length !== 1
+    ) {
       return;
     }
     const currentX = e.touches[0].clientX;
@@ -137,7 +147,12 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!hasMultipleImages || !isMouseDown || dragStartX.current === null || dragStartY.current === null) {
+    if (
+      !hasMultipleImages ||
+      !isMouseDown ||
+      dragStartX.current === null ||
+      dragStartY.current === null
+    ) {
       return;
     }
     const diffX = e.clientX - dragStartX.current;
@@ -180,14 +195,16 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
   };
 
   const handleClickMainFrame = () => {
-    if (hasDraggedRef.current) {
+    if (hasDraggedRef.current || isNoImage) {
       return;
     }
     setIsLightboxOpen(true);
   };
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, width: "100%" }}>
+    <Box
+      sx={{ display: "flex", flexDirection: "column", gap: 2, width: "100%" }}
+    >
       {/* 1. Main Image Frame */}
       <Paper
         ref={mainImageFrameRef}
@@ -219,49 +236,53 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
           boxShadow: "0 10px 30px -10px rgba(15, 23, 42, 0.08)",
           userSelect: "none",
           touchAction: "pan-y",
-          cursor: hasMultipleImages
+          cursor: isNoImage
+            ? "default"
+            : hasMultipleImages
             ? isMouseDown
               ? "grabbing"
               : "grab"
             : "pointer",
           outline: "none",
           "&:focus-visible": {
-            boxShadow: "0 0 0 3px #2563EB",
+            boxShadow: isNoImage ? "none" : "0 0 0 3px #2563EB",
           },
         }}
       >
-        {/* Fullscreen Expand Button */}
-        <Tooltip title="Xem toàn màn hình (Lightbox)">
-          <IconButton
-            aria-label="Xem toàn màn hình"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsLightboxOpen(true);
-            }}
-            onMouseDown={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
-            sx={{
-              position: "absolute",
-              top: 16,
-              right: 16,
-              bgcolor: "rgba(15, 23, 42, 0.65)",
-              color: "#FFFFFF",
-              backdropFilter: "blur(6px)",
-              width: 40,
-              height: 40,
-              boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-              transition: "all 0.2s ease",
-              pointerEvents: "auto",
-              zIndex: 2,
-              "&:hover": {
-                bgcolor: "rgba(15, 23, 42, 0.88)",
-                transform: "scale(1.08)",
-              },
-            }}
-          >
-            <FullscreenIcon sx={{ fontSize: 24 }} />
-          </IconButton>
-        </Tooltip>
+        {/* Fullscreen Expand Button — hidden when no real images */}
+        {!isNoImage && (
+          <Tooltip title="Xem toàn màn hình (Lightbox)">
+            <IconButton
+              aria-label="Xem toàn màn hình"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsLightboxOpen(true);
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              sx={{
+                position: "absolute",
+                top: 16,
+                right: 16,
+                bgcolor: "rgba(15, 23, 42, 0.65)",
+                color: "#FFFFFF",
+                backdropFilter: "blur(6px)",
+                width: 40,
+                height: 40,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                transition: "all 0.2s ease",
+                pointerEvents: "auto",
+                zIndex: 2,
+                "&:hover": {
+                  bgcolor: "rgba(15, 23, 42, 0.88)",
+                  transform: "scale(1.08)",
+                },
+              }}
+            >
+              <FullscreenIcon sx={{ fontSize: 24 }} />
+            </IconButton>
+          </Tooltip>
+        )}
 
         {/* Continuous Slider Track */}
         <Box
@@ -272,8 +293,13 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
             width: "100%",
             height: "100%",
             display: "flex",
-            transform: `translateX(calc(-${safeIndex * 100}% + ${dragOffset}px))`,
-            transition: dragOffset !== 0 ? "none" : "transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)",
+            transform: `translateX(calc(-${
+              safeIndex * 100
+            }% + ${dragOffset}px))`,
+            transition:
+              dragOffset !== 0
+                ? "none"
+                : "transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)",
             willChange: "transform",
           }}
         >
@@ -298,7 +324,7 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
                 sx={{
                   width: "100%",
                   height: "100%",
-                  objectFit: "cover",
+                  objectFit: isNoImage ? "contain" : "cover",
                   pointerEvents: "none",
                 }}
               />
@@ -398,7 +424,9 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
 
       {/* 2. Single Horizontal Thumbnail Strip */}
       {hasMultipleImages && (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%" }}>
+        <Box
+          sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%" }}
+        >
           {/* Scroll Strip Left Button */}
           <IconButton
             aria-label="Scroll thumbnails left"

@@ -190,7 +190,7 @@ export const HomestayListingPage: React.FC = () => {
         {filteredHomestays.length > 0 ? (
           <Grid container spacing={3.5}>
             {filteredHomestays.map((homestay: IHomestayItem) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={homestay.id}>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={homestay.id}>
                 <HomestayCard homestay={homestay} />
               </Grid>
             ))}
