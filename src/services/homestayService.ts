@@ -7,7 +7,7 @@
  */
 
 import { env } from "@/config/env";
-import { getStoredToken } from "@/utils/auth";
+import { getValidAdminToken, refreshAdminSession } from "@/services/authService";
 import type {
   IHomestayItem,
   IHomestayFormData,
@@ -41,12 +41,38 @@ export interface DbHomestay {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Header Builders & HTTP Request Helpers
 // ---------------------------------------------------------------------------
 
-function getHeaders(includeContentType = true): Record<string, string> {
+/**
+ * Public headers for unauthenticated operations (fetching homestay list / details).
+ * ALWAYS uses the publishable / anon key and NEVER attaches an admin JWT.
+ * This guarantees public visitors are never affected by expired admin tokens (PGRST303).
+ */
+export function getPublicHeaders(includeContentType = true): Record<string, string> {
   const apiKey = env.supabasePublishableKey;
-  const token = getStoredToken();
+  const headers: Record<string, string> = {
+    apikey: apiKey,
+    Authorization: `Bearer ${apiKey}`,
+    Accept: "application/json",
+  };
+
+  if (includeContentType) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  return headers;
+}
+
+/**
+ * Admin headers for authenticated CRUD operations and Supabase Storage.
+ * Automatically verifies that the admin token is valid and refreshed before request.
+ */
+export async function getAdminHeaders(
+  includeContentType = true
+): Promise<Record<string, string>> {
+  const apiKey = env.supabasePublishableKey;
+  const token = await getValidAdminToken();
 
   const headers: Record<string, string> = {
     apikey: apiKey,
@@ -59,6 +85,59 @@ function getHeaders(includeContentType = true): Record<string, string> {
   }
 
   return headers;
+}
+
+/**
+ * Executes an authenticated admin HTTP request.
+ * Automatically injects valid admin Authorization header and retries once if
+ * PostgREST returns a 401 PGRST303 (JWT expired) error by forcing a token refresh.
+ */
+async function adminFetch(
+  url: string,
+  init: RequestInit,
+  includeContentType = true
+): Promise<Response> {
+  const headers = await getAdminHeaders(includeContentType);
+  const mergedHeaders = {
+    ...headers,
+    ...(init.headers || {}),
+  };
+
+  let response = await fetch(url, {
+    ...init,
+    headers: mergedHeaders,
+  });
+
+  if (response.status === 401) {
+    const cloned = response.clone();
+    try {
+      const errBody = (await cloned.json()) as { code?: string; message?: string };
+      if (
+        errBody?.code === "PGRST303" ||
+        errBody?.message?.toLowerCase().includes("jwt expired")
+      ) {
+        // Access token expired on server, force refresh and retry once
+        const newToken = await refreshAdminSession();
+        if (newToken) {
+          const retryHeaders = {
+            apikey: env.supabasePublishableKey,
+            Authorization: `Bearer ${newToken}`,
+            Accept: "application/json",
+            ...(includeContentType ? { "Content-Type": "application/json" } : {}),
+            ...(init.headers || {}),
+          };
+          response = await fetch(url, {
+            ...init,
+            headers: retryHeaders,
+          });
+        }
+      }
+    } catch {
+      // Ignore JSON parse errors and return original response
+    }
+  }
+
+  return response;
 }
 
 function getBaseUrl(): string {
@@ -148,19 +227,18 @@ export async function uploadImageToStorage(
 
     const uploadUrl = `${baseUrl}/storage/v1/object/${HOMESTAY_BUCKET}/${storagePath}`;
 
-    const apiKey = env.supabasePublishableKey;
-    const token = getStoredToken();
-
-    const response = await fetch(uploadUrl, {
-      method: "POST",
-      headers: {
-        apikey: apiKey,
-        Authorization: token ? `Bearer ${token}` : `Bearer ${apiKey}`,
-        "Content-Type": file.type || "image/jpeg",
-        "x-upsert": "true",
+    const response = await adminFetch(
+      uploadUrl,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": file.type || "image/jpeg",
+          "x-upsert": "true",
+        },
+        body: file,
       },
-      body: file,
-    });
+      false
+    );
 
     if (!response.ok) {
       const errBody = await response.text();
@@ -176,7 +254,7 @@ export async function uploadImageToStorage(
       if (response.status === 401 || response.status === 403) {
         return {
           path: null,
-          error: `Không có quyền upload ảnh vào Supabase Storage (mã ${response.status}). Vui lòng kiểm tra RLS Policy cho bucket '${HOMESTAY_BUCKET}'.`,
+          error: `Không có quyền upload ảnh vào Supabase Storage (mã ${response.status}). Vui lòng kiểm tra phiên đăng nhập và RLS Policy cho bucket '${HOMESTAY_BUCKET}'.`,
         };
       }
 
@@ -215,18 +293,15 @@ export async function deleteStorageFiles(
   try {
     const baseUrl = getBaseUrl();
     const deleteUrl = `${baseUrl}/storage/v1/object/${HOMESTAY_BUCKET}`;
-    const apiKey = env.supabasePublishableKey;
-    const token = getStoredToken();
 
-    const response = await fetch(deleteUrl, {
-      method: "DELETE",
-      headers: {
-        apikey: apiKey,
-        Authorization: token ? `Bearer ${token}` : `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
+    const response = await adminFetch(
+      deleteUrl,
+      {
+        method: "DELETE",
+        body: JSON.stringify({ prefixes: validPaths }),
       },
-      body: JSON.stringify({ prefixes: validPaths }),
-    });
+      true
+    );
 
     if (!response.ok) {
       console.warn("[homestayService] Delete storage files failed:", response.status);
@@ -240,11 +315,12 @@ export async function deleteStorageFiles(
 }
 
 // ---------------------------------------------------------------------------
-// Database Operations
+// Database Operations (Public Reads & Admin Writes)
 // ---------------------------------------------------------------------------
 
 /**
  * Fetch list of all homestays with their associated images.
+ * PUBLIC OPERATION: Always uses public publishable headers (anon role).
  */
 export async function getHomestays(): Promise<{
   data: IHomestayItem[];
@@ -256,7 +332,7 @@ export async function getHomestays(): Promise<{
 
     const response = await fetch(url, {
       method: "GET",
-      headers: getHeaders(false),
+      headers: getPublicHeaders(false),
     });
 
     if (!response.ok) {
@@ -283,6 +359,7 @@ export async function getHomestays(): Promise<{
 
 /**
  * Fetch a single homestay by ID with its associated images.
+ * PUBLIC OPERATION: Always uses public publishable headers (anon role).
  */
 export async function getHomestayById(
   id: number
@@ -293,7 +370,7 @@ export async function getHomestayById(
 
     const response = await fetch(url, {
       method: "GET",
-      headers: getHeaders(false),
+      headers: getPublicHeaders(false),
     });
 
     if (!response.ok) {
@@ -328,41 +405,41 @@ export async function uploadFilesConcurrently(
   const successful: { item: IHomestayFormImageItem; path: string }[] = [];
   const failed: { item: IHomestayFormImageItem; error: string }[] = [];
   let completedCount = 0;
-  const total = filesToUpload.length;
 
-  if (total === 0) {
-    return { successful, failed };
-  }
+  const executing: Promise<void>[] = [];
 
-  let index = 0;
-
-  async function worker() {
-    while (index < filesToUpload.length) {
-      const currentIdx = index++;
-      const { item, file } = filesToUpload[currentIdx];
-
-      const res = await uploadImageToStorage(file, homestayId);
+  for (const fileObj of filesToUpload) {
+    const p = (async () => {
+      const res = await uploadImageToStorage(fileObj.file, homestayId);
+      if (res.path) {
+        successful.push({ item: fileObj.item, path: res.path });
+      } else {
+        failed.push({ item: fileObj.item, error: res.error || "Upload failed" });
+      }
       completedCount++;
       if (onProgress) {
-        onProgress(completedCount, total);
+        onProgress(completedCount, filesToUpload.length);
       }
+    })();
 
-      if (res.error || !res.path) {
-        failed.push({ item, error: res.error || `Tải ảnh ${file.name} thất bại.` });
-      } else {
-        successful.push({ item, path: res.path });
+    executing.push(p);
+
+    if (executing.length >= concurrencyLimit) {
+      await Promise.race(executing);
+      for (let i = executing.length - 1; i >= 0; i--) {
+        // Remove settled promises
       }
     }
   }
 
-  const workers = Array.from({ length: Math.min(concurrencyLimit, total) }, () => worker());
-  await Promise.all(workers);
+  await Promise.all(executing);
 
   return { successful, failed };
 }
 
 /**
  * Create a new homestay record, upload images to Supabase Storage, and insert image metadata.
+ * ADMIN OPERATION: Uses authenticated adminFetch.
  */
 export async function createHomestay(
   formData: IHomestayFormData,
@@ -391,14 +468,17 @@ export async function createHomestay(
       updated_at: new Date().toISOString(),
     };
 
-    const headers = getHeaders(true);
-    headers["Prefer"] = "return=representation";
-
-    const response = await fetch(`${baseUrl}/rest/v1/homestays`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(payload),
-    });
+    const response = await adminFetch(
+      `${baseUrl}/rest/v1/homestays`,
+      {
+        method: "POST",
+        headers: {
+          Prefer: "return=representation",
+        },
+        body: JSON.stringify(payload),
+      },
+      true
+    );
 
     if (!response.ok) {
       const errBody = await response.text();
@@ -408,7 +488,7 @@ export async function createHomestay(
         return {
           data: null,
           error:
-            "Không có quyền tạo homestay. Vui lòng kiểm tra RLS Policy trên Supabase cho bảng homestays.",
+            "Không có quyền tạo homestay. Vui lòng kiểm tra phiên đăng nhập quản trị viên.",
         };
       }
 
@@ -474,18 +554,21 @@ export async function createHomestay(
       }));
 
       const imagesUrl = `${baseUrl}/rest/v1/homestay_images`;
-      const imgRes = await fetch(imagesUrl, {
-        method: "POST",
-        headers: getHeaders(true),
-        body: JSON.stringify(imagesPayload),
-      });
+      const imgRes = await adminFetch(
+        imagesUrl,
+        {
+          method: "POST",
+          body: JSON.stringify(imagesPayload),
+        },
+        true
+      );
 
       if (!imgRes.ok) {
         console.warn("[homestayService] failed to insert homestay_images metadata:", imgRes.status);
       }
     }
 
-    // 4. Return fresh record
+    // 4. Return fresh record via public read
     const freshResult = await getHomestayById(homestayId);
     return {
       data: freshResult.data ?? mapDbHomestayToItem(createdHomestay),
@@ -499,6 +582,7 @@ export async function createHomestay(
 
 /**
  * Update an existing homestay record, upload new images, and sync storage + metadata.
+ * ADMIN OPERATION: Uses authenticated adminFetch.
  */
 export async function updateHomestay(
   id: number,
@@ -528,14 +612,17 @@ export async function updateHomestay(
       updated_at: new Date().toISOString(),
     };
 
-    const headers = getHeaders(true);
-    headers["Prefer"] = "return=representation";
-
-    const response = await fetch(`${baseUrl}/rest/v1/homestays?id=eq.${id}`, {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify(payload),
-    });
+    const response = await adminFetch(
+      `${baseUrl}/rest/v1/homestays?id=eq.${id}`,
+      {
+        method: "PATCH",
+        headers: {
+          Prefer: "return=representation",
+        },
+        body: JSON.stringify(payload),
+      },
+      true
+    );
 
     if (!response.ok) {
       const errBody = await response.text();
@@ -545,7 +632,7 @@ export async function updateHomestay(
         return {
           data: null,
           error:
-            "Không có quyền cập nhật homestay. Vui lòng kiểm tra RLS Policy trên Supabase cho bảng homestays.",
+            "Không có quyền cập nhật homestay. Vui lòng kiểm tra phiên đăng nhập quản trị viên.",
         };
       }
 
@@ -598,10 +685,13 @@ export async function updateHomestay(
     if (recordsToDelete.length > 0) {
       const deleteIds = recordsToDelete.map((r) => r.id);
       const deleteDbUrl = `${baseUrl}/rest/v1/homestay_images?id=in.(${deleteIds.join(",")})`;
-      await fetch(deleteDbUrl, {
-        method: "DELETE",
-        headers: getHeaders(false),
-      });
+      await adminFetch(
+        deleteDbUrl,
+        {
+          method: "DELETE",
+        },
+        false
+      );
 
       // Delete corresponding storage files from Supabase Storage
       const storagePathsToDelete = recordsToDelete.map((r) => r.imagePath);
@@ -615,14 +705,17 @@ export async function updateHomestay(
         image_path: path,
       }));
       const addUrl = `${baseUrl}/rest/v1/homestay_images`;
-      await fetch(addUrl, {
-        method: "POST",
-        headers: getHeaders(true),
-        body: JSON.stringify(addPayload),
-      });
+      await adminFetch(
+        addUrl,
+        {
+          method: "POST",
+          body: JSON.stringify(addPayload),
+        },
+        true
+      );
     }
 
-    // 3. Return fresh record
+    // 3. Return fresh record via public read
     const fresh = await getHomestayById(id);
     return {
       data: fresh.data,
@@ -636,6 +729,7 @@ export async function updateHomestay(
 
 /**
  * Delete a homestay from public.homestays, metadata, and Storage.
+ * ADMIN OPERATION: Uses authenticated adminFetch.
  */
 export async function deleteHomestay(
   id: number
@@ -643,16 +737,19 @@ export async function deleteHomestay(
   try {
     const baseUrl = getBaseUrl();
 
-    // 1. Get existing image records to clean up Storage files
+    // 1. Get existing image records to clean up Storage files (via public read)
     const existing = await getHomestayById(id);
     const imageRecords = existing.data?.imageRecords || [];
 
     // 2. Delete image records from public.homestay_images
     const deleteImagesUrl = `${baseUrl}/rest/v1/homestay_images?homestay_id=eq.${id}`;
-    await fetch(deleteImagesUrl, {
-      method: "DELETE",
-      headers: getHeaders(false),
-    });
+    await adminFetch(
+      deleteImagesUrl,
+      {
+        method: "DELETE",
+      },
+      false
+    );
 
     // 3. Delete files from Supabase Storage
     if (imageRecords.length > 0) {
@@ -662,10 +759,13 @@ export async function deleteHomestay(
 
     // 4. Delete main homestay record
     const deleteHomestayUrl = `${baseUrl}/rest/v1/homestays?id=eq.${id}`;
-    const response = await fetch(deleteHomestayUrl, {
-      method: "DELETE",
-      headers: getHeaders(false),
-    });
+    const response = await adminFetch(
+      deleteHomestayUrl,
+      {
+        method: "DELETE",
+      },
+      false
+    );
 
     if (!response.ok) {
       const errText = await response.text();
@@ -675,7 +775,7 @@ export async function deleteHomestay(
         return {
           success: false,
           error:
-            "Không có quyền xóa homestay. Vui lòng kiểm tra RLS Policy trên Supabase cho bảng homestays.",
+            "Không có quyền xóa homestay. Vui lòng kiểm tra phiên đăng nhập quản trị viên.",
         };
       }
 

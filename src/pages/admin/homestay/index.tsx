@@ -366,23 +366,6 @@ export const AdminHomestayPage: React.FC = () => {
         ),
     },
     {
-      field: "description",
-      headerName: "Mô Tả",
-      flex: 2,
-      minWidth: 220,
-      renderCell: ({ value }) => (
-        <Typography
-          noWrap
-          sx={{
-            color: "#64748B",
-            fontSize: "12.5px",
-          }}
-        >
-          {(value as string) || "—"}
-        </Typography>
-      ),
-    },
-    {
       field: "actions",
       headerName: "Hành Động",
       width: 140,

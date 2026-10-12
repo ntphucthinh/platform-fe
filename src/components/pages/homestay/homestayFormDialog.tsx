@@ -337,18 +337,26 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
               disabled={isSubmittingAsync}
             />
 
-            {/* 3. Description (Multiline, optional) */}
+            {/* 3. Description — textarea, 5 rows mặc định, có thể kéo thả to nhỏ */}
             <TextField
               fullWidth
               multiline
-              rows={3}
+              rows={5}
               label="Mô Tả Chi Tiết (tùy chọn)"
               placeholder="Nhập thông tin chi tiết về homestay (tiện nghi, điểm nổi bật...)"
               {...register("description")}
               error={!!errors.description}
               helperText={errors.description?.message}
-              size="small"
               disabled={isSubmittingAsync}
+              sx={{
+                "& .MuiInputBase-root": {
+                  overflow: "visible",
+                },
+                "& textarea": {
+                  resize: "vertical",
+                  overflow: "auto",
+                },
+              }}
             />
 
             {/* 4. Price (string input, optional) */}

@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Box, CardMedia, Paper, IconButton } from "@mui/material";
+import { Box, CardMedia, Paper, IconButton, Tooltip } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
+import { ImageLightbox } from "./imageLightbox";
 
 export interface HomestayGalleryProps {
   mainImage: string;
@@ -23,8 +25,11 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
     validImages.length > 0 ? Array.from(new Set(validImages)) : [fallbackImage];
 
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const [isLightboxOpen, setIsLightboxOpen] = useState<boolean>(false);
+  const mainImageFrameRef = useRef<HTMLDivElement | null>(null);
   const thumbnailScrollRef = useRef<HTMLDivElement | null>(null);
   const thumbnailRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const hasDraggedRef = useRef<boolean>(false);
 
   const safeIndex = selectedIndex < allImages.length ? selectedIndex : 0;
 
@@ -73,6 +78,7 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
 
   // Touch handlers for mobile swipe
   const handleTouchStart = (e: React.TouchEvent) => {
+    hasDraggedRef.current = false;
     if (!hasMultipleImages) return;
     if (e.touches.length === 1) {
       dragStartX.current = e.touches[0].clientX;
@@ -89,6 +95,10 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
     const currentY = e.touches[0].clientY;
     const diffX = currentX - dragStartX.current;
     const diffY = currentY - dragStartY.current;
+
+    if (Math.abs(diffX) > 6 || Math.abs(diffY) > 6) {
+      hasDraggedRef.current = true;
+    }
 
     if (Math.abs(diffX) > Math.abs(diffY)) {
       let effectiveOffset = diffX;
@@ -117,7 +127,9 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
 
   // Mouse drag handlers for desktop
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (!hasMultipleImages || e.button !== 0) return;
+    if (e.button !== 0) return;
+    hasDraggedRef.current = false;
+    if (!hasMultipleImages) return;
     dragStartX.current = e.clientX;
     dragStartY.current = e.clientY;
     setIsMouseDown(true);
@@ -130,6 +142,11 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
     }
     const diffX = e.clientX - dragStartX.current;
     const diffY = e.clientY - dragStartY.current;
+
+    if (Math.abs(diffX) > 6 || Math.abs(diffY) > 6) {
+      hasDraggedRef.current = true;
+    }
+
     if (Math.abs(diffX) > Math.abs(diffY)) {
       let effectiveOffset = diffX;
       if (safeIndex === 0 && diffX > 0) {
@@ -162,11 +179,29 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
     }
   };
 
+  const handleClickMainFrame = () => {
+    if (hasDraggedRef.current) {
+      return;
+    }
+    setIsLightboxOpen(true);
+  };
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2, width: "100%" }}>
       {/* 1. Main Image Frame */}
       <Paper
+        ref={mainImageFrameRef}
         elevation={0}
+        role="button"
+        tabIndex={0}
+        aria-label={`Xem ảnh phóng to ${title} - ảnh ${safeIndex + 1}`}
+        onClick={handleClickMainFrame}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setIsLightboxOpen(true);
+          }
+        }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -188,9 +223,46 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
             ? isMouseDown
               ? "grabbing"
               : "grab"
-            : "default",
+            : "pointer",
+          outline: "none",
+          "&:focus-visible": {
+            boxShadow: "0 0 0 3px #2563EB",
+          },
         }}
       >
+        {/* Fullscreen Expand Button */}
+        <Tooltip title="Xem toàn màn hình (Lightbox)">
+          <IconButton
+            aria-label="Xem toàn màn hình"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsLightboxOpen(true);
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            sx={{
+              position: "absolute",
+              top: 16,
+              right: 16,
+              bgcolor: "rgba(15, 23, 42, 0.65)",
+              color: "#FFFFFF",
+              backdropFilter: "blur(6px)",
+              width: 40,
+              height: 40,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+              transition: "all 0.2s ease",
+              pointerEvents: "auto",
+              zIndex: 2,
+              "&:hover": {
+                bgcolor: "rgba(15, 23, 42, 0.88)",
+                transform: "scale(1.08)",
+              },
+            }}
+          >
+            <FullscreenIcon sx={{ fontSize: 24 }} />
+          </IconButton>
+        </Tooltip>
+
         {/* Continuous Slider Track */}
         <Box
           sx={{
@@ -433,6 +505,17 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
           </IconButton>
         </Box>
       )}
+
+      {/* 3. Fullscreen Lightbox Modal */}
+      <ImageLightbox
+        isOpen={isLightboxOpen}
+        images={allImages}
+        currentIndex={safeIndex}
+        title={title}
+        onClose={() => setIsLightboxOpen(false)}
+        onNavigate={(newIndex) => setSelectedIndex(newIndex)}
+        triggerRef={mainImageFrameRef}
+      />
     </Box>
   );
 };

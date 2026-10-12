@@ -115,11 +115,60 @@ export const createAppTheme = () => {
           },
         },
       },
+      MuiOutlinedInput: {
+        styleOverrides: {
+          root: {
+            borderRadius: 8,
+            '&:not(.MuiInputBase-multiline)': {
+              height: '50px',
+            },
+          },
+          input: {
+            '&:not(textarea)': {
+              padding: '13px 14px',
+              boxSizing: 'border-box',
+            },
+            '&.MuiInputBase-inputSizeSmall:not(textarea)': {
+              padding: '14px 14px',
+              boxSizing: 'border-box',
+            },
+          },
+        },
+      },
+      MuiInputLabel: {
+        styleOverrides: {
+          outlined: {
+            '&:not(.MuiInputLabel-shrink)': {
+              transform: 'translate(14px, 13px) scale(1)',
+            },
+            '&.MuiInputLabel-sizeSmall:not(.MuiInputLabel-shrink)': {
+              transform: 'translate(14px, 15px) scale(1)',
+            },
+          },
+        },
+      },
       MuiTextField: {
         styleOverrides: {
           root: {
             '& .MuiOutlinedInput-root': {
               borderRadius: 8,
+            },
+            '& .MuiOutlinedInput-root:not(.MuiInputBase-multiline)': {
+              height: '50px',
+            },
+            '& .MuiOutlinedInput-input:not(textarea)': {
+              padding: '13px 14px',
+              boxSizing: 'border-box',
+            },
+            '& .MuiOutlinedInput-inputSizeSmall:not(textarea)': {
+              padding: '14px 14px',
+              boxSizing: 'border-box',
+            },
+            '& .MuiInputLabel-outlined:not(.MuiInputLabel-shrink)': {
+              transform: 'translate(14px, 13px) scale(1)',
+            },
+            '& .MuiInputLabel-sizeSmall:not(.MuiInputLabel-shrink)': {
+              transform: 'translate(14px, 15px) scale(1)',
             },
           },
         },

@@ -1,7 +1,7 @@
 /**
- * authService — Supabase Auth sign-in via POST /auth/v1/token.
+ * authService — Supabase Auth sign-in and token refresh via REST API.
  *
- * Password verification is performed entirely on the Supabase server.
+ * Password verification and session lifecycle are managed by Supabase Auth.
  * The browser never receives password_hash values.
  *
  * Requirements:
@@ -11,7 +11,15 @@
  */
 
 import { env } from "@/config/env";
-import type { StoredAdminUser } from "@/utils/auth";
+import {
+  type StoredAdminUser,
+  getStoredRefreshToken,
+  getStoredToken,
+  isTokenExpired,
+  isAuthenticated,
+  updateStoredTokens,
+  clearAdminAuthenticated,
+} from "@/utils/auth";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -38,7 +46,13 @@ interface SupabaseAuthError {
 }
 
 export type LoginResult =
-  | { success: true; user: StoredAdminUser; accessToken: string }
+  | {
+      success: true;
+      user: StoredAdminUser;
+      accessToken: string;
+      refreshToken: string;
+      expiresIn: number;
+    }
   | { success: false; message: string };
 
 // ---------------------------------------------------------------------------
@@ -60,16 +74,15 @@ function getValidatedEnv(): { baseUrl: string; apiKey: string } {
 }
 
 // ---------------------------------------------------------------------------
-// Public API
+// Authentication & Token Refresh API
 // ---------------------------------------------------------------------------
+
+// Singleton promise to prevent concurrent token refresh race conditions
+let activeRefreshPromise: Promise<string | null> | null = null;
 
 /**
  * Authenticate with Supabase Auth using email + password.
- *
- * Calls:  POST {SUPABASE_URL}/auth/v1/token?grant_type=password
- *
- * On success: returns the Supabase JWT access_token and a minimal user profile.
- * On failure: returns a generic error message (no credential details leaked).
+ * Calls: POST {SUPABASE_URL}/auth/v1/token?grant_type=password
  */
 export async function loginWithEmail(
   email: string,
@@ -82,7 +95,9 @@ export async function loginWithEmail(
     ({ baseUrl, apiKey } = getValidatedEnv());
   } catch (err: unknown) {
     const message =
-      err instanceof Error ? err.message : "Configuration error. Please contact the administrator.";
+      err instanceof Error
+        ? err.message
+        : "Configuration error. Please contact the administrator.";
     return { success: false, message };
   }
 
@@ -102,7 +117,8 @@ export async function loginWithEmail(
   } catch {
     return {
       success: false,
-      message: "A network error occurred. Please check your connection and try again.",
+      message:
+        "A network error occurred. Please check your connection and try again.",
     };
   }
 
@@ -112,12 +128,12 @@ export async function loginWithEmail(
   } catch {
     return {
       success: false,
-      message: "Authentication service returned an unexpected response. Please try again.",
+      message:
+        "Authentication service returned an unexpected response. Please try again.",
     };
   }
 
   if (!response.ok) {
-    // Log technical detail in dev (no credentials included).
     if (import.meta.env.DEV) {
       const errBody = body as SupabaseAuthError;
       console.error(
@@ -126,7 +142,6 @@ export async function loginWithEmail(
       );
     }
 
-    // 400 from Supabase Auth = invalid credentials.
     if (response.status === 400) {
       return { success: false, message: "Invalid email or password." };
     }
@@ -138,9 +153,6 @@ export async function loginWithEmail(
   }
 
   const tokenData = body as SupabaseAuthTokenResponse;
-
-  // Build minimal user profile from the Auth response.
-  // user_metadata may contain full_name / username if set during signup.
   const metadata = tokenData.user.user_metadata;
   const user: StoredAdminUser = {
     id: tokenData.user.id,
@@ -155,5 +167,104 @@ export async function loginWithEmail(
         : (tokenData.user.email?.split("@")[0] ?? "Admin"),
   };
 
-  return { success: true, user, accessToken: tokenData.access_token };
+  return {
+    success: true,
+    user,
+    accessToken: tokenData.access_token,
+    refreshToken: tokenData.refresh_token,
+    expiresIn: tokenData.expires_in,
+  };
+}
+
+/**
+ * Refreshes the admin session using the stored refresh token.
+ * Calls: POST {SUPABASE_URL}/auth/v1/token?grant_type=refresh_token
+ *
+ * Uses a singleton promise to deduplicate concurrent refresh requests.
+ * If refresh token is expired or revoked (400/401), clears admin session safely.
+ */
+export async function refreshAdminSession(): Promise<string | null> {
+  if (activeRefreshPromise) {
+    return activeRefreshPromise;
+  }
+
+  activeRefreshPromise = (async () => {
+    try {
+      const refreshToken = getStoredRefreshToken();
+      if (!refreshToken) {
+        clearAdminAuthenticated();
+        return null;
+      }
+
+      let baseUrl: string;
+      let apiKey: string;
+      try {
+        ({ baseUrl, apiKey } = getValidatedEnv());
+      } catch {
+        return null;
+      }
+
+      const url = `${baseUrl}/auth/v1/token?grant_type=refresh_token`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          apikey: apiKey,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+
+      if (!response.ok) {
+        if (import.meta.env.DEV) {
+          console.warn(
+            `[authService] Token refresh rejected (HTTP ${response.status}). Session cleared.`
+          );
+        }
+        clearAdminAuthenticated();
+        return null;
+      }
+
+      const body = (await response.json()) as SupabaseAuthTokenResponse;
+      if (body.access_token) {
+        updateStoredTokens(
+          body.access_token,
+          body.refresh_token,
+          body.expires_in
+        );
+        return body.access_token;
+      }
+
+      clearAdminAuthenticated();
+      return null;
+    } catch (err: unknown) {
+      if (import.meta.env.DEV) {
+        console.error("[authService] Token refresh network error:", err);
+      }
+      return null;
+    } finally {
+      activeRefreshPromise = null;
+    }
+  })();
+
+  return activeRefreshPromise;
+}
+
+/**
+ * Returns a valid, non-expired admin access token.
+ * Automatically triggers token refresh if the token has expired or is expiring soon.
+ * Returns null if the user is unauthenticated or if the session cannot be refreshed.
+ */
+export async function getValidAdminToken(): Promise<string | null> {
+  if (!isAuthenticated()) {
+    return null;
+  }
+
+  // Token is still fresh with at least 60 seconds buffer
+  if (!isTokenExpired(60)) {
+    return getStoredToken();
+  }
+
+  // Token is expired or expiring soon, refresh it
+  return await refreshAdminSession();
 }

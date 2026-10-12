@@ -59,8 +59,14 @@ export const Login: React.FC = () => {
         return;
       }
 
-      // Store minimal user profile + JWT token — password never stored.
-      setAdminAuthenticated(true, result.user, result.accessToken);
+      // Store minimal user profile, JWT token, refresh token, and expiration timestamp
+      setAdminAuthenticated(
+        true,
+        result.user,
+        result.accessToken,
+        result.refreshToken,
+        result.expiresIn
+      );
       navigate("/admin/homestay");
     } catch (err: unknown) {
       const message =
