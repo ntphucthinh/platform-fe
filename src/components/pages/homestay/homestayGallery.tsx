@@ -36,6 +36,15 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
   const thumbnailRefs = useRef<(HTMLDivElement | null)[]>([]);
   const hasDraggedRef = useRef<boolean>(false);
 
+  const [prevKey, setPrevKey] = useState<string>(() => `${mainImage}_${(images || []).join(",")}`);
+  const currentKey = `${mainImage}_${(images || []).join(",")}`;
+
+  if (currentKey !== prevKey) {
+    setPrevKey(currentKey);
+    const coverIdx = allImages.indexOf(mainImage);
+    setSelectedIndex(coverIdx >= 0 ? coverIdx : 0);
+  }
+
   const safeIndex = selectedIndex < allImages.length ? selectedIndex : 0;
 
   // Scroll active thumbnail into view smoothly

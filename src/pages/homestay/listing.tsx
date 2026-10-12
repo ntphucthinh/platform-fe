@@ -9,6 +9,8 @@ import {
   Button,
   Paper,
   Chip,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
@@ -23,29 +25,57 @@ import { getHomestays } from "@/services/homestayService";
 export const HomestayListingPage: React.FC = () => {
   const [dbHomestays, setDbHomestays] = useState<IHomestayItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let isMounted = true;
-    getHomestays().then(({ data }) => {
-      if (isMounted && data && data.length > 0) {
+  const handleRetry = () => {
+    setLoading(true);
+    setError(null);
+    getHomestays().then(({ data, error: err }) => {
+      if (err) {
+        setError(err);
+      } else if (data) {
         setDbHomestays(data);
       }
+      setLoading(false);
+    });
+  };
+
+  useEffect(() => {
+    let active = true;
+    getHomestays().then(({ data, error: err }) => {
+      if (!active) return;
+      if (err) {
+        setError(err);
+      } else if (data) {
+        setDbHomestays(data);
+      }
+      setLoading(false);
     });
     return () => {
-      isMounted = false;
+      active = false;
     };
   }, []);
 
   const homestayList = dbHomestays;
 
   const filteredHomestays = useMemo(() => {
+    const term = searchTerm.toLowerCase();
     return homestayList.filter((h) => {
       const locStr = h.address || h.location || "";
+      const matchesRoom = (h.rooms || []).some(
+        (r) =>
+          r.name.toLowerCase().includes(term) ||
+          (r.description ?? "").toLowerCase().includes(term) ||
+          (r.priceText ?? "").toLowerCase().includes(term)
+      );
+
       return (
-        (h.name ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        locStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (h.description ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (h.shortDescription && h.shortDescription.toLowerCase().includes(searchTerm.toLowerCase()))
+        (h.name ?? "").toLowerCase().includes(term) ||
+        locStr.toLowerCase().includes(term) ||
+        (h.description ?? "").toLowerCase().includes(term) ||
+        (h.shortDescription && h.shortDescription.toLowerCase().includes(term)) ||
+        matchesRoom
       );
     });
   }, [homestayList, searchTerm]);
@@ -126,7 +156,7 @@ export const HomestayListingPage: React.FC = () => {
             >
               <TextField
                 fullWidth
-                placeholder="Tìm theo tên, địa điểm hoặc từ khóa..."
+                placeholder="Tìm theo tên, địa điểm hoặc loại phòng..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 size="small"
@@ -186,8 +216,35 @@ export const HomestayListingPage: React.FC = () => {
           )}
         </Box>
 
-        {/* Grid List */}
-        {filteredHomestays.length > 0 ? (
+        {/* Error State */}
+        {error && (
+          <Alert
+            severity="error"
+            action={
+              <Button color="inherit" size="small" onClick={handleRetry}>
+                Thử lại
+              </Button>
+            }
+            sx={{ mb: 4, borderRadius: "10px" }}
+          >
+            {error}
+          </Alert>
+        )}
+
+        {/* Loading State */}
+        {loading ? (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              minHeight: 240,
+            }}
+          >
+            <CircularProgress size={40} />
+          </Box>
+        ) : filteredHomestays.length > 0 ? (
+          /* Grid List */
           <Grid container spacing={3.5}>
             {filteredHomestays.map((homestay: IHomestayItem) => (
               <Grid size={{ xs: 12, sm: 6, md: 3 }} key={homestay.id}>

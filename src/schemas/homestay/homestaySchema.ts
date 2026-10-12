@@ -1,12 +1,36 @@
-import { type ObjectSchema, object, string, array, boolean, mixed } from "yup";
-import type { IHomestayFormData, IHomestayFormImageItem } from "@/types/pages/homestay/homestay";
+import { type ObjectSchema, object, string, number, array, boolean, mixed } from "yup";
+import type {
+  IHomestayFormData,
+  IHomestayRoomFormData,
+  IRoomFormImageItem,
+} from "@/types/pages/homestay/homestay";
 
-const imageItemSchema: ObjectSchema<IHomestayFormImageItem> = object().shape({
+const roomImageItemSchema: ObjectSchema<IRoomFormImageItem> = object().shape({
   id: string().required(),
+  imageId: number().optional(),
   url: string().required(),
   file: mixed<File>().optional(),
   isObjectUrl: boolean().optional(),
   imagePath: string().optional(),
+  sortOrder: number().required(),
+  isCover: boolean().required(),
+});
+
+const roomSchema: ObjectSchema<IHomestayRoomFormData> = object().shape({
+  id: number().optional(),
+  name: string().trim().required("Tên loại phòng là bắt buộc"),
+  description: string().trim().nullable().optional(),
+  priceText: string().trim().nullable().optional(),
+  sortOrder: number().required(),
+  images: array()
+    .of(string().required())
+    .max(50, "Mỗi loại phòng chỉ được phép có tối đa 50 hình ảnh.")
+    .optional()
+    .default([]),
+  imageItems: array()
+    .of(roomImageItemSchema)
+    .max(50, "Mỗi loại phòng chỉ được phép có tối đa 50 hình ảnh.")
+    .optional(),
 });
 
 export const homestaySchema: ObjectSchema<IHomestayFormData> = object().shape({
@@ -17,17 +41,7 @@ export const homestaySchema: ObjectSchema<IHomestayFormData> = object().shape({
   address: string().trim().required("Địa điểm / Địa chỉ là bắt buộc"),
   location: string().trim().optional(),
   description: string().trim().nullable().optional(),
-  images: array()
-    .of(string().required())
-    .max(50, "Homestay chỉ được phép có tối đa 50 hình ảnh. Vui lòng giảm số lượng ảnh trước khi tiếp tục.")
-    .optional()
-    .default([]),
-  imageItems: array()
-    .of(imageItemSchema)
-    .max(50, "Homestay chỉ được phép có tối đa 50 hình ảnh. Vui lòng giảm số lượng ảnh trước khi tiếp tục.")
-    .optional(),
   price: string().trim().nullable().optional(),
-  // Allow empty string or null; only validate URL format if a non-empty value is entered
   googleMapsUrl: string()
     .trim()
     .nullable()
@@ -62,4 +76,11 @@ export const homestaySchema: ObjectSchema<IHomestayFormData> = object().shape({
         }
       }
     ),
+  rooms: array()
+    .of(roomSchema)
+    .min(1, "Danh sách loại phòng phải có ít nhất 1 loại phòng.")
+    .required("Vui lòng thêm ít nhất 1 loại phòng.")
+    .default([]),
+  images: array().of(string().required()).optional(),
+  imageItems: array().of(roomImageItemSchema).optional(),
 });

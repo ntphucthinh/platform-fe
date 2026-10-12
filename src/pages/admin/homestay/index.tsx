@@ -108,12 +108,12 @@ export const AdminHomestayPage: React.FC = () => {
 
     if (error) {
       setFetchError(error);
-      handleShowSnackbar(error, "error");
+      // Inline Alert is displayed, avoiding duplicate toast
     } else {
       setHomestays(data);
     }
     setIsLoading(false);
-  }, [handleShowSnackbar]);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -121,7 +121,6 @@ export const AdminHomestayPage: React.FC = () => {
       if (!active) return;
       if (error) {
         setFetchError(error);
-        handleShowSnackbar(error, "error");
       } else {
         setHomestays(data);
       }
@@ -130,15 +129,23 @@ export const AdminHomestayPage: React.FC = () => {
     return () => {
       active = false;
     };
-  }, [handleShowSnackbar]);
+  }, []);
 
   // Client-side search filtering
   const filteredHomestays = homestays.filter((h) => {
     const term = searchTerm.toLowerCase();
+    const matchesRoom = (h.rooms || []).some(
+      (r) =>
+        r.name.toLowerCase().includes(term) ||
+        (r.description ?? "").toLowerCase().includes(term) ||
+        (r.priceText ?? "").toLowerCase().includes(term)
+    );
+
     return (
       (h.name ?? "").toLowerCase().includes(term) ||
       (h.address ?? h.location ?? "").toLowerCase().includes(term) ||
-      (h.description ?? "").toLowerCase().includes(term)
+      (h.description ?? "").toLowerCase().includes(term) ||
+      matchesRoom
     );
   });
 
@@ -174,7 +181,7 @@ export const AdminHomestayPage: React.FC = () => {
         setHomestayToDelete(null);
         await loadHomestays();
       } else {
-        handleShowSnackbar(error || `Không thể xóa homestay".`, "error");
+        handleShowSnackbar(error || `Không thể xóa homestay.`, "error");
       }
     } finally {
       setIsDeleting(false);
@@ -191,7 +198,7 @@ export const AdminHomestayPage: React.FC = () => {
       const { data, error } = await homestayService.updateHomestay(
         selectedHomestay.id,
         formData,
-        selectedHomestay.imageRecords || [],
+        selectedHomestay,
         onProgress,
       );
 
@@ -235,9 +242,10 @@ export const AdminHomestayPage: React.FC = () => {
       filterable: false,
       renderCell: ({ row }) => {
         const firstImage =
-          row.images && row.images.length > 0 && row.images[0]
+          row.mainImage ||
+          (row.images && row.images.length > 0 && row.images[0]
             ? row.images[0]
-            : DEFAULT_NO_IMAGE;
+            : DEFAULT_NO_IMAGE);
         return (
           <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
             <Avatar
@@ -297,6 +305,27 @@ export const AdminHomestayPage: React.FC = () => {
         >
           {(value as string) || "—"}
         </Typography>
+      ),
+    },
+    {
+      field: "rooms",
+      headerName: "Loại Phòng",
+      width: 120,
+      sortable: false,
+      renderCell: ({ row }) => (
+        <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
+          <Chip
+            label={`${(row.rooms || []).length} phòng`}
+            size="small"
+            sx={{
+              bgcolor: "#F1F5F9",
+              color: "#334155",
+              fontWeight: 700,
+              fontSize: "0.75rem",
+              borderRadius: "6px",
+            }}
+          />
+        </Box>
       ),
     },
     {
