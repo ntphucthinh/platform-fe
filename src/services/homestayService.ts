@@ -254,13 +254,13 @@ export async function uploadImageToStorage(
       if (response.status === 401 || response.status === 403) {
         return {
           path: null,
-          error: `Không có quyền upload ảnh vào Supabase Storage (mã ${response.status}). Vui lòng kiểm tra phiên đăng nhập và RLS Policy cho bucket '${HOMESTAY_BUCKET}'.`,
+          error: `Không có quyền upload ảnh vào Supabase Storage. Vui lòng kiểm tra phiên đăng nhập và RLS Policy cho bucket '${HOMESTAY_BUCKET}'.`,
         };
       }
 
       return {
         path: null,
-        error: `Tải ảnh lên Supabase Storage thất bại (mã ${response.status}).`,
+        error: `Tải ảnh lên Supabase Storage thất bại. Vui lòng thử lại.`,
       };
     }
 
@@ -340,7 +340,7 @@ export async function getHomestays(): Promise<{
       console.error("[homestayService] getHomestays failed:", response.status, errText);
       return {
         data: [],
-        error: `Không thể tải danh sách homestay (mã lỗi ${response.status}).`,
+        error: `Không thể tải danh sách homestay. Vui lòng thử lại.`,
       };
     }
 
@@ -494,7 +494,7 @@ export async function createHomestay(
 
       return {
         data: null,
-        error: `Không thể tạo homestay (mã lỗi ${response.status}).`,
+        error: `Không thể tạo homestay. Vui lòng thử lại.`,
       };
     }
 
@@ -636,7 +636,7 @@ export async function updateHomestay(
         };
       }
 
-      return { data: null, error: `Không thể cập nhật homestay (${response.status}).` };
+      return { data: null, error: `Không thể cập nhật homestay. Vui lòng thử lại.` };
     }
 
     // 2. Upload newly added File objects with concurrency = 5
@@ -781,7 +781,7 @@ export async function deleteHomestay(
 
       return {
         success: false,
-        error: `Xóa homestay thất bại (${response.status}).`,
+        error: `Xóa homestay thất bại. Vui lòng thử lại.`,
       };
     }
 
