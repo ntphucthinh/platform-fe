@@ -4,7 +4,7 @@ import { Box, IconButton, Typography, Tooltip } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE, isVideoMedia } from "@/constants/homestayConstant";
 
 export interface ImageLightboxProps {
   isOpen: boolean;
@@ -371,37 +371,61 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({
             position: "relative",
           }}
         >
-          <Box
-            component="img"
-            key={currentImage}
-            src={currentImage}
-            alt={`${title} - Ảnh ${safeIndex + 1}`}
-            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-              e.currentTarget.src = DEFAULT_NO_IMAGE;
-            }}
-            draggable={false}
-            sx={{
-              maxWidth: "100%",
-              maxHeight: {
-                xs: "calc(100vh - 160px)",
-                sm: "calc(100vh - 180px)",
-                md: "calc(100vh - 200px)",
-              },
-              objectFit: "contain",
-              borderRadius: { xs: "8px", sm: "14px" },
-              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.6)",
-              transition: "transform 0.25s ease, opacity 0.25s ease",
-              animation: "imagePop 0.22s ease-out",
-              "@keyframes imagePop": {
-                from: { opacity: 0.8, transform: "scale(0.98)" },
-                to: { opacity: 1, transform: "scale(1)" },
-              },
-              "@media (prefers-reduced-motion: reduce)": {
-                animation: "none",
-                transition: "none",
-              },
-            }}
-          />
+          {isVideoMedia(currentImage) ? (
+            <Box
+              component="video"
+              key={currentImage}
+              src={currentImage}
+              controls
+              autoPlay
+              loop
+              playsInline
+              draggable={false}
+              sx={{
+                maxWidth: "100%",
+                maxHeight: {
+                  xs: "calc(100vh - 160px)",
+                  sm: "calc(100vh - 180px)",
+                  md: "calc(100vh - 200px)",
+                },
+                objectFit: "contain",
+                borderRadius: { xs: "8px", sm: "14px" },
+                boxShadow: "0 20px 50px rgba(0, 0, 0, 0.6)",
+              }}
+            />
+          ) : (
+            <Box
+              component="img"
+              key={currentImage}
+              src={currentImage}
+              alt={`${title} - Ảnh ${safeIndex + 1}`}
+              onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                e.currentTarget.src = DEFAULT_NO_IMAGE;
+              }}
+              draggable={false}
+              sx={{
+                maxWidth: "100%",
+                maxHeight: {
+                  xs: "calc(100vh - 160px)",
+                  sm: "calc(100vh - 180px)",
+                  md: "calc(100vh - 200px)",
+                },
+                objectFit: "contain",
+                borderRadius: { xs: "8px", sm: "14px" },
+                boxShadow: "0 20px 50px rgba(0, 0, 0, 0.6)",
+                transition: "transform 0.25s ease, opacity 0.25s ease",
+                animation: "imagePop 0.22s ease-out",
+                "@keyframes imagePop": {
+                  from: { opacity: 0.8, transform: "scale(0.98)" },
+                  to: { opacity: 1, transform: "scale(1)" },
+                },
+                "@media (prefers-reduced-motion: reduce)": {
+                  animation: "none",
+                  transition: "none",
+                },
+              }}
+            />
+          )}
         </Box>
 
         {/* Next Button (Desktop & Tablet) */}
@@ -514,20 +538,52 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({
                     },
                   }}
                 >
-                  <Box
-                    component="img"
-                    src={imgUrl}
-                    alt={`Thumbnail ${idx + 1}`}
-                    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                      e.currentTarget.src = DEFAULT_NO_IMAGE;
-                    }}
-                    draggable={false}
-                    sx={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
+                  {isVideoMedia(imgUrl) ? (
+                    <>
+                      <Box
+                        component="video"
+                        src={imgUrl}
+                        muted
+                        playsInline
+                        draggable={false}
+                        sx={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          pointerEvents: "none",
+                        }}
+                      />
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          inset: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "#fff",
+                          fontSize: "1rem",
+                          pointerEvents: "none",
+                        }}
+                      >
+                        ▶
+                      </Box>
+                    </>
+                  ) : (
+                    <Box
+                      component="img"
+                      src={imgUrl}
+                      alt={`Thumbnail ${idx + 1}`}
+                      onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                        e.currentTarget.src = DEFAULT_NO_IMAGE;
+                      }}
+                      draggable={false}
+                      sx={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  )}
                 </Box>
               );
             })}

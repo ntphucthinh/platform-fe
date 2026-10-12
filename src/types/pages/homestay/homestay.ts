@@ -12,6 +12,7 @@ export interface HomestayRoomImage {
   isCover: boolean;
   createdAt?: string;
   url?: string;
+  mediaType?: "image" | "video";
 }
 
 /** Legacy alias for HomestayRoomImage */
@@ -83,6 +84,7 @@ export interface IRoomFormImageItem {
   imagePath?: string;
   sortOrder: number;
   isCover: boolean;
+  mediaType?: "image" | "video";
 }
 
 /** Legacy alias for form image item */

@@ -3,7 +3,7 @@ import { Box, CardMedia, Paper, IconButton, Tooltip } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
-import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE, isVideoMedia } from "@/constants/homestayConstant";
 import { ImageLightbox } from "./imageLightbox";
 
 export interface HomestayGalleryProps {
@@ -322,21 +322,39 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
                 position: "relative",
               }}
             >
-              <CardMedia
-                component="img"
-                image={imgUrl}
-                alt={`${title} - image ${idx + 1}`}
-                draggable={false}
-                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                  e.currentTarget.src = DEFAULT_NO_IMAGE;
-                }}
-                sx={{
-                  width: "%",
-                  height: "100%",
-                  objectFit: isNoImage ? "contain" : "cover",
-                  pointerEvents: "none",
-                }}
-              />
+              {isVideoMedia(imgUrl) ? (
+                <Box
+                  component="video"
+                  src={imgUrl}
+                  muted
+                  autoPlay
+                  loop
+                  playsInline
+                  draggable={false}
+                  sx={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    pointerEvents: "none",
+                  }}
+                />
+              ) : (
+                <CardMedia
+                  component="img"
+                  image={imgUrl}
+                  alt={`${title} - image ${idx + 1}`}
+                  draggable={false}
+                  onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                    e.currentTarget.src = DEFAULT_NO_IMAGE;
+                  }}
+                  sx={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: isNoImage ? "contain" : "cover",
+                    pointerEvents: "none",
+                  }}
+                />
+              )}
             </Box>
           ))}
         </Box>
@@ -505,19 +523,52 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
                     },
                   }}
                 >
-                  <CardMedia
-                    component="img"
-                    image={imgUrl}
-                    alt={`${title} thumbnail ${index + 1}`}
-                    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                      e.currentTarget.src = DEFAULT_NO_IMAGE;
-                    }}
-                    sx={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
+                  {isVideoMedia(imgUrl) ? (
+                    <Box sx={{ position: "relative", width: "100%", height: "100%" }}>
+                      <Box
+                        component="video"
+                        src={imgUrl}
+                        muted
+                        playsInline
+                        sx={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          pointerEvents: "none",
+                        }}
+                      />
+                      {/* Play icon overlay */}
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          inset: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          bgcolor: "rgba(0,0,0,0.25)",
+                          color: "#fff",
+                          fontSize: "1.4rem",
+                          pointerEvents: "none",
+                        }}
+                      >
+                        ▶
+                      </Box>
+                    </Box>
+                  ) : (
+                    <CardMedia
+                      component="img"
+                      image={imgUrl}
+                      alt={`${title} thumbnail ${index + 1}`}
+                      onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                        e.currentTarget.src = DEFAULT_NO_IMAGE;
+                      }}
+                      sx={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  )}
                 </Paper>
               );
             })}

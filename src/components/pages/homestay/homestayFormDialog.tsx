@@ -42,6 +42,10 @@ import type {
 } from "@/types/pages/homestay/homestay";
 import { homestaySchema } from "@/schemas/homestay/homestaySchema";
 import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
+import {
+  MAX_MEDIA_FILE_SIZE_BYTES,
+  MAX_MEDIA_FILE_SIZE_MB,
+} from "@/constants/homestayConstant";
 
 export interface HomestayFormDialogProps {
   open: boolean;
@@ -267,17 +271,27 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
 
     const filesArray = Array.from(files);
     if (room.imageItems.length >= 50 || room.imageItems.length + filesArray.length > 50) {
-      setFormError(`Loại phòng "${room.name}" chỉ được phép có tối đa 50 hình ảnh.`);
+      setFormError(`Loại phòng "${room.name}" chỉ được phép có tối đa 50 hình ảnh/video.`);
       return;
     }
 
+    const validImageTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+    const validVideoTypes = ["video/mp4", "video/webm", "video/quicktime", "video/ogg", "video/x-m4v", "video/x-matroska"];
+    const validTypes = [...validImageTypes, ...validVideoTypes];
+
     const newItems: IRoomFormImageItem[] = [];
     let hasTypeError = false;
+    let hasSizeError = false;
 
     filesArray.forEach((file) => {
-      const validTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
-      if (!validTypes.includes(file.type.toLowerCase())) {
+      const fileTypeLower = file.type.toLowerCase();
+      if (!validTypes.includes(fileTypeLower)) {
         hasTypeError = true;
+        return;
+      }
+
+      if (file.size > MAX_MEDIA_FILE_SIZE_BYTES) {
+        hasSizeError = true;
         return;
       }
 
@@ -288,6 +302,7 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
 
       const objectUrl = URL.createObjectURL(file);
       const isFirst = room.imageItems.length === 0 && newItems.length === 0;
+      const mediaType: "image" | "video" = fileTypeLower.startsWith("video/") ? "video" : "image";
 
       newItems.push({
         id: `file-${file.name}-${file.size}-${Date.now()}-${Math.random()}`,
@@ -296,11 +311,15 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
         isObjectUrl: true,
         sortOrder: room.imageItems.length + newItems.length + 1,
         isCover: isFirst,
+        mediaType,
       });
     });
 
     if (hasTypeError) {
-      setFormError("Chỉ chấp nhận các hình ảnh có định dạng PNG, JPG, JPEG hoặc WebP.");
+      setFormError("Chỉ chấp nhận hình ảnh (PNG, JPG, WebP) hoặc video (MP4, WebM, MOV, OGG).");
+    }
+    if (hasSizeError) {
+      setFormError(`Mỗi file không được vượt quá ${MAX_MEDIA_FILE_SIZE_MB}MB.`);
     }
 
     if (newItems.length > 0) {
@@ -940,7 +959,7 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                   }}
                                   type="file"
                                   multiple
-                                  accept="image/png,image/jpeg,image/webp,image/jpg"
+                                  accept="image/png,image/jpeg,image/webp,image/jpg,video/mp4,video/webm,video/quicktime,video/ogg"
                                   style={{ display: "none" }}
                                   onChange={(e) => handleFileSelect(room.localId, e)}
                                   disabled={
@@ -983,19 +1002,38 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                         },
                                       }}
                                     >
-                                      <Box
-                                        component="img"
-                                        src={img.url}
-                                        alt={`Room img ${imgIndex + 1}`}
-                                        sx={{
-                                          position: "absolute",
-                                          top: 0,
-                                          left: 0,
-                                          width: "100%",
-                                          height: "100%",
-                                          objectFit: "cover",
-                                        }}
-                                      />
+                                      {img.mediaType === "video" ? (
+                                        <Box
+                                          component="video"
+                                          src={img.url}
+                                          muted
+                                          autoPlay
+                                          loop
+                                          playsInline
+                                          sx={{
+                                            position: "absolute",
+                                            top: 0,
+                                            left: 0,
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                          }}
+                                        />
+                                      ) : (
+                                        <Box
+                                          component="img"
+                                          src={img.url}
+                                          alt={`Room img ${imgIndex + 1}`}
+                                          sx={{
+                                            position: "absolute",
+                                            top: 0,
+                                            left: 0,
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                          }}
+                                        />
+                                      )}
 
                                       {/* Cover Badge */}
                                       {img.isCover && (

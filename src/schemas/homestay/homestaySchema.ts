@@ -9,11 +9,18 @@ const roomImageItemSchema: ObjectSchema<IRoomFormImageItem> = object().shape({
   id: string().required(),
   imageId: number().optional(),
   url: string().required(),
-  file: mixed<File>().optional(),
+  file: mixed<File>()
+    .optional()
+    .test(
+      "fileSize",
+      "Dung lượng tệp không được vượt quá 10MB",
+      (value) => !value || !(value instanceof File) || value.size <= 10 * 1024 * 1024
+    ),
   isObjectUrl: boolean().optional(),
   imagePath: string().optional(),
   sortOrder: number().required(),
   isCover: boolean().required(),
+  mediaType: string<"image" | "video">().optional(),
 });
 
 const roomSchema: ObjectSchema<IHomestayRoomFormData> = object().shape({
