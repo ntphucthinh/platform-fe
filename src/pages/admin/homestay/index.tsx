@@ -170,17 +170,11 @@ export const AdminHomestayPage: React.FC = () => {
       );
 
       if (success) {
-        handleShowSnackbar(
-          `Đã xóa homestay "${homestayToDelete.name}" thành công`,
-          "success",
-        );
+        handleShowSnackbar(`Đã xóa homestay thành công`, "success");
         setHomestayToDelete(null);
         await loadHomestays();
       } else {
-        handleShowSnackbar(
-          error || `Không thể xóa homestay "${homestayToDelete.name}".`,
-          "error",
-        );
+        handleShowSnackbar(error || `Không thể xóa homestay".`, "error");
       }
     } finally {
       setIsDeleting(false);

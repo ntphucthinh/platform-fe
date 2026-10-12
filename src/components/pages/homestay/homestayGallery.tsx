@@ -227,7 +227,7 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
         sx={{
-          borderRadius: "20px",
+          borderRadius: "10px",
           overflow: "hidden",
           border: "1px solid #E2E8F0",
           position: "relative",
@@ -322,7 +322,7 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
                   e.currentTarget.src = DEFAULT_NO_IMAGE;
                 }}
                 sx={{
-                  width: "100%",
+                  width: "%",
                   height: "100%",
                   objectFit: isNoImage ? "contain" : "cover",
                   pointerEvents: "none",
