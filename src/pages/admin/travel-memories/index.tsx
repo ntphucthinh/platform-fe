@@ -35,7 +35,9 @@ import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
 
 export const TravelMemoryListPage: React.FC = () => {
   const navigate = useNavigate();
-  const [memories, setMemories] = useState<ITravelMemory[]>(getTravelMemories());
+  const [memories, setMemories] = useState<ITravelMemory[]>(
+    getTravelMemories(),
+  );
 
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState("");
@@ -198,12 +200,18 @@ export const TravelMemoryListPage: React.FC = () => {
             alignSelf: { xs: "stretch", sm: "auto" },
           }}
         >
-          + Thêm chuyến đi
+          Thêm chuyến đi
         </Button>
       </Box>
 
       {/* 5.2 Summary Cards */}
-      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2.5 }}>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: 2.5,
+        }}
+      >
         <Box>
           <Card
             elevation={1}
@@ -293,7 +301,10 @@ export const TravelMemoryListPage: React.FC = () => {
               >
                 {uniqueDestinationsCount}
               </Typography>
-              <Typography variant="caption" sx={{ color: "#059669", fontWeight: 600 }}>
+              <Typography
+                variant="caption"
+                sx={{ color: "#059669", fontWeight: 600 }}
+              >
                 Điểm đến trên khắp cả nước
               </Typography>
             </CardContent>
@@ -341,7 +352,10 @@ export const TravelMemoryListPage: React.FC = () => {
               >
                 {totalPhotosCount}
               </Typography>
-              <Typography variant="caption" sx={{ color: "#D97706", fontWeight: 600 }}>
+              <Typography
+                variant="caption"
+                sx={{ color: "#D97706", fontWeight: 600 }}
+              >
                 Khoảnh khắc lưu giữ
               </Typography>
             </CardContent>
