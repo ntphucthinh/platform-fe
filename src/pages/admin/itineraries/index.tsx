@@ -16,7 +16,6 @@ import {
   Select,
   FormControl,
   InputLabel,
-  Grid,
 } from '@mui/material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import SearchIcon from '@mui/icons-material/Search'
@@ -446,8 +445,8 @@ export const ItineraryListPage: React.FC = () => {
       </Box>
 
       {/* 5.2 Summary Cards */}
-      <Grid container spacing={2.5}>
-        <Grid sx={{ width: { xs: '100%', sm: '33.333%' } }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2.5 }}>
+        <Box>
           <Card
             elevation={1}
             sx={{
@@ -472,9 +471,9 @@ export const ItineraryListPage: React.FC = () => {
               </Typography>
             </CardContent>
           </Card>
-        </Grid>
+        </Box>
 
-        <Grid sx={{ width: { xs: '100%', sm: '33.333%' } }}>
+        <Box>
           <Card
             elevation={1}
             sx={{
@@ -499,9 +498,9 @@ export const ItineraryListPage: React.FC = () => {
               </Typography>
             </CardContent>
           </Card>
-        </Grid>
+        </Box>
 
-        <Grid sx={{ width: { xs: '100%', sm: '33.333%' } }}>
+        <Box>
           <Card
             elevation={1}
             sx={{
@@ -526,8 +525,8 @@ export const ItineraryListPage: React.FC = () => {
               </Typography>
             </CardContent>
           </Card>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
       {/* 5.3 Search & Filters Bar */}
       <Card

@@ -32,4 +32,14 @@ export const resources: ResourceProps[] = [
       label: 'Lịch trình du lịch',
     },
   },
+  {
+    name: 'travel-memories',
+    list: '/admin/travel-memories',
+    create: '/admin/travel-memories/create',
+    edit: '/admin/travel-memories/:id/edit',
+    show: '/admin/travel-memories/:id',
+    meta: {
+      label: 'Kỷ niệm chuyến đi',
+    },
+  },
 ];

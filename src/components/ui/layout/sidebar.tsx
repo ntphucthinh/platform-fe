@@ -19,6 +19,7 @@ import SettingsIcon from '@mui/icons-material/Settings'
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined'
+import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 const SIDEBAR_WIDTH = 260
@@ -49,6 +50,14 @@ const menuItems: MenuItem[] = [
   { title: 'Homestays', path: '/admin/homestay', icon: <CottageIcon /> },
   { title: 'Lịch trình du lịch', path: '/admin/itineraries', icon: <MapOutlinedIcon /> },
   {
+    title: 'Kỷ niệm chuyến đi',
+    icon: <CollectionsBookmarkOutlinedIcon />,
+    children: [
+      { title: 'Danh sách chuyến đi', path: '/admin/travel-memories' },
+      { title: 'Thêm chuyến đi', path: '/admin/travel-memories/create' },
+    ],
+  },
+  {
     title: 'Users',
     icon: <PeopleIcon />,
     children: [
@@ -67,13 +76,20 @@ export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: Si
   const navigate = useNavigate()
 
   const isUsersRoute = location.pathname.startsWith('/users')
+  const isTravelMemoriesRoute = location.pathname.startsWith('/admin/travel-memories')
   const [prevPath, setPrevPath] = useState(location.pathname)
-  const [usersOpen, setUsersOpen] = useState(isUsersRoute)
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
+    Users: isUsersRoute,
+    'Kỷ niệm chuyến đi': isTravelMemoriesRoute,
+  })
 
   if (location.pathname !== prevPath) {
     setPrevPath(location.pathname)
     if (isUsersRoute) {
-      setUsersOpen(true)
+      setOpenMenus((prev) => ({ ...prev, Users: true }))
+    }
+    if (isTravelMemoriesRoute) {
+      setOpenMenus((prev) => ({ ...prev, 'Kỷ niệm chuyến đi': true }))
     }
   }
 
@@ -81,7 +97,7 @@ export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: Si
     if (item.disabled) return
 
     if (item.children) {
-      setUsersOpen((prev) => !prev)
+      setOpenMenus((prev) => ({ ...prev, [item.title]: !prev[item.title] }))
     } else if (item.path) {
       navigate(item.path)
       if (isMobile) {
@@ -139,10 +155,15 @@ export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: Si
         <List component="nav" sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
           {menuItems.map((item) => {
             const hasChildren = Boolean(item.children?.length)
+            const isOpen = Boolean(openMenus[item.title])
             const isItinerary = Boolean(item.path && item.path.startsWith('/admin/itineraries'))
             const isParentSelected = item.path
               ? location.pathname === item.path || (isItinerary && location.pathname.startsWith('/admin/itineraries'))
-              : hasChildren && isUsersRoute
+              : hasChildren && (
+                  (item.title === 'Users' && isUsersRoute) ||
+                  (item.title === 'Kỷ niệm chuyến đi' && isTravelMemoriesRoute) ||
+                  Boolean(item.children?.some((child) => location.pathname === child.path))
+                )
 
             const parentButtonContent = (
               <ListItemButton
@@ -193,7 +214,7 @@ export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: Si
                         },
                       }}
                     />
-                    {hasChildren && (usersOpen ? <ArrowDropUpIcon sx={{ fontSize: 20, color: '#64748B' }} /> : <ArrowDropDownIcon sx={{ fontSize: 20, color: '#64748B' }} />)}
+                    {hasChildren && (isOpen ? <ArrowDropUpIcon sx={{ fontSize: 20, color: '#64748B' }} /> : <ArrowDropDownIcon sx={{ fontSize: 20, color: '#64748B' }} />)}
                   </>
                 )}
               </ListItemButton>
@@ -211,7 +232,7 @@ export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: Si
               <Box key={item.title}>
                 {parentButtonContent}
                 {hasChildren && (
-                  <Collapse in={usersOpen} timeout="auto" unmountOnExit>
+                  <Collapse in={isOpen} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mt: 0.25 }}>
                       {item.children?.map((subItem) => {
                         const isSubSelected = location.pathname === subItem.path

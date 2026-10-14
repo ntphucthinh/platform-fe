@@ -22,6 +22,10 @@ import { HomestayDetailPage } from "@/pages/homestay/detail";
 import { AdminHomestayPage } from "@/pages/admin/homestay/index";
 import { ItineraryListPage } from "@/pages/admin/itineraries/index";
 import { ItineraryPreviewPage } from "@/pages/admin/itineraries/preview";
+import { TravelMemoryListPage } from "@/pages/admin/travel-memories/index";
+import { TravelMemoryCreatePage } from "@/pages/admin/travel-memories/create";
+import { TravelMemoryDetailPage } from "@/pages/admin/travel-memories/detail";
+import { TravelMemoryEditPage } from "@/pages/admin/travel-memories/edit";
 import { resources } from "@/router/resources";
 import { ErrorComponent } from "@refinedev/mui";
 
@@ -65,6 +69,10 @@ export function AppProvider() {
                 <Route path="admin/itineraries" element={<ItineraryListPage />} />
                 <Route path="admin/itineraries/preview" element={<ItineraryPreviewPage />} />
                 <Route path="admin/itineraries/:id/preview" element={<ItineraryPreviewPage />} />
+                <Route path="admin/travel-memories" element={<TravelMemoryListPage />} />
+                <Route path="admin/travel-memories/create" element={<TravelMemoryCreatePage />} />
+                <Route path="admin/travel-memories/:id" element={<TravelMemoryDetailPage />} />
+                <Route path="admin/travel-memories/:id/edit" element={<TravelMemoryEditPage />} />
 
                 <Route path="users">
                   <Route
