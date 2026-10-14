@@ -18,6 +18,7 @@ import AssessmentIcon from '@mui/icons-material/Assessment'
 import SettingsIcon from '@mui/icons-material/Settings'
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
+import MapOutlinedIcon from '@mui/icons-material/MapOutlined'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 const SIDEBAR_WIDTH = 260
@@ -46,6 +47,7 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { title: 'Dashboard', path: '/admin/dashboard', icon: <DashboardIcon /> },
   { title: 'Homestays', path: '/admin/homestay', icon: <CottageIcon /> },
+  { title: 'Lịch trình du lịch', path: '/admin/itineraries', icon: <MapOutlinedIcon /> },
   {
     title: 'Users',
     icon: <PeopleIcon />,
@@ -137,8 +139,9 @@ export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: Si
         <List component="nav" sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
           {menuItems.map((item) => {
             const hasChildren = Boolean(item.children?.length)
+            const isItinerary = Boolean(item.path && item.path.startsWith('/admin/itineraries'))
             const isParentSelected = item.path
-              ? location.pathname === item.path
+              ? location.pathname === item.path || (isItinerary && location.pathname.startsWith('/admin/itineraries'))
               : hasChildren && isUsersRoute
 
             const parentButtonContent = (

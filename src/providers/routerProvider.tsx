@@ -20,6 +20,8 @@ import { UsersSetting } from "@/pages/users/setting";
 import { HomestayListingPage } from "@/pages/homestay/listing";
 import { HomestayDetailPage } from "@/pages/homestay/detail";
 import { AdminHomestayPage } from "@/pages/admin/homestay/index";
+import { ItineraryListPage } from "@/pages/admin/itineraries/index";
+import { ItineraryPreviewPage } from "@/pages/admin/itineraries/preview";
 import { resources } from "@/router/resources";
 import { ErrorComponent } from "@refinedev/mui";
 
@@ -60,6 +62,9 @@ export function AppProvider() {
                 <Route path="admin" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="admin/dashboard" element={<Home />} />
                 <Route path="admin/homestay" element={<AdminHomestayPage />} />
+                <Route path="admin/itineraries" element={<ItineraryListPage />} />
+                <Route path="admin/itineraries/preview" element={<ItineraryPreviewPage />} />
+                <Route path="admin/itineraries/:id/preview" element={<ItineraryPreviewPage />} />
 
                 <Route path="users">
                   <Route

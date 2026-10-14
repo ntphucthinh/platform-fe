@@ -24,4 +24,12 @@ export const resources: ResourceProps[] = [
       label: 'Homestay',
     },
   },
+  {
+    name: 'itineraries',
+    list: '/admin/itineraries',
+    show: '/admin/itineraries/preview',
+    meta: {
+      label: 'Lịch trình du lịch',
+    },
+  },
 ];
