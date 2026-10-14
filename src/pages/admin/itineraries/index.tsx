@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useSyncExternalStore } from 'react'
 import {
   Box,
   Typography,
@@ -30,7 +30,11 @@ import EditNoteIcon from '@mui/icons-material/EditNote'
 import { useNavigate } from 'react-router-dom'
 import { HeaderTitle } from '@/components/ui/header/headerTitle'
 import { tableSx } from '@/components/ui/table/tableStyles'
-import { MOCK_ITINERARY_LIST } from '@/constants/itineraryConstant'
+import {
+  getItineraryListItems,
+  subscribeItineraries,
+  deleteItinerary,
+} from '@/services/itineraryService'
 import type { IItineraryListItem } from '@/types/pages/itineraries/itinerary'
 import { DeleteConfirmDialog } from '@/components/common/deleteConfirmDialog'
 import { DEFAULT_NO_IMAGE } from '@/constants/homestayConstant'
@@ -61,7 +65,11 @@ function CustomNoRowsOverlay() {
 
 export const ItineraryListPage: React.FC = () => {
   const navigate = useNavigate()
-  const [itineraries, setItineraries] = useState<IItineraryListItem[]>(MOCK_ITINERARY_LIST)
+  const itineraries = useSyncExternalStore(
+    subscribeItineraries,
+    getItineraryListItems,
+    getItineraryListItems,
+  )
   const [searchTerm, setSearchTerm] = useState('')
   const [destinationFilter, setDestinationFilter] = useState('ALL')
   const [durationFilter, setDurationFilter] = useState('ALL')
@@ -146,41 +154,27 @@ export const ItineraryListPage: React.FC = () => {
   }
 
   const handleCreate = () => {
-    setSnackbar({
-      open: true,
-      message: 'Tính năng tạo lịch trình mới đang được phát triển (UI Demo).',
-      severity: 'info',
-    })
+    navigate('/admin/itineraries/create')
   }
 
-  const handleEdit = () => {
-    setSnackbar({
-      open: true,
-      message: 'Tính năng chỉnh sửa lịch trình đang được phát triển (UI Demo).',
-      severity: 'info',
-    })
+  const handleEdit = (item: IItineraryListItem) => {
+    navigate(`/admin/itineraries/${item.id}/edit`)
   }
 
   const handlePreview = (item: IItineraryListItem) => {
-    if (item.hasDetailPreview || item.id === 'itinerary-dalat-3n2d') {
-      navigate('/admin/itineraries/preview')
-    } else {
-      setSnackbar({
-        open: true,
-        message: `Bản xem trước mẫu chi tiết hiện có sẵn cho lịch trình Đà Lạt. Lịch trình "${item.title}" đang được hoàn thiện.`,
-        severity: 'info',
-      })
-    }
+    navigate(`/admin/itineraries/${item.id}/preview`)
   }
 
   const handleConfirmDelete = () => {
     if (!itemToDelete) return
-    setItineraries((prev) => prev.filter((it) => it.id !== itemToDelete.id))
-    setSnackbar({
-      open: true,
-      message: `Đã xóa lịch trình "${itemToDelete.title}" (mô phỏng UI).`,
-      severity: 'success',
-    })
+    const success = deleteItinerary(itemToDelete.id)
+    if (success) {
+      setSnackbar({
+        open: true,
+        message: `Đã xóa lịch trình "${itemToDelete.title}" (mô phỏng UI).`,
+        severity: 'success',
+      })
+    }
     setItemToDelete(null)
   }
 
@@ -363,7 +357,7 @@ export const ItineraryListPage: React.FC = () => {
               variant="contained"
               color="primary"
               aria-label="Chỉnh sửa lịch trình"
-              onClick={handleEdit}
+              onClick={() => handleEdit(row)}
               sx={{
                 minWidth: 0,
                 width: 32,

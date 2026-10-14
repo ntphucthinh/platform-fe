@@ -19,11 +19,13 @@ export interface IItineraryActivity {
 }
 
 export interface IItineraryDay {
+  id?: string
   dayNumber: number
   title: string
-  subtitle: string
+  subtitle?: string
   date?: string
   summary?: string
+  description?: string
   coverImage?: string
   activities: IItineraryActivity[]
 }
@@ -63,14 +65,41 @@ export interface ITravelItinerary {
   title: string
   destination: string
   duration: string
+  durationDays?: number
+  durationNights?: number
   description: string
   coverImage: string
   status: string
-  suitableFor: string
+  suitableFor?: string
   themes: string[]
-  highlights: IItineraryHighlight[]
+  highlights?: IItineraryHighlight[]
   days: IItineraryDay[]
   featuredImages: IItineraryGalleryImage[]
   travelTips: string[]
+  createdAt?: string
+  updatedAt?: string
 }
 
+export interface ICreateItineraryInput {
+  title: string
+  destination: string
+  durationDays?: number
+  durationNights?: number
+  duration?: string
+  description: string
+  coverImage: string
+  status?: string
+  suitableFor?: string
+  themes: string[]
+  days: IItineraryDay[]
+  featuredImages?: IItineraryGalleryImage[]
+  travelTips?: string[]
+  highlights?: IItineraryHighlight[]
+}
+
+export interface IUpdateItineraryInput extends Partial<ICreateItineraryInput> {
+  title?: string
+  destination?: string
+  description?: string
+  coverImage?: string
+}

@@ -22,6 +22,8 @@ import { HomestayDetailPage } from "@/pages/homestay/detail";
 import { AdminHomestayPage } from "@/pages/admin/homestay/index";
 import { ItineraryListPage } from "@/pages/admin/itineraries/index";
 import { ItineraryPreviewPage } from "@/pages/admin/itineraries/preview";
+import { ItineraryCreatePage } from "@/pages/admin/itineraries/create";
+import { ItineraryEditPage } from "@/pages/admin/itineraries/edit";
 import { TravelMemoryListPage } from "@/pages/admin/travel-memories/index";
 import { TravelMemoryCreatePage } from "@/pages/admin/travel-memories/create";
 import { TravelMemoryDetailPage } from "@/pages/admin/travel-memories/detail";
@@ -67,8 +69,9 @@ export function AppProvider() {
                 <Route path="admin/dashboard" element={<Home />} />
                 <Route path="admin/homestay" element={<AdminHomestayPage />} />
                 <Route path="admin/itineraries" element={<ItineraryListPage />} />
-                <Route path="admin/itineraries/preview" element={<ItineraryPreviewPage />} />
+                <Route path="admin/itineraries/create" element={<ItineraryCreatePage />} />
                 <Route path="admin/itineraries/:id/preview" element={<ItineraryPreviewPage />} />
+                <Route path="admin/itineraries/:id/edit" element={<ItineraryEditPage />} />
                 <Route path="admin/travel-memories" element={<TravelMemoryListPage />} />
                 <Route path="admin/travel-memories/create" element={<TravelMemoryCreatePage />} />
                 <Route path="admin/travel-memories/:id" element={<TravelMemoryDetailPage />} />

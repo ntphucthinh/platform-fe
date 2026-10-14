@@ -48,7 +48,14 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { title: 'Dashboard', path: '/admin/dashboard', icon: <DashboardIcon /> },
   { title: 'Homestays', path: '/admin/homestay', icon: <CottageIcon /> },
-  { title: 'Lịch trình du lịch', path: '/admin/itineraries', icon: <MapOutlinedIcon /> },
+  {
+    title: 'Lịch trình du lịch',
+    icon: <MapOutlinedIcon />,
+    children: [
+      { title: 'Danh sách lịch trình', path: '/admin/itineraries' },
+      { title: 'Thêm lịch trình', path: '/admin/itineraries/create' },
+    ],
+  },
   {
     title: 'Kỷ niệm chuyến đi',
     icon: <CollectionsBookmarkOutlinedIcon />,
@@ -77,10 +84,12 @@ export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: Si
 
   const isUsersRoute = location.pathname.startsWith('/users')
   const isTravelMemoriesRoute = location.pathname.startsWith('/admin/travel-memories')
+  const isItinerariesRoute = location.pathname.startsWith('/admin/itineraries')
   const [prevPath, setPrevPath] = useState(location.pathname)
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
     Users: isUsersRoute,
     'Kỷ niệm chuyến đi': isTravelMemoriesRoute,
+    'Lịch trình du lịch': isItinerariesRoute,
   })
 
   if (location.pathname !== prevPath) {
@@ -90,6 +99,9 @@ export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: Si
     }
     if (isTravelMemoriesRoute) {
       setOpenMenus((prev) => ({ ...prev, 'Kỷ niệm chuyến đi': true }))
+    }
+    if (isItinerariesRoute) {
+      setOpenMenus((prev) => ({ ...prev, 'Lịch trình du lịch': true }))
     }
   }
 
@@ -156,14 +168,15 @@ export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: Si
           {menuItems.map((item) => {
             const hasChildren = Boolean(item.children?.length)
             const isOpen = Boolean(openMenus[item.title])
-            const isItinerary = Boolean(item.path && item.path.startsWith('/admin/itineraries'))
             const isParentSelected = item.path
-              ? location.pathname === item.path || (isItinerary && location.pathname.startsWith('/admin/itineraries'))
-              : hasChildren && (
-                  (item.title === 'Users' && isUsersRoute) ||
-                  (item.title === 'Kỷ niệm chuyến đi' && isTravelMemoriesRoute) ||
-                  Boolean(item.children?.some((child) => location.pathname === child.path))
-                )
+              ? location.pathname === item.path
+              : hasChildren &&
+                  (
+                    (item.title === 'Users' && isUsersRoute) ||
+                    (item.title === 'Kỷ niệm chuyến đi' && isTravelMemoriesRoute) ||
+                    (item.title === 'Lịch trình du lịch' && isItinerariesRoute) ||
+                    Boolean(item.children?.some((child) => location.pathname === child.path))
+                  )
 
             const parentButtonContent = (
               <ListItemButton

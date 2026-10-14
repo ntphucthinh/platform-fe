@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Typography,
@@ -13,9 +13,10 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { HeaderTitle } from '@/components/ui/header/headerTitle'
-import { MOCK_DALAT_ITINERARY } from '@/constants/itineraryConstant'
+import { getItineraryById, subscribeItineraries } from '@/services/itineraryService'
+import type { IItineraryDay } from '@/types/pages/itineraries/itinerary'
 import { ItineraryHero } from '@/components/pages/itineraries/itineraryHero'
 import { ItineraryInfoPanel } from '@/components/pages/itineraries/itineraryInfoPanel'
 import {
@@ -26,10 +27,23 @@ import { ItineraryOverview } from '@/components/pages/itineraries/itineraryOverv
 import { ItineraryTimeline } from '@/components/pages/itineraries/itineraryTimeline'
 import { ItineraryImageGallery } from '@/components/pages/itineraries/itineraryImageGallery'
 import { ItineraryTravelTips } from '@/components/pages/itineraries/itineraryTravelTips'
+import { ItineraryNotFound } from '@/components/pages/itineraries/itineraryNotFound'
 
 export const ItineraryPreviewPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const itinerary = MOCK_DALAT_ITINERARY
+
+  const [itinerary, setItinerary] = useState(() =>
+    id ? getItineraryById(id) : undefined,
+  )
+
+  useEffect(() => {
+    const unsub = subscribeItineraries(() => {
+      setItinerary(id ? getItineraryById(id) : undefined)
+    })
+    return unsub
+  }, [id])
+
   const [activeTab, setActiveTab] = useState<ItineraryTabKey>('overview')
 
   // Toast notification state
@@ -43,30 +57,38 @@ export const ItineraryPreviewPage: React.FC = () => {
     severity: 'info',
   })
 
-  // Calculate total activities dynamically from mock data
-  const totalActivities = useMemo(() => {
-    return itinerary.days.reduce((acc, day) => acc + day.activities.length, 0)
-  }, [itinerary.days])
+  // Calculate total activities dynamically from record data
+  const totalActivities = itinerary
+    ? itinerary.days.reduce(
+        (acc: number, day: IItineraryDay) =>
+          acc + (day.activities?.length || 0),
+        0,
+      )
+    : 0
 
   // Get active day object if a day tab is selected
-  const activeDay = useMemo(() => {
-    if (activeTab === 'overview') return null
+  const activeDay = (() => {
+    if (!itinerary || activeTab === 'overview') return null
     const match = activeTab.match(/day-(\d+)/)
     if (!match) return null
     const dayNumber = parseInt(match[1], 10)
-    return itinerary.days.find((d) => d.dayNumber === dayNumber) || null
-  }, [activeTab, itinerary.days])
+    return itinerary.days.find((d: IItineraryDay) => d.dayNumber === dayNumber) || null
+  })()
+
+  if (!itinerary) {
+    return (
+      <ItineraryNotFound
+        message={`Không tìm thấy lịch trình du lịch cho mã "${id || ''}".`}
+      />
+    )
+  }
 
   const handleBack = () => {
     navigate('/admin/itineraries')
   }
 
   const handleEditClick = () => {
-    setSnackbar({
-      open: true,
-      message: 'Tính năng chỉnh sửa lịch trình đang được hoàn thiện (Bản demo giao diện).',
-      severity: 'info',
-    })
+    navigate(`/admin/itineraries/${itinerary.id}/edit`)
   }
 
   const handleSaveDraft = () => {
@@ -81,6 +103,13 @@ export const ItineraryPreviewPage: React.FC = () => {
     setSnackbar((prev) => ({ ...prev, open: false }))
   }
 
+  const durationLabel =
+    itinerary.duration ||
+    `${itinerary.durationDays || itinerary.days.length} ngày ${
+      itinerary.durationNights ??
+      Math.max(0, (itinerary.durationDays || itinerary.days.length) - 1)
+    } đêm`
+
   return (
     <Box
       sx={{
@@ -93,9 +122,9 @@ export const ItineraryPreviewPage: React.FC = () => {
         pb: 6,
       }}
     >
-      <HeaderTitle>Xem trước lịch trình</HeaderTitle>
+      <HeaderTitle>{`Xem trước: ${itinerary.title}`}</HeaderTitle>
 
-      {/* 5.1 Admin Preview Toolbar */}
+      {/* Admin Preview Toolbar */}
       <Box
         sx={{
           display: 'flex',
@@ -108,10 +137,10 @@ export const ItineraryPreviewPage: React.FC = () => {
       >
         {/* Left Toolbar */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Tooltip title="Quay lại">
+          <Tooltip title="Quay lại danh sách">
             <IconButton
               onClick={handleBack}
-              aria-label="Quay lại"
+              aria-label="Quay lại danh sách"
               sx={{
                 bgcolor: '#FFFFFF',
                 border: '1px solid #E2E8F0',
@@ -126,7 +155,14 @@ export const ItineraryPreviewPage: React.FC = () => {
           </Tooltip>
 
           <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                flexWrap: 'wrap',
+              }}
+            >
               <Typography
                 variant="h5"
                 component="h1"
@@ -137,24 +173,39 @@ export const ItineraryPreviewPage: React.FC = () => {
                   letterSpacing: '-0.01em',
                 }}
               >
-                Xem trước lịch trình
+                {itinerary.title}
               </Typography>
 
               <Chip
                 icon={
                   <FiberManualRecordIcon
-                    sx={{ fontSize: '10px !important', color: '#D97706 !important' }}
+                    sx={{
+                      fontSize: '10px !important',
+                      color:
+                        itinerary.status === 'Đã hoàn thiện'
+                          ? '#059669 !important'
+                          : '#D97706 !important',
+                    }}
                   />
                 }
-                label="Bản xem trước · Chưa xuất bản"
+                label={
+                  itinerary.status === 'Đã hoàn thiện'
+                    ? 'Đã hoàn thiện'
+                    : 'Bản xem trước · Chưa xuất bản'
+                }
                 size="small"
                 sx={{
-                  bgcolor: '#FEF3C7',
-                  color: '#92400E',
+                  bgcolor:
+                    itinerary.status === 'Đã hoàn thiện' ? '#ECFDF5' : '#FEF3C7',
+                  color:
+                    itinerary.status === 'Đã hoàn thiện' ? '#065F46' : '#92400E',
                   fontWeight: 700,
                   fontSize: '0.74rem',
                   borderRadius: '6px',
-                  border: '1px solid #FDE68A',
+                  border:
+                    itinerary.status === 'Đã hoàn thiện'
+                      ? '1px solid #A7F3D0'
+                      : '1px solid #FDE68A',
                 }}
               />
             </Box>
@@ -163,13 +214,20 @@ export const ItineraryPreviewPage: React.FC = () => {
               variant="body2"
               sx={{ color: '#64748B', fontSize: '0.86rem', mt: 0.25 }}
             >
-              Kiểm tra nội dung và thứ tự hoạt động trước khi lưu lịch trình.
+              Kiểm tra nội dung và thứ tự hoạt động của lịch trình du lịch.
             </Typography>
           </Box>
         </Box>
 
         {/* Right Toolbar Actions */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, alignSelf: { xs: 'stretch', sm: 'auto' } }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            alignSelf: { xs: 'stretch', sm: 'auto' },
+          }}
+        >
           <Button
             variant="outlined"
             startIcon={<EditOutlinedIcon />}
@@ -223,20 +281,20 @@ export const ItineraryPreviewPage: React.FC = () => {
           coverImage={itinerary.coverImage}
           destination={itinerary.destination}
           title={itinerary.title}
-          duration={itinerary.duration}
+          duration={durationLabel}
           description={itinerary.description}
         />
 
         <ItineraryInfoPanel
-          duration={itinerary.duration}
+          duration={durationLabel}
           destination={itinerary.destination}
-          suitableFor={itinerary.suitableFor}
+          suitableFor={itinerary.suitableFor || 'Cặp đôi, nhóm bạn, gia đình'}
           totalActivities={totalActivities}
           themes={itinerary.themes}
         />
       </Box>
 
-      {/* 5.4 Day Navigation Tabs */}
+      {/* Day Navigation Tabs */}
       <Box sx={{ pt: 1 }}>
         <ItineraryDayTabs
           activeTab={activeTab}
@@ -250,30 +308,41 @@ export const ItineraryPreviewPage: React.FC = () => {
         sx={{
           display: 'grid',
           gridTemplateColumns: { xs: '1fr', lg: '1fr 340px' },
-          gap: 3.5,
+          gap: 3,
           alignItems: 'start',
         }}
       >
-        {/* Left Column: Overview or Timeline */}
-        <Box sx={{ minWidth: 0 }}>
-          {activeTab === 'overview' && (
+        {/* Left Column: Overview or Timeline based on Active Tab */}
+        <Box sx={{ minWidth: 0, width: '100%' }}>
+          {activeTab === 'overview' ? (
             <ItineraryOverview
               itinerary={itinerary}
               onSelectDay={(tabKey) => setActiveTab(tabKey)}
             />
+          ) : activeDay ? (
+            <ItineraryTimeline day={activeDay} />
+          ) : (
+            <Typography sx={{ color: 'text.secondary', py: 4 }}>
+              Không tìm thấy thông tin cho ngày đã chọn.
+            </Typography>
           )}
-
-          {activeDay && <ItineraryTimeline day={activeDay} />}
         </Box>
 
         {/* Right Column: Featured Images & Travel Tips */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <ItineraryImageGallery images={itinerary.featuredImages} />
-          <ItineraryTravelTips tips={itinerary.travelTips} />
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 3,
+            width: '100%',
+          }}
+        >
+          <ItineraryImageGallery images={itinerary.featuredImages || []} />
+          <ItineraryTravelTips tips={itinerary.travelTips || []} />
         </Box>
       </Box>
 
-      {/* Snackbar feedback for actions */}
+      {/* Global Snackbar Toast Feedback */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -283,12 +352,8 @@ export const ItineraryPreviewPage: React.FC = () => {
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}
-          sx={{
-            width: '100%',
-            borderRadius: '10px',
-            fontWeight: 500,
-            boxShadow: '0 4px 14px rgba(0,0,0,0.12)',
-          }}
+          variant="filled"
+          sx={{ width: '100%', borderRadius: '8px', fontWeight: 600 }}
         >
           {snackbar.message}
         </Alert>

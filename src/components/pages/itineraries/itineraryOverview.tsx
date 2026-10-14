@@ -67,24 +67,23 @@ export const ItineraryOverview: React.FC<ItineraryOverviewProps> = ({
             lineHeight: 1.6,
           }}
         >
-          Hành trình 3 ngày 2 đêm tại Đà Lạt sẽ đưa bạn khám phá những địa điểm nổi tiếng,
-          thưởng thức đặc sản địa phương và trải nghiệm nhịp sống chậm đặc trưng của
-          thành phố ngàn hoa.
+          {itinerary.description}
         </Typography>
       </Box>
 
-      {/* 4 Feature highlights */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: {
-            xs: 'repeat(2, 1fr)',
-            sm: 'repeat(4, 1fr)',
-          },
-          gap: 2,
-        }}
-      >
-        {itinerary.highlights.map((hl) => (
+      {/* Feature highlights */}
+      {itinerary.highlights && itinerary.highlights.length > 0 && (
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'repeat(2, 1fr)',
+              sm: `repeat(${Math.min(itinerary.highlights.length, 4)}, 1fr)`,
+            },
+            gap: 2,
+          }}
+        >
+          {itinerary.highlights.map((hl) => (
           <Card
             key={hl.id}
             elevation={0}
@@ -131,6 +130,7 @@ export const ItineraryOverview: React.FC<ItineraryOverviewProps> = ({
           </Card>
         ))}
       </Box>
+    )}
 
       {/* 3 Day-summary cards */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
