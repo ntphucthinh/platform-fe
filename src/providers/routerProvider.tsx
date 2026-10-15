@@ -53,9 +53,13 @@ export function AppProvider() {
 
               {/* Admin Authentication Route */}
               <Route path="/admin/login" element={<Login />} />
-              <Route path="/login" element={<Navigate to="/admin/login" replace />} />
+              <Route
+                path="/login"
+                element={<Navigate to="/admin/login" replace />}
+              />
 
               {/* Protected Admin Dashboard & Management Routes */}
+
               <Route
                 element={
                   <AdminAuthGuard>
@@ -65,18 +69,38 @@ export function AppProvider() {
                   </AdminAuthGuard>
                 }
               >
-                <Route path="admin" element={<Navigate to="/admin/dashboard" replace />} />
-                <Route path="admin/dashboard" element={<Home />} />
-                <Route path="admin/homestay" element={<AdminHomestayPage />} />
-                <Route path="admin/itineraries" element={<ItineraryListPage />} />
-                <Route path="admin/itineraries/create" element={<ItineraryCreatePage />} />
-                <Route path="admin/itineraries/:id/preview" element={<ItineraryPreviewPage />} />
-                <Route path="admin/itineraries/:id/edit" element={<ItineraryEditPage />} />
-                <Route path="admin/travel-memories" element={<TravelMemoryListPage />} />
-                <Route path="admin/travel-memories/create" element={<TravelMemoryCreatePage />} />
-                <Route path="admin/travel-memories/:id" element={<TravelMemoryDetailPage />} />
-                <Route path="admin/travel-memories/:id/edit" element={<TravelMemoryEditPage />} />
+                {/* Admin */}
+                <Route path="admin">
+                  <Route
+                    index
+                    element={<Navigate to="/admin/dashboard" replace />}
+                  />
 
+                  <Route path="dashboard" element={<Home />} />
+
+                  <Route path="homestay" element={<AdminHomestayPage />} />
+
+                  {/* Itineraries */}
+                  <Route path="itineraries">
+                    <Route index element={<ItineraryListPage />} />
+                    <Route path="create" element={<ItineraryCreatePage />} />
+                    <Route
+                      path=":id/preview"
+                      element={<ItineraryPreviewPage />}
+                    />
+                    <Route path=":id/edit" element={<ItineraryEditPage />} />
+                  </Route>
+
+                  {/* Travel Memories */}
+                  <Route path="travel-memories">
+                    <Route index element={<TravelMemoryListPage />} />
+                    <Route path="create" element={<TravelMemoryCreatePage />} />
+                    <Route path=":id" element={<TravelMemoryDetailPage />} />
+                    <Route path=":id/edit" element={<TravelMemoryEditPage />} />
+                  </Route>
+                </Route>
+
+                {/* Users */}
                 <Route path="users">
                   <Route
                     index
@@ -88,6 +112,7 @@ export function AppProvider() {
                   <Route path="setting" element={<UsersSetting />} />
                 </Route>
 
+                {/* Not Found */}
                 <Route path="*" element={<ErrorComponent />} />
               </Route>
             </Routes>
