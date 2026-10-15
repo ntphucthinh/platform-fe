@@ -102,9 +102,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
       ? initialData.durationNights
       : Math.max(0, (initialData?.days?.length || 3) - 1),
   );
-  const [status, setStatus] = useState<string>(
-    initialData?.status === "Đã hoàn thiện" ? "Đã hoàn thiện" : "Bản nháp",
-  );
+  const status = initialData?.status || "Đã hoàn thiện";
   const [suitableFor, setSuitableFor] = useState(
     initialData?.suitableFor || "Cặp đôi, nhóm bạn, gia đình",
   );
@@ -747,42 +745,21 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             size="medium"
           />
 
-          {/* Row 2: Địa điểm, Trạng thái */}
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", md: "2fr 1fr" },
-              gap: 2,
+          {/* Row 2: Địa điểm */}
+          <TextField
+            label="Địa điểm *"
+            placeholder="Ví dụ: Đà Lạt, Lâm Đồng"
+            value={destination}
+            onChange={(e) => {
+              setDestination(e.target.value);
+              if (errors.destination)
+                setErrors((prev) => ({ ...prev, destination: undefined }));
             }}
-          >
-            <TextField
-              label="Địa điểm *"
-              placeholder="Ví dụ: Đà Lạt, Lâm Đồng"
-              value={destination}
-              onChange={(e) => {
-                setDestination(e.target.value);
-                if (errors.destination)
-                  setErrors((prev) => ({ ...prev, destination: undefined }));
-              }}
-              error={Boolean(errors.destination)}
-              helperText={errors.destination}
-              fullWidth
-              required
-            />
-
-            <FormControl fullWidth>
-              <InputLabel id="status-select-label">Trạng thái</InputLabel>
-              <Select
-                labelId="status-select-label"
-                value={status}
-                label="Trạng thái"
-                onChange={(e) => setStatus(e.target.value)}
-              >
-                <MenuItem value="Bản nháp">Bản nháp</MenuItem>
-                <MenuItem value="Đã hoàn thiện">Đã hoàn thiện</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
+            error={Boolean(errors.destination)}
+            helperText={errors.destination}
+            fullWidth
+            required
+          />
 
           {/* Row 3: Thời lượng (Số ngày, Số đêm) & Đối tượng phù hợp */}
           <Box

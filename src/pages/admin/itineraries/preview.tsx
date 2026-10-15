@@ -4,7 +4,6 @@ import {
   Typography,
   Button,
   IconButton,
-  Chip,
   Snackbar,
   Alert,
   Tooltip,
@@ -12,7 +11,6 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'
-import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord'
 import { useNavigate, useParams } from 'react-router-dom'
 import { HeaderTitle } from '@/components/ui/header/headerTitle'
 import { getItineraryById, subscribeItineraries } from '@/services/itineraryService'
@@ -175,39 +173,6 @@ export const ItineraryPreviewPage: React.FC = () => {
               >
                 {itinerary.title}
               </Typography>
-
-              <Chip
-                icon={
-                  <FiberManualRecordIcon
-                    sx={{
-                      fontSize: '10px !important',
-                      color:
-                        itinerary.status === 'Đã hoàn thiện'
-                          ? '#059669 !important'
-                          : '#D97706 !important',
-                    }}
-                  />
-                }
-                label={
-                  itinerary.status === 'Đã hoàn thiện'
-                    ? 'Đã hoàn thiện'
-                    : 'Bản xem trước · Chưa xuất bản'
-                }
-                size="small"
-                sx={{
-                  bgcolor:
-                    itinerary.status === 'Đã hoàn thiện' ? '#ECFDF5' : '#FEF3C7',
-                  color:
-                    itinerary.status === 'Đã hoàn thiện' ? '#065F46' : '#92400E',
-                  fontWeight: 700,
-                  fontSize: '0.74rem',
-                  borderRadius: '6px',
-                  border:
-                    itinerary.status === 'Đã hoàn thiện'
-                      ? '1px solid #A7F3D0'
-                      : '1px solid #FDE68A',
-                }}
-              />
             </Box>
 
             <Typography

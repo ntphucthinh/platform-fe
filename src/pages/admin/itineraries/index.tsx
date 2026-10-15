@@ -25,8 +25,8 @@ import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
-import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined";
-import EditNoteIcon from "@mui/icons-material/EditNote";
+import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import ExploreOutlinedIcon from "@mui/icons-material/ExploreOutlined";
 import { useNavigate } from "react-router-dom";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { tableSx } from "@/components/ui/table/tableStyles";
@@ -73,7 +73,6 @@ export const ItineraryListPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [destinationFilter, setDestinationFilter] = useState("ALL");
   const [durationFilter, setDurationFilter] = useState("ALL");
-  const [statusFilter, setStatusFilter] = useState("ALL");
 
   // Delete modal state
   const [itemToDelete, setItemToDelete] = useState<IItineraryListItem | null>(
@@ -93,12 +92,8 @@ export const ItineraryListPage: React.FC = () => {
 
   // Summary counts
   const totalCount = itineraries.length;
-  const completedCount = useMemo(
-    () => itineraries.filter((item) => item.status === "Đã hoàn thiện").length,
-    [itineraries],
-  );
-  const draftCount = useMemo(
-    () => itineraries.filter((item) => item.status === "Bản nháp").length,
+  const totalActivitiesCount = useMemo(
+    () => itineraries.reduce((sum, item) => sum + (item.activityCount || 0), 0),
     [itineraries],
   );
 
@@ -124,9 +119,6 @@ export const ItineraryListPage: React.FC = () => {
       const matchesDestination =
         destinationFilter === "ALL" || item.destination === destinationFilter;
 
-      const matchesStatus =
-        statusFilter === "ALL" || item.status === statusFilter;
-
       let matchesDuration = true;
       if (durationFilter === "1") {
         matchesDuration = item.daysCount === 1;
@@ -138,29 +130,24 @@ export const ItineraryListPage: React.FC = () => {
         matchesDuration = item.daysCount >= 4;
       }
 
-      return (
-        matchesSearch && matchesDestination && matchesStatus && matchesDuration
-      );
+      return matchesSearch && matchesDestination && matchesDuration;
     });
   }, [
     itineraries,
     searchTerm,
     destinationFilter,
-    statusFilter,
     durationFilter,
   ]);
 
   const isFiltered =
     searchTerm !== "" ||
     destinationFilter !== "ALL" ||
-    durationFilter !== "ALL" ||
-    statusFilter !== "ALL";
+    durationFilter !== "ALL";
 
   const handleResetFilters = () => {
     setSearchTerm("");
     setDestinationFilter("ALL");
     setDurationFilter("ALL");
-    setStatusFilter("ALL");
   };
 
   const handleCreate = () => {
@@ -295,30 +282,6 @@ export const ItineraryListPage: React.FC = () => {
           }}
         />
       ),
-    },
-    {
-      field: "status",
-      headerName: "Trạng thái",
-      width: 140,
-      align: "center",
-      headerAlign: "center",
-      renderCell: ({ value }) => {
-        const isCompleted = value === "Đã hoàn thiện";
-        return (
-          <Chip
-            label={value as string}
-            size="small"
-            sx={{
-              bgcolor: isCompleted ? "#ECFDF5" : "#FFFBEB",
-              color: isCompleted ? "#059669" : "#D97706",
-              border: isCompleted ? "1px solid #A7F3D0" : "1px solid #FDE68A",
-              fontWeight: 700,
-              fontSize: "0.75rem",
-              borderRadius: "6px",
-            }}
-          />
-        );
-      },
     },
     {
       field: "updatedAt",
@@ -528,30 +491,30 @@ export const ItineraryListPage: React.FC = () => {
                   variant="subtitle2"
                   sx={{ color: "text.secondary", fontWeight: 600 }}
                 >
-                  Đã hoàn thiện
+                  Điểm đến
                 </Typography>
                 <Box
                   sx={{
                     p: 0.8,
                     borderRadius: "8px",
-                    bgcolor: "#ECFDF5",
-                    color: "#059669",
+                    bgcolor: "#F0F9FF",
+                    color: "#0284C7",
                   }}
                 >
-                  <CheckCircleOutlinedIcon sx={{ fontSize: 20 }} />
+                  <LocationOnOutlinedIcon sx={{ fontSize: 20 }} />
                 </Box>
               </Box>
               <Typography
                 variant="h5"
                 sx={{ fontWeight: 700, color: "text.primary" }}
               >
-                {completedCount}
+                {uniqueDestinations.length}
               </Typography>
               <Typography
                 variant="caption"
-                sx={{ color: "#059669", fontWeight: 600 }}
+                sx={{ color: "#0284C7", fontWeight: 600 }}
               >
-                Sẵn sàng phục vụ khách
+                Khu vực khám phá
               </Typography>
             </CardContent>
           </Card>
@@ -578,30 +541,30 @@ export const ItineraryListPage: React.FC = () => {
                   variant="subtitle2"
                   sx={{ color: "text.secondary", fontWeight: 600 }}
                 >
-                  Bản nháp
+                  Tổng hoạt động
                 </Typography>
                 <Box
                   sx={{
                     p: 0.8,
                     borderRadius: "8px",
-                    bgcolor: "#FFFBEB",
-                    color: "#D97706",
+                    bgcolor: "#ECFDF5",
+                    color: "#059669",
                   }}
                 >
-                  <EditNoteIcon sx={{ fontSize: 20 }} />
+                  <ExploreOutlinedIcon sx={{ fontSize: 20 }} />
                 </Box>
               </Box>
               <Typography
                 variant="h5"
                 sx={{ fontWeight: 700, color: "text.primary" }}
               >
-                {draftCount}
+                {totalActivitiesCount}
               </Typography>
               <Typography
                 variant="caption"
-                sx={{ color: "#D97706", fontWeight: 600 }}
+                sx={{ color: "#059669", fontWeight: 600 }}
               >
-                Đang biên tập nội dung
+                Trải nghiệm được thiết kế
               </Typography>
             </CardContent>
           </Card>
@@ -676,20 +639,6 @@ export const ItineraryListPage: React.FC = () => {
           </Select>
         </FormControl>
 
-        {/* Status Filter */}
-        <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 150 } }}>
-          <InputLabel id="status-filter-label">Trạng thái</InputLabel>
-          <Select
-            labelId="status-filter-label"
-            value={statusFilter}
-            label="Trạng thái"
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <MenuItem value="ALL">Tất cả trạng thái</MenuItem>
-            <MenuItem value="Đã hoàn thiện">Đã hoàn thiện</MenuItem>
-            <MenuItem value="Bản nháp">Bản nháp</MenuItem>
-          </Select>
-        </FormControl>
 
         {/* Reset button */}
         {isFiltered && (
