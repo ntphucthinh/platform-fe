@@ -1,8 +1,9 @@
 import { type ObjectSchema, object, string, number, array, boolean, mixed } from "yup";
-import type {
-  IHomestayFormData,
-  IHomestayRoomFormData,
-  IRoomFormImageItem,
+import {
+  PriceUnit,
+  type IHomestayFormData,
+  type IHomestayRoomFormData,
+  type IRoomFormImageItem,
 } from "@/types/pages/homestay/homestay";
 
 const roomImageItemSchema: ObjectSchema<IRoomFormImageItem> = object().shape({
@@ -28,6 +29,23 @@ const roomSchema: ObjectSchema<IHomestayRoomFormData> = object().shape({
   name: string().trim().required("Tên loại phòng là bắt buộc"),
   description: string().trim().nullable().optional(),
   priceText: string().trim().nullable().optional(),
+  priceAmount: number()
+    .transform((_value, originalValue) =>
+      originalValue === "" || originalValue === null || originalValue === undefined
+        ? null
+        : Number(originalValue)
+    )
+    .nullable()
+    .optional()
+    .test(
+      "positive-if-present",
+      "Giá thuê phải là số dương",
+      (value) => value === null || value === undefined || value > 0
+    ),
+  priceUnit: mixed<PriceUnit>()
+    .oneOf(Object.values(PriceUnit) as PriceUnit[], "Đơn vị tính không hợp lệ")
+    .nullable()
+    .optional(),
   sortOrder: number().required(),
   images: array()
     .of(string().required())
@@ -39,6 +57,7 @@ const roomSchema: ObjectSchema<IHomestayRoomFormData> = object().shape({
     .max(50, "Mỗi loại phòng chỉ được phép có tối đa 50 hình ảnh.")
     .optional(),
 });
+
 
 export const homestaySchema: ObjectSchema<IHomestayFormData> = object().shape({
   name: string()

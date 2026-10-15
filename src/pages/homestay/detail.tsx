@@ -23,7 +23,7 @@ import { PublicFooter } from "@/components/pages/homestay/publicFooter";
 import { HomestayGallery } from "@/components/pages/homestay/homestayGallery";
 import type { IHomestayItem, HomestayRoom } from "@/types/pages/homestay/homestay";
 import { getHomestayById } from "@/services/homestayService";
-import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE, formatRoomPrice } from "@/constants/homestayConstant";
 
 export const HomestayDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -192,12 +192,10 @@ export const HomestayDetailPage: React.FC = () => {
   const roomName = activeRoom ? activeRoom.name : homestay.name;
 
   const roomPriceText = activeRoom
-    ? (activeRoom.priceText && activeRoom.priceText.trim() !== ""
-        ? activeRoom.priceText
-        : "Liên hệ để biết giá")
-    : (homestay.price && homestay.price.trim() !== ""
-        ? homestay.price
-        : "Liên hệ để biết giá");
+    ? formatRoomPrice(activeRoom.priceAmount, activeRoom.priceUnit)
+    : (homestay.rooms?.[0]
+        ? formatRoomPrice(homestay.rooms[0].priceAmount, homestay.rooms[0].priceUnit)
+        : "Chưa cập nhật giá");
 
   const roomDescription = activeRoom
     ? activeRoom.description

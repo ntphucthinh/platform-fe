@@ -21,6 +21,7 @@ import { HomestayCard } from "@/components/pages/homestay/homestayCard";
 
 import type { IHomestayItem } from "@/types/pages/homestay/homestay";
 import { getHomestays } from "@/services/homestayService";
+import { formatRoomPrice } from "@/constants/homestayConstant";
 
 export const HomestayListingPage: React.FC = () => {
   const [dbHomestays, setDbHomestays] = useState<IHomestayItem[]>([]);
@@ -63,12 +64,15 @@ export const HomestayListingPage: React.FC = () => {
     const term = searchTerm.toLowerCase();
     return homestayList.filter((h) => {
       const locStr = h.address || h.location || "";
-      const matchesRoom = (h.rooms || []).some(
-        (r) =>
+      const matchesRoom = (h.rooms || []).some((r) => {
+        const formatted = formatRoomPrice(r.priceAmount, r.priceUnit).toLowerCase();
+        return (
           r.name.toLowerCase().includes(term) ||
           (r.description ?? "").toLowerCase().includes(term) ||
-          (r.priceText ?? "").toLowerCase().includes(term)
-      );
+          (r.priceAmount ? String(r.priceAmount).includes(term) : false) ||
+          formatted.includes(term)
+        );
+      });
 
       return (
         (h.name ?? "").toLowerCase().includes(term) ||

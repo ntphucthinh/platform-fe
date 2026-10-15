@@ -8,12 +8,14 @@
 
 import { env } from "@/config/env";
 import { getValidAdminToken, refreshAdminSession } from "@/services/authService";
-import type {
-  IHomestayItem,
-  IHomestayFormData,
-  IRoomFormImageItem,
-  HomestayRoom,
-  HomestayRoomImage,
+import { formatRoomPrice } from "@/constants/homestayConstant";
+import {
+  PriceUnit,
+  type IHomestayItem,
+  type IHomestayFormData,
+  type IRoomFormImageItem,
+  type HomestayRoom,
+  type HomestayRoomImage,
 } from "@/types/pages/homestay/homestay";
 
 // ---------------------------------------------------------------------------
@@ -38,6 +40,8 @@ export interface DbHomestayRoom {
   name: string;
   description: string | null;
   price_text: string | null;
+  price_amount?: number | null;
+  price_unit?: string | null;
   sort_order: number;
   created_at?: string;
   updated_at?: string;
@@ -239,6 +243,11 @@ export function mapDbHomestayToItem(dbRow: DbHomestay): IHomestayItem {
       name: room.name ?? "",
       description: room.description ?? null,
       priceText: room.price_text ?? null,
+      priceAmount:
+        room.price_amount !== undefined && room.price_amount !== null
+          ? Number(room.price_amount)
+          : null,
+      priceUnit: (room.price_unit as PriceUnit) || null,
       sortOrder: room.sort_order ?? 1,
       createdAt: room.created_at,
       updatedAt: room.updated_at,
@@ -266,11 +275,10 @@ export function mapDbHomestayToItem(dbRow: DbHomestay): IHomestayItem {
   });
 
   // Representative price:
-  // If rooms exist, use first room's priceText or legacy homestay price
-  const representativePrice =
-    rooms.length > 0
-      ? rooms.find((r) => r.priceText && r.priceText.trim())?.priceText || dbRow.price || null
-      : dbRow.price || null;
+  // If rooms exist, format first room's price using new fields if available, otherwise "Chưa cập nhật giá"
+  const representativePrice = rooms.length > 0
+    ? formatRoomPrice(rooms[0].priceAmount, rooms[0].priceUnit)
+    : "Chưa cập nhật giá";
 
   // Representative image:
   const firstRoom = rooms[0];
@@ -574,13 +582,12 @@ export async function createHomestay(
       });
     });
 
-    // 1. Insert main homestay record
-    const representativePrice = rooms[0]?.priceText?.trim() || formData.price?.trim() || null;
+    // 1. Insert main homestay record (do not write new room prices to homestays.price)
     const homestayPayload = {
       name: formData.name.trim(),
       address: formData.address.trim(),
       description: formData.description?.trim() || null,
-      price: representativePrice,
+      price: null,
       google_maps_url: formData.googleMapsUrl?.trim() || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -634,7 +641,11 @@ export async function createHomestay(
         homestay_id: homestayId,
         name: room.name.trim() || `Room ${rIdx + 1}`,
         description: room.description?.trim() || null,
-        price_text: room.priceText?.trim() || null,
+        price_amount:
+          room.priceAmount !== undefined && room.priceAmount !== null && !isNaN(Number(room.priceAmount))
+            ? Number(room.priceAmount)
+            : null,
+        price_unit: room.priceUnit || null,
         sort_order: room.sortOrder ?? (rIdx + 1),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -794,13 +805,11 @@ export async function updateHomestay(
       }
     }
 
-    // 1. Update main homestay record
-    const representativePrice = rooms[0]?.priceText?.trim() || formData.price?.trim() || null;
+    // 1. Update main homestay record (leave homestays.price unchanged in DB)
     const homestayPayload = {
       name: formData.name.trim(),
       address: formData.address.trim(),
       description: formData.description?.trim() || null,
-      price: representativePrice,
       google_maps_url: formData.googleMapsUrl?.trim() || null,
       updated_at: new Date().toISOString(),
     };
@@ -884,7 +893,11 @@ export async function updateHomestay(
         const updateRoomPayload = {
           name: room.name.trim() || `Room ${rIdx + 1}`,
           description: room.description?.trim() || null,
-          price_text: room.priceText?.trim() || null,
+          price_amount:
+            room.priceAmount !== undefined && room.priceAmount !== null && !isNaN(Number(room.priceAmount))
+              ? Number(room.priceAmount)
+              : null,
+          price_unit: room.priceUnit || null,
           sort_order: room.sortOrder ?? (rIdx + 1),
           updated_at: new Date().toISOString(),
         };
@@ -903,7 +916,11 @@ export async function updateHomestay(
           homestay_id: id,
           name: room.name.trim() || `Room ${rIdx + 1}`,
           description: room.description?.trim() || null,
-          price_text: room.priceText?.trim() || null,
+          price_amount:
+            room.priceAmount !== undefined && room.priceAmount !== null && !isNaN(Number(room.priceAmount))
+              ? Number(room.priceAmount)
+              : null,
+          price_unit: room.priceUnit || null,
           sort_order: room.sortOrder ?? (rIdx + 1),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),

@@ -20,6 +20,8 @@ import {
   CardContent,
   Collapse,
   Divider,
+  MenuItem,
+  InputAdornment,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
@@ -34,17 +36,20 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import MeetingRoomOutlinedIcon from "@mui/icons-material/MeetingRoomOutlined";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import type {
-  IHomestayFormData,
-  IHomestayItem,
-  IHomestayRoomFormData,
-  IRoomFormImageItem,
+import {
+  PriceUnit,
+  type IHomestayFormData,
+  type IHomestayItem,
+  type IHomestayRoomFormData,
+  type IRoomFormImageItem,
 } from "@/types/pages/homestay/homestay";
 import { homestaySchema } from "@/schemas/homestay/homestaySchema";
 import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
 import {
   MAX_MEDIA_FILE_SIZE_BYTES,
   MAX_MEDIA_FILE_SIZE_MB,
+  PRICE_UNIT_OPTIONS,
+  formatRoomPrice,
 } from "@/constants/homestayConstant";
 
 export interface HomestayFormDialogProps {
@@ -63,6 +68,8 @@ interface RoomUIState {
   name: string;
   description: string;
   priceText: string;
+  priceAmount: number | "";
+  priceUnit: PriceUnit;
   sortOrder: number;
   isExpanded: boolean;
   imageItems: IRoomFormImageItem[];
@@ -88,6 +95,11 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
         name: room.name || `Room ${rIdx + 1}`,
         description: room.description || "",
         priceText: room.priceText || "",
+        priceAmount:
+          room.priceAmount !== undefined && room.priceAmount !== null
+            ? room.priceAmount
+            : "",
+        priceUnit: room.priceUnit || PriceUnit.PerRoomPerNight,
         sortOrder: room.sortOrder || rIdx + 1,
         isExpanded: rIdx === 0, // expand first room by default
         imageItems: (room.imageRecords || []).map((img, imgIdx) => ({
@@ -109,6 +121,8 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
         name: "Room 1",
         description: "",
         priceText: "",
+        priceAmount: "",
+        priceUnit: PriceUnit.PerRoomPerNight,
         sortOrder: 1,
         isExpanded: true,
         imageItems: [],
@@ -152,6 +166,11 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
       name: r.name,
       description: r.description || null,
       priceText: r.priceText || null,
+      priceAmount:
+        r.priceAmount === "" || r.priceAmount === null || r.priceAmount === undefined
+          ? null
+          : Number(r.priceAmount),
+      priceUnit: r.priceUnit || null,
       sortOrder: r.sortOrder ?? (rIdx + 1),
       images: r.imageItems.map((img) => img.url),
       imageItems: r.imageItems,
@@ -193,6 +212,8 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
       name: getNextRoomName(),
       description: "",
       priceText: "",
+      priceAmount: "",
+      priceUnit: PriceUnit.PerRoomPerNight,
       sortOrder: rooms.length + 1,
       isExpanded: true,
       imageItems: [],
@@ -249,11 +270,11 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
     });
   };
 
-  // Update room text fields
+  // Update room fields
   const handleRoomFieldChange = (
     localId: string,
-    field: "name" | "priceText" | "description",
-    value: string
+    field: "name" | "priceText" | "priceAmount" | "priceUnit" | "description",
+    value: unknown
   ) => {
     setFormError(null);
     setRooms((prev) =>
@@ -467,6 +488,11 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
       name: r.name.trim(),
       description: r.description.trim() || null,
       priceText: r.priceText.trim() || null,
+      priceAmount:
+        r.priceAmount === "" || r.priceAmount === null || r.priceAmount === undefined
+          ? null
+          : Number(r.priceAmount),
+      priceUnit: r.priceUnit || null,
       sortOrder: r.sortOrder ?? (rIdx + 1),
       images: r.imageItems.map((img) => img.url),
       imageItems: r.imageItems,
@@ -696,9 +722,9 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                               >
                                 {room.name || `Loại phòng #${index + 1}`}
                               </Typography>
-                              {room.priceText && (
+                              {room.priceAmount !== "" && Number(room.priceAmount) > 0 ? (
                                 <Chip
-                                  label={room.priceText}
+                                  label={formatRoomPrice(Number(room.priceAmount), room.priceUnit)}
                                   size="small"
                                   sx={{
                                     bgcolor: "#EFF6FF",
@@ -708,7 +734,7 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                     borderRadius: "6px",
                                   }}
                                 />
-                              )}
+                              ) : null}
                               <Chip
                                 label={`${room.imageItems.length} ảnh`}
                                 size="small"
@@ -793,11 +819,11 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                         {/* Room Panel Content */}
                         <Collapse in={room.isExpanded} timeout="auto" unmountOnExit>
                           <CardContent sx={{ p: 2.5, display: "flex", flexDirection: "column", gap: 2 }}>
-                            {/* Room Name and Price */}
+                            {/* Room Name, Price Amount, and Price Unit */}
                             <Box
                               sx={{
                                 display: "grid",
-                                gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                                gridTemplateColumns: { xs: "1fr", sm: "2fr 1.5fr 1.5fr" },
                                 gap: 2,
                               }}
                             >
@@ -816,16 +842,69 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
 
                               <TextField
                                 fullWidth
-                                label="Giá Thuê (dạng chữ tự do)"
-                                placeholder="Ví dụ: 430k - 450k / đêm / phòng, 1tr3 / đêm"
-                                value={room.priceText}
-                                onChange={(e) =>
-                                  handleRoomFieldChange(room.localId, "priceText", e.target.value)
+                                type="number"
+                                label="Giá thuê"
+                                placeholder="500000"
+                                value={room.priceAmount}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (val === "") {
+                                    handleRoomFieldChange(room.localId, "priceAmount", "");
+                                  } else {
+                                    const num = Number(val);
+                                    if (num >= 0) {
+                                      handleRoomFieldChange(room.localId, "priceAmount", num);
+                                    }
+                                  }
+                                }}
+                                slotProps={{
+                                  input: {
+                                    endAdornment: (
+                                      <InputAdornment position="end">
+                                        <Typography
+                                          variant="caption"
+                                          sx={{ color: "#64748B", fontWeight: 700 }}
+                                        >
+                                          VNĐ
+                                        </Typography>
+                                      </InputAdornment>
+                                    ),
+                                  },
+                                  htmlInput: {
+                                    min: 0,
+                                    step: 1000,
+                                  },
+                                }}
+                                helperText={
+                                  room.priceAmount !== "" && Number(room.priceAmount) > 0
+                                    ? `${new Intl.NumberFormat("vi-VN").format(Number(room.priceAmount))}đ`
+                                    : "Nhập giá thuê (số dương)"
                                 }
                                 size="small"
-                                helperText="Lưu chính xác chuỗi văn bản giá thuê"
                                 disabled={isSubmittingAsync}
                               />
+
+                              <TextField
+                                select
+                                fullWidth
+                                label="Đơn vị tính"
+                                value={room.priceUnit}
+                                onChange={(e) =>
+                                  handleRoomFieldChange(
+                                    room.localId,
+                                    "priceUnit",
+                                    e.target.value as PriceUnit
+                                  )
+                                }
+                                size="small"
+                                disabled={isSubmittingAsync}
+                              >
+                                {PRICE_UNIT_OPTIONS.map((opt) => (
+                                  <MenuItem key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                  </MenuItem>
+                                ))}
+                              </TextField>
                             </Box>
 
                             {/* Room Description */}

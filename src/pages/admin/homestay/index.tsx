@@ -31,7 +31,7 @@ import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
 import { HomestayFormDialog } from "@/components/pages/homestay/homestayFormDialog";
 import { HomestayDetailDialog } from "@/components/pages/homestay/homestayDetailDialog";
 import * as homestayService from "@/services/homestayService";
-import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE, formatRoomPrice } from "@/constants/homestayConstant";
 
 function CustomNoRowsOverlay() {
   return (
@@ -134,12 +134,15 @@ export const AdminHomestayPage: React.FC = () => {
   // Client-side search filtering
   const filteredHomestays = homestays.filter((h) => {
     const term = searchTerm.toLowerCase();
-    const matchesRoom = (h.rooms || []).some(
-      (r) =>
+    const matchesRoom = (h.rooms || []).some((r) => {
+      const formatted = formatRoomPrice(r.priceAmount, r.priceUnit).toLowerCase();
+      return (
         r.name.toLowerCase().includes(term) ||
         (r.description ?? "").toLowerCase().includes(term) ||
-        (r.priceText ?? "").toLowerCase().includes(term)
-    );
+        (r.priceAmount ? String(r.priceAmount).includes(term) : false) ||
+        formatted.includes(term)
+      );
+    });
 
     return (
       (h.name ?? "").toLowerCase().includes(term) ||
@@ -333,21 +336,28 @@ export const AdminHomestayPage: React.FC = () => {
       headerName: "Giá Thuê",
       flex: 1.2,
       minWidth: 180,
-      renderCell: ({ value }) =>
-        value ? (
+      renderCell: ({ row }) => {
+        const firstRoom = row.rooms?.[0];
+        const displayPrice = firstRoom
+          ? formatRoomPrice(firstRoom.priceAmount, firstRoom.priceUnit)
+          : "Chưa cập nhật giá";
+        const hasPrice = displayPrice !== "Chưa cập nhật giá";
+
+        return hasPrice ? (
           <Typography
             noWrap
             sx={{ color: "#2563EB", fontSize: "13px", fontWeight: 700 }}
           >
-            {value as string}
+            {displayPrice}
           </Typography>
         ) : (
           <Typography
-            sx={{ color: "#CBD5E1", fontSize: "12px", fontStyle: "italic" }}
+            sx={{ color: "#94A3B8", fontSize: "12px", fontStyle: "italic" }}
           >
-            Chưa có giá
+            Chưa cập nhật giá
           </Typography>
-        ),
+        );
+      },
     },
     {
       field: "googleMapsUrl",

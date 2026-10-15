@@ -14,7 +14,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useNavigate } from "react-router-dom";
 import type { IHomestayItem } from "@/types/pages/homestay/homestay";
 
-import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE, formatRoomPrice } from "@/constants/homestayConstant";
 
 export interface HomestayCardProps {
   homestay: IHomestayItem;
@@ -172,25 +172,33 @@ export const HomestayCard: React.FC<HomestayCardProps> = ({ homestay }) => {
             mt: "auto",
           }}
         >
-          {homestay.price ? (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-              <AttachMoneyIcon sx={{ color: "#2563EB", fontSize: 18 }} />
+          {(() => {
+            const firstRoom = homestay.rooms?.[0];
+            const displayPrice = firstRoom
+              ? formatRoomPrice(firstRoom.priceAmount, firstRoom.priceUnit)
+              : "Chưa cập nhật giá";
+            const hasPrice = displayPrice !== "Chưa cập nhật giá";
+
+            return hasPrice ? (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <AttachMoneyIcon sx={{ color: "#2563EB", fontSize: 18 }} />
+                <Typography
+                  component="span"
+                  noWrap
+                  sx={{ fontWeight: 800, fontSize: "0.95rem", color: "#2563EB", maxWidth: 160 }}
+                >
+                  {displayPrice}
+                </Typography>
+              </Box>
+            ) : (
               <Typography
                 component="span"
-                noWrap
-                sx={{ fontWeight: 800, fontSize: "0.95rem", color: "#2563EB", maxWidth: 160 }}
+                sx={{ fontSize: "0.8rem", color: "#94A3B8", fontStyle: "italic" }}
               >
-                {homestay.price}
+                Chưa cập nhật giá
               </Typography>
-            </Box>
-          ) : (
-            <Typography
-              component="span"
-              sx={{ fontSize: "0.8rem", color: "#CBD5E1", fontStyle: "italic" }}
-            >
-              Liên hệ để biết giá
-            </Typography>
-          )}
+            );
+          })()}
 
           <Button
             size="small"

@@ -1,5 +1,10 @@
 export type HomestayStatus = "Active" | "Maintenance" | "Inactive";
 
+export enum PriceUnit {
+  PerRoomPerNight = "per_room_per_night",
+  PerHousePerNight = "per_house_per_night",
+}
+
 /**
  * HomestayRoomImage — image metadata associated with a room in homestay_images table.
  */
@@ -26,7 +31,12 @@ export interface HomestayRoom {
   homestayId: number;
   name: string;
   description: string | null;
+  /** Legacy flexible price string, retained for backward compatibility */
   priceText: string | null;
+  /** Numeric price amount */
+  priceAmount: number | null;
+  /** Price unit */
+  priceUnit: PriceUnit | null;
   sortOrder: number;
   createdAt?: string;
   updatedAt?: string;
@@ -94,7 +104,12 @@ export interface IHomestayRoomFormData {
   id?: number;
   name: string;
   description?: string | null;
+  /** Legacy flexible price string, retained for backward compatibility */
   priceText?: string | null;
+  /** Numeric price amount */
+  priceAmount?: number | null;
+  /** Price unit */
+  priceUnit?: PriceUnit | null;
   sortOrder: number;
   images: string[];
   imageItems?: IRoomFormImageItem[];

@@ -17,7 +17,7 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import MeetingRoomOutlinedIcon from "@mui/icons-material/MeetingRoomOutlined";
 import type { IHomestayItem, HomestayRoom } from "@/types/pages/homestay/homestay";
 import { HomestayGallery } from "./homestayGallery";
-import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE, formatRoomPrice } from "@/constants/homestayConstant";
 
 export interface HomestayDetailDialogProps {
   open: boolean;
@@ -171,7 +171,7 @@ export const HomestayDetailDialog: React.FC<HomestayDetailDialogProps> = ({
                     Giá thuê ({activeRoom?.name || "Homestay"})
                   </Typography>
                   <Typography sx={{ fontWeight: 800, color: "#1D4ED8", fontSize: "1.05rem" }}>
-                    {activeRoom?.priceText || homestay.price || "Liên hệ để biết giá"}
+                    {formatRoomPrice(activeRoom?.priceAmount, activeRoom?.priceUnit)}
                   </Typography>
                 </Box>
               </Box>
