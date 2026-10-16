@@ -21,6 +21,7 @@ import AddPhotoAlternateOutlinedIcon from "@mui/icons-material/AddPhotoAlternate
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import dayjs from "dayjs";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import type {
   ITravelMemory,
@@ -556,14 +557,34 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
             >
               {/* Start Date */}
               <Box sx={{ flex: "1 1 180px", minWidth: 160 }}>
-                <TextField
-                  fullWidth
-                  required
-                  type="date"
+                <DatePicker
                   label="Ngày khởi hành"
-                  value={startDate}
-                  onChange={(e) => handleDateChangeAttempt(e.target.value, endDate)}
-                  slotProps={{ inputLabel: { shrink: true } }}
+                  format="DD/MM/YYYY"
+                  value={
+                    startDate && dayjs(startDate, "YYYY-MM-DD").isValid()
+                      ? dayjs(startDate, "YYYY-MM-DD")
+                      : null
+                  }
+                  onChange={(newValue) => {
+                    const nextStart =
+                      newValue && newValue.isValid()
+                        ? newValue.format("YYYY-MM-DD")
+                        : "";
+                    handleDateChangeAttempt(nextStart, endDate);
+                  }}
+                  slotProps={{
+                    actionBar: {
+                      actions: ["clear", "accept"],
+                    },
+                    textField: {
+                      required: true,
+                      fullWidth: true,
+                      error: Boolean(errors.dateRange) || !startDate,
+                      helperText:
+                        errors.dateRange ||
+                        (!startDate ? "Vui lòng chọn ngày khởi hành" : undefined),
+                    },
+                  }}
                 />
               </Box>
 
@@ -584,14 +605,38 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
 
               {/* End Date */}
               <Box sx={{ flex: "1 1 180px", minWidth: 160 }}>
-                <TextField
-                  fullWidth
-                  required
-                  type="date"
+                <DatePicker
                   label="Ngày kết thúc"
-                  value={endDate}
-                  onChange={(e) => handleDateChangeAttempt(startDate, e.target.value)}
-                  slotProps={{ inputLabel: { shrink: true } }}
+                  format="DD/MM/YYYY"
+                  value={
+                    endDate && dayjs(endDate, "YYYY-MM-DD").isValid()
+                      ? dayjs(endDate, "YYYY-MM-DD")
+                      : null
+                  }
+                  minDate={
+                    startDate && dayjs(startDate, "YYYY-MM-DD").isValid()
+                      ? dayjs(startDate, "YYYY-MM-DD")
+                      : undefined
+                  }
+                  onChange={(newValue) => {
+                    const nextEnd =
+                      newValue && newValue.isValid()
+                        ? newValue.format("YYYY-MM-DD")
+                        : "";
+                    handleDateChangeAttempt(startDate, nextEnd);
+                  }}
+                  slotProps={{
+                    actionBar: {
+                      actions: ["clear", "accept"],
+                    },
+                    textField: {
+                      required: true,
+                      fullWidth: true,
+                      error: Boolean(errors.dateRange) || !endDate,
+                      helperText:
+                        !endDate ? "Vui lòng chọn ngày kết thúc" : undefined,
+                    },
+                  }}
                 />
               </Box>
 

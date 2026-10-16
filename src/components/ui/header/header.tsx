@@ -55,7 +55,9 @@ export const Header = ({ onToggleSidebar }: HeaderProps) => {
         background:
           "linear-gradient(90deg, #4FA3F8 0%, #3B8AF5 50%, #257CE6 100%)",
         color: "#FFFFFF",
-        position: "relative",
+        position: "sticky",
+        top: 0,
+        zIndex: (theme) => theme.zIndex.appBar,
         overflow: "hidden",
       }}
     >
@@ -104,19 +106,25 @@ export const Header = ({ onToggleSidebar }: HeaderProps) => {
           position: "relative",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0, mr: 1 }}>
           <IconButton
             aria-label="toggle sidebar"
             onClick={onToggleSidebar}
             edge="start"
-            sx={{ color: "#FFFFFF" }}
+            sx={{ color: "#FFFFFF", flexShrink: 0 }}
           >
             <MenuIcon />
           </IconButton>
           <Typography
             variant="h6"
             component="div"
-            sx={{ fontWeight: 700, letterSpacing: "-0.02em", color: "#FFFFFF" }}
+            noWrap
+            sx={{
+              fontWeight: 700,
+              letterSpacing: "-0.02em",
+              color: "#FFFFFF",
+              fontSize: { xs: "1rem", sm: "1.25rem" },
+            }}
           >
             {headerTitle}
           </Typography>

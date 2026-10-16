@@ -31,6 +31,9 @@ import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
+import dayjs from "dayjs";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import type {
   ITravelItinerary,
@@ -417,7 +420,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
 
   // Save Activity from Modal
   const handleSaveActivity = () => {
-    if (!activityModal.title.trim()) return;
+    if (!activityModal.title.trim() || !activityModal.time.trim()) return;
 
     const {
       dayIndex,
@@ -437,7 +440,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
         activityIndex !== null && days[dayIndex].activities[activityIndex]?.id
           ? days[dayIndex].activities[activityIndex].id
           : `act-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      time: time.trim() || "08:00",
+      time: time.trim(),
       title: actTitle.trim(),
       type,
       duration: duration.trim() || "1 giờ",
@@ -1144,15 +1147,34 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                   fullWidth
                 />
 
-                <TextField
+                <DatePicker
                   label="Ngày hiển thị (Tùy chọn)"
-                  placeholder="Ví dụ: 15/03/2024"
-                  value={day.date || ""}
-                  onChange={(e) =>
-                    handleUpdateDayField(dayIndex, "date", e.target.value)
+                  format="DD/MM/YYYY"
+                  value={
+                    day.date
+                      ? dayjs(day.date, ["DD/MM/YYYY", "YYYY-MM-DD"]).isValid()
+                        ? dayjs(day.date, ["DD/MM/YYYY", "YYYY-MM-DD"])
+                        : null
+                      : null
                   }
-                  size="small"
-                  fullWidth
+                  onChange={(newValue) => {
+                    handleUpdateDayField(
+                      dayIndex,
+                      "date",
+                      newValue && newValue.isValid()
+                        ? newValue.format("DD/MM/YYYY")
+                        : ""
+                    );
+                  }}
+                  slotProps={{
+                    actionBar: {
+                      actions: ["clear", "accept"],
+                    },
+                    textField: {
+                      size: "small",
+                      fullWidth: true,
+                    },
+                  }}
                 />
               </Box>
 
@@ -1443,15 +1465,37 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
               gap: 2,
             }}
           >
-            <TextField
+            <TimePicker
               label="Giờ bắt đầu *"
-              placeholder="08:00"
-              value={activityModal.time}
-              onChange={(e) =>
-                setActivityModal((prev) => ({ ...prev, time: e.target.value }))
+              ampm={false}
+              format="HH:mm"
+              value={
+                activityModal.time && dayjs(activityModal.time, "HH:mm").isValid()
+                  ? dayjs(activityModal.time, "HH:mm")
+                  : null
               }
-              required
-              fullWidth
+              onChange={(newValue) => {
+                setActivityModal((prev) => ({
+                  ...prev,
+                  time:
+                    newValue && newValue.isValid()
+                      ? newValue.format("HH:mm")
+                      : "",
+                }));
+              }}
+              slotProps={{
+                actionBar: {
+                  actions: ["clear", "accept"],
+                },
+                textField: {
+                  required: true,
+                  fullWidth: true,
+                  error: !activityModal.time.trim(),
+                  helperText: !activityModal.time.trim()
+                    ? "Vui lòng chọn giờ bắt đầu"
+                    : undefined,
+                },
+              }}
             />
 
             <TextField
@@ -1637,7 +1681,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             variant="contained"
             color="primary"
             onClick={handleSaveActivity}
-            disabled={!activityModal.title.trim()}
+            disabled={!activityModal.title.trim() || !activityModal.time.trim()}
             sx={{
               borderRadius: "8px",
               textTransform: "none",
@@ -1806,7 +1850,17 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             </Box>
 
             {/* Day Navigation Tabs */}
-            <Box sx={{ pt: 1 }}>
+            <Box
+              sx={{
+                position: "sticky",
+                top: 57,
+                zIndex: 9,
+                bgcolor: "#F8FAFC",
+                pt: 1,
+                pb: 1.5,
+                borderBottom: "1px solid #E2E8F0",
+              }}
+            >
               <ItineraryDayTabs
                 activeTab={previewActiveTab}
                 onSelectTab={setPreviewActiveTab}

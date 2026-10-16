@@ -30,11 +30,22 @@ import { TravelMemoryDetailPage } from "@/pages/admin/travel-memories/detail";
 import { TravelMemoryEditPage } from "@/pages/admin/travel-memories/edit";
 import { resources } from "@/router/resources";
 import { ErrorComponent } from "@refinedev/mui";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { viVN } from "@mui/x-date-pickers/locales";
+import "dayjs/locale/vi";
 
 export function AppProvider() {
   return (
     <CustomThemeProvider>
-      <HeaderTitleProvider>
+      <LocalizationProvider
+        dateAdapter={AdapterDayjs}
+        adapterLocale="vi"
+        localeText={
+          viVN.components.MuiLocalizationProvider.defaultProps.localeText
+        }
+      >
+        <HeaderTitleProvider>
         <BrowserRouter>
           <Refine
             routerProvider={routerProvider}
@@ -119,6 +130,7 @@ export function AppProvider() {
           </Refine>
         </BrowserRouter>
       </HeaderTitleProvider>
+      </LocalizationProvider>
     </CustomThemeProvider>
   );
 }

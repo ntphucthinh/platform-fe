@@ -1,22 +1,24 @@
 import { createTheme, ThemeOptions } from '@mui/material/styles'
+import type {} from '@mui/x-date-pickers/themeAugmentation'
 import { lightPalette } from '@/theme/lightTheme'
 
 export const createAppTheme = () => {
   const palette = lightPalette
   const { layout } = palette
+  const fontFamily = [
+    'Inter',
+    'system-ui',
+    '-apple-system',
+    'BlinkMacSystemFont',
+    '"Segoe UI"',
+    'Roboto',
+    'sans-serif',
+  ].join(',')
 
   const themeOptions: ThemeOptions = {
     palette,
     typography: {
-      fontFamily: [
-        'Inter',
-        'system-ui',
-        '-apple-system',
-        'BlinkMacSystemFont',
-        '"Segoe UI"',
-        'Roboto',
-        'sans-serif',
-      ].join(','),
+      fontFamily,
       h5: {
         fontWeight: 600,
         color: palette.text?.primary,
@@ -42,15 +44,7 @@ export const createAppTheme = () => {
           body: {
             backgroundColor: palette.background?.default,
             color: palette.text?.primary,
-            fontFamily: [
-              'Inter',
-              'system-ui',
-              '-apple-system',
-              'BlinkMacSystemFont',
-              '"Segoe UI"',
-              'Roboto',
-              'sans-serif',
-            ].join(','),
+            fontFamily,
           },
         },
       },
@@ -119,11 +113,17 @@ export const createAppTheme = () => {
         styleOverrides: {
           root: {
             borderRadius: 8,
+            fontFamily,
+            fontSize: '1rem',
+            lineHeight: '1.4375em',
             '&:not(.MuiInputBase-multiline)': {
               height: '50px',
             },
           },
           input: {
+            fontFamily,
+            fontSize: '1rem',
+            lineHeight: '1.4375em',
             '&:not(textarea)': {
               padding: '13px 14px',
               boxSizing: 'border-box',
@@ -138,11 +138,16 @@ export const createAppTheme = () => {
       MuiInputLabel: {
         styleOverrides: {
           outlined: {
+            fontFamily,
+            fontSize: '1rem',
             '&:not(.MuiInputLabel-shrink)': {
               transform: 'translate(14px, 13px) scale(1)',
             },
             '&.MuiInputLabel-sizeSmall:not(.MuiInputLabel-shrink)': {
               transform: 'translate(14px, 15px) scale(1)',
+            },
+            '&.MuiInputLabel-shrink': {
+              transform: 'translate(14px, -9px) scale(0.75)',
             },
           },
         },
@@ -152,23 +157,168 @@ export const createAppTheme = () => {
           root: {
             '& .MuiOutlinedInput-root': {
               borderRadius: 8,
+              fontFamily,
+              fontSize: '1rem',
+              lineHeight: '1.4375em',
             },
             '& .MuiOutlinedInput-root:not(.MuiInputBase-multiline)': {
               height: '50px',
             },
             '& .MuiOutlinedInput-input:not(textarea)': {
+              fontFamily,
+              fontSize: '1rem',
+              lineHeight: '1.4375em',
               padding: '13px 14px',
               boxSizing: 'border-box',
             },
             '& .MuiOutlinedInput-inputSizeSmall:not(textarea)': {
+              fontFamily,
+              fontSize: '1rem',
+              lineHeight: '1.4375em',
               padding: '14px 14px',
               boxSizing: 'border-box',
             },
             '& .MuiInputLabel-outlined:not(.MuiInputLabel-shrink)': {
               transform: 'translate(14px, 13px) scale(1)',
+              fontFamily,
+              fontSize: '1rem',
             },
             '& .MuiInputLabel-sizeSmall:not(.MuiInputLabel-shrink)': {
               transform: 'translate(14px, 15px) scale(1)',
+              fontFamily,
+              fontSize: '1rem',
+            },
+            '& .MuiInputLabel-outlined.MuiInputLabel-shrink': {
+              transform: 'translate(14px, -9px) scale(0.75)',
+              fontFamily,
+              fontSize: '1rem',
+            },
+          },
+        },
+      },
+      MuiPickersOutlinedInput: {
+        styleOverrides: {
+          root: {
+            borderRadius: 8,
+            boxSizing: 'border-box',
+            fontFamily,
+            fontSize: '1rem',
+            lineHeight: '1.4375em',
+            '&:not(.MuiPickersInputBase-multiline)': {
+              height: '50px',
+            },
+          },
+          notchedOutline: {
+            borderRadius: 8,
+          },
+          sectionsContainer: {
+            fontFamily,
+            fontSize: '1rem',
+            lineHeight: '1.4375em',
+            boxSizing: 'border-box',
+          },
+        },
+      },
+      MuiPickersInputBase: {
+        styleOverrides: {
+          root: {
+            borderRadius: 8,
+            fontFamily,
+            fontSize: '1rem',
+            lineHeight: '1.4375em',
+          },
+          sectionsContainer: {
+            fontFamily,
+            fontSize: '1rem',
+            lineHeight: '1.4375em',
+          },
+          sectionContent: {
+            fontFamily,
+            fontSize: '1rem',
+            lineHeight: '1.4375em',
+            letterSpacing: 'inherit',
+          },
+        },
+      },
+      MuiPickersSectionList: {
+        styleOverrides: {
+          root: {
+            fontFamily,
+            fontSize: '1rem',
+            lineHeight: '1.4375em',
+          },
+          section: {
+            fontFamily,
+            fontSize: '1rem',
+            lineHeight: '1.4375em',
+          },
+          sectionContent: {
+            fontFamily,
+            fontSize: '1rem',
+            lineHeight: '1.4375em',
+            letterSpacing: 'inherit',
+          },
+        },
+      },
+      MuiPickersTextField: {
+        styleOverrides: {
+          root: {
+            '& .MuiPickersOutlinedInput-root': {
+              borderRadius: 8,
+              boxSizing: 'border-box',
+              fontFamily,
+              fontSize: '1rem',
+              lineHeight: '1.4375em',
+              '&:not(.MuiPickersInputBase-multiline)': {
+                height: '50px',
+              },
+            },
+            '& .MuiPickersOutlinedInput-notchedOutline': {
+              borderRadius: 8,
+            },
+            '& .MuiPickersInputBase-sectionsContainer': {
+              fontFamily,
+              fontSize: '1rem',
+              lineHeight: '1.4375em',
+            },
+            '& .MuiPickersSectionList-section': {
+              fontFamily,
+              fontSize: '1rem',
+              lineHeight: '1.4375em',
+            },
+            '& .MuiPickersSectionList-sectionContent': {
+              fontFamily,
+              fontSize: '1rem',
+              lineHeight: '1.4375em',
+            },
+            '& .MuiPickersInputBase-sectionSeparator': {
+              fontFamily,
+              fontSize: '1rem',
+              lineHeight: '1.4375em',
+            },
+            '& .MuiInputLabel-outlined:not(.MuiInputLabel-shrink)': {
+              transform: 'translate(14px, 13px) scale(1)',
+              fontFamily,
+              fontSize: '1rem',
+            },
+            '& .MuiInputLabel-sizeSmall:not(.MuiInputLabel-shrink)': {
+              transform: 'translate(14px, 15px) scale(1)',
+              fontFamily,
+              fontSize: '1rem',
+            },
+            '& .MuiInputLabel-outlined.MuiInputLabel-shrink': {
+              transform: 'translate(14px, -9px) scale(0.75)',
+              fontFamily,
+              fontSize: '1rem',
+            },
+            '& .MuiInputAdornment-root': {
+              maxHeight: 'none',
+              alignItems: 'center',
+              marginRight: -4,
+            },
+            '& .MuiInputAdornment-root .MuiIconButton-root': {
+              padding: 8,
+              color: palette.text?.secondary || '#64748B',
             },
           },
         },

@@ -14,7 +14,13 @@ export const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ day }) => 
   )
 
   return (
-    <Box sx={{ width: '100%', pt: 1 }}>
+    <Box
+      sx={{
+        width: '100%',
+        pt: { xs: 0.5, sm: 1 },
+        scrollMarginTop: { xs: '120px', sm: '140px' },
+      }}
+    >
       {/* Day Header Banner */}
       <Box
         sx={{
@@ -23,7 +29,7 @@ export const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ day }) => 
           justifyContent: 'space-between',
           flexWrap: 'wrap',
           gap: 1.5,
-          mb: 3,
+          mb: { xs: 2, sm: 3 },
           pb: 1.5,
           borderBottom: '1px solid #E2E8F0',
         }}

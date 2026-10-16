@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Box,
   Typography,
@@ -43,6 +43,54 @@ export const ItineraryPreviewPage: React.FC = () => {
   }, [id])
 
   const [activeTab, setActiveTab] = useState<ItineraryTabKey>('overview')
+  const contentRef = useRef<HTMLDivElement>(null)
+  const tabsRef = useRef<HTMLDivElement>(null)
+  const prevTabRef = useRef<ItineraryTabKey>(activeTab)
+  const isFirstRender = useRef(true)
+
+  // Scroll to the beginning of the selected itinerary content when switching tabs
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+
+    if (prevTabRef.current === activeTab) {
+      return
+    }
+    prevTabRef.current = activeTab
+
+    if (!contentRef.current) return
+
+    const headerEl = document.querySelector('header.MuiAppBar-root')
+    const headerHeight = headerEl
+      ? headerEl.getBoundingClientRect().height
+      : window.innerWidth < 600
+        ? 56
+        : 64
+
+    const tabsHeight = tabsRef.current
+      ? tabsRef.current.offsetHeight
+      : window.innerWidth < 600
+        ? 52
+        : 58
+
+    const contentRect = contentRef.current.getBoundingClientRect()
+    const contentDocTop = window.scrollY + contentRect.top
+
+    // Position the user at the beginning of the newly selected content, right below sticky tabs
+    const targetY = Math.round(contentDocTop - headerHeight - tabsHeight)
+
+    const isMobile = window.innerWidth < 600
+    const prefersReducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
+
+    window.scrollTo({
+      top: Math.max(0, targetY),
+      behavior: isMobile || prefersReducedMotion ? 'auto' : 'smooth',
+    })
+  }, [activeTab])
 
   // Toast notification state
   const [snackbar, setSnackbar] = useState<{
@@ -113,7 +161,7 @@ export const ItineraryPreviewPage: React.FC = () => {
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 3,
+        gap: { xs: 1.5, sm: 2.5, md: 3 },
         maxWidth: 1400,
         mx: 'auto',
         width: '100%',
@@ -260,7 +308,19 @@ export const ItineraryPreviewPage: React.FC = () => {
       </Box>
 
       {/* Day Navigation Tabs */}
-      <Box sx={{ pt: 1 }}>
+      <Box
+        ref={tabsRef}
+        sx={{
+          position: 'sticky',
+          top: { xs: 56, sm: 64 },
+          zIndex: 10,
+          bgcolor: 'background.default',
+          pt: { xs: 0.75, sm: 1 },
+          pb: { xs: 0.75, sm: 1.25 },
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
         <ItineraryDayTabs
           activeTab={activeTab}
           onSelectTab={setActiveTab}
@@ -270,11 +330,13 @@ export const ItineraryPreviewPage: React.FC = () => {
 
       {/* Main Content & Supporting Sidebar */}
       <Box
+        ref={contentRef}
         sx={{
           display: 'grid',
           gridTemplateColumns: { xs: '1fr', lg: '1fr 340px' },
           gap: 3,
           alignItems: 'start',
+          mt: { xs: 0.5, sm: 0 },
         }}
       >
         {/* Left Column: Overview or Timeline based on Active Tab */}

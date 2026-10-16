@@ -43,7 +43,16 @@ export const ItineraryOverview: React.FC<ItineraryOverviewProps> = ({
   onSelectDay,
 }) => {
   return (
-    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 3.5, pt: 1 }}>
+    <Box
+      sx={{
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: { xs: 2.5, sm: 3.5 },
+        pt: { xs: 0.5, sm: 1 },
+        scrollMarginTop: { xs: '120px', sm: '140px' },
+      }}
+    >
       {/* Intro section */}
       <Box>
         <Typography
