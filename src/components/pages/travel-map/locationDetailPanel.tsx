@@ -11,6 +11,8 @@ import {
   CardContent,
   Drawer,
   Tooltip,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -39,7 +41,7 @@ interface LocationDetailPanelProps {
   onClose: () => void;
   onEdit: (location: ILocationWithDetails) => void;
   onDelete: (id: string, name: string) => void;
-  isMobile: boolean;
+  isMobile?: boolean;
 }
 
 export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
@@ -51,6 +53,9 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
   isMobile,
 }) => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobileQuery = useMediaQuery(theme.breakpoints.down("md"));
+  const effectiveIsMobile = isMobile !== undefined ? isMobile : isMobileQuery;
 
   if (!location) return null;
 
@@ -62,20 +67,45 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
         display: "flex",
         flexDirection: "column",
         height: "100%",
+        minHeight: 0,
         bgcolor: "#FFFFFF",
+        overflow: "hidden",
       }}
     >
       {/* Top Header Image & Controls */}
-      <Box sx={{ position: "relative" }}>
+      <Box sx={{ position: "relative", flexShrink: 0 }}>
+        {/* Grab Handle for mobile bottom sheet */}
+        {effectiveIsMobile && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: 8,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 38,
+              height: 4,
+              borderRadius: "2px",
+              bgcolor: "rgba(255, 255, 255, 0.85)",
+              zIndex: 10,
+              pointerEvents: "none",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+            }}
+          />
+        )}
+
         <CardMedia
           component="img"
-          height="200"
           image={location.coverImage || DEFAULT_NO_IMAGE}
           alt={location.name}
           onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
             e.currentTarget.src = DEFAULT_NO_IMAGE;
           }}
-          sx={{ objectFit: "cover" }}
+          sx={{
+            height: { xs: 160, sm: 200 },
+            objectFit: "cover",
+            width: "100%",
+            display: "block",
+          }}
         />
 
         {/* Gradient Overlay for controls */}
@@ -86,11 +116,13 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
             left: 0,
             right: 0,
             p: 1.5,
+            pt: effectiveIsMobile ? 2 : 1.5,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             background:
-              "linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%)",
+              "linear-gradient(to bottom, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.2) 65%, transparent 100%)",
+            zIndex: 5,
           }}
         >
           <Chip
@@ -154,12 +186,18 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
       {/* Scrollable Content Body */}
       <Box
         sx={{
-          p: 2.5,
+          p: { xs: 2, sm: 2.5 },
           flex: 1,
+          minHeight: 0,
           overflowY: "auto",
+          overflowX: "hidden",
+          WebkitOverflowScrolling: "touch",
+          overscrollBehaviorY: "contain",
+          touchAction: "pan-y",
           display: "flex",
           flexDirection: "column",
           gap: 2.5,
+          pb: "calc(32px + env(safe-area-inset-bottom, 20px))",
         }}
       >
         {/* Title & Address */}
@@ -645,7 +683,7 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
     </Box>
   );
 
-  if (isMobile) {
+  if (effectiveIsMobile) {
     return (
       <Drawer
         anchor="bottom"
@@ -654,10 +692,20 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
         slotProps={{
           paper: {
             sx: {
-              maxHeight: "85vh",
+              height: "92dvh",
+              maxHeight: "92dvh",
+              "@supports not (height: 92dvh)": {
+                height: "92vh",
+                maxHeight: "92vh",
+              },
+              display: "flex",
+              flexDirection: "column",
+              minHeight: 0,
               borderTopLeftRadius: "20px",
               borderTopRightRadius: "20px",
               overflow: "hidden",
+              bgcolor: "#FFFFFF",
+              boxShadow: "0 -8px 32px rgba(0,0,0,0.18)",
             },
           },
         }}
