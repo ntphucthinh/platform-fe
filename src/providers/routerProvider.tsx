@@ -28,6 +28,8 @@ import { TravelMemoryListPage } from "@/pages/admin/travel-memories/index";
 import { TravelMemoryCreatePage } from "@/pages/admin/travel-memories/create";
 import { TravelMemoryDetailPage } from "@/pages/admin/travel-memories/detail";
 import { TravelMemoryEditPage } from "@/pages/admin/travel-memories/edit";
+import { TravelMapPage } from "@/pages/admin/travel-map/index";
+import { TravelMapDetailPage } from "@/pages/admin/travel-map/detail";
 import { resources } from "@/router/resources";
 import { ErrorComponent } from "@refinedev/mui";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -108,6 +110,12 @@ export function AppProvider() {
                     <Route path="create" element={<TravelMemoryCreatePage />} />
                     <Route path=":id" element={<TravelMemoryDetailPage />} />
                     <Route path=":id/edit" element={<TravelMemoryEditPage />} />
+                  </Route>
+
+                  {/* Travel Map */}
+                  <Route path="travel-map">
+                    <Route index element={<TravelMapPage />} />
+                    <Route path=":id" element={<TravelMapDetailPage />} />
                   </Route>
                 </Route>
 

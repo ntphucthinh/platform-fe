@@ -20,6 +20,7 @@ import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined'
 import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined'
+import ExploreOutlinedIcon from '@mui/icons-material/ExploreOutlined'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 const SIDEBAR_WIDTH = 260
@@ -64,6 +65,7 @@ const menuItems: MenuItem[] = [
       { title: 'Thêm chuyến đi', path: '/admin/travel-memories/create' },
     ],
   },
+  { title: 'Bản đồ hành trình', path: '/admin/travel-map', icon: <ExploreOutlinedIcon /> },
   {
     title: 'Users',
     icon: <PeopleIcon />,
@@ -169,7 +171,8 @@ export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: Si
             const hasChildren = Boolean(item.children?.length)
             const isOpen = Boolean(openMenus[item.title])
             const isParentSelected = item.path
-              ? location.pathname === item.path
+              ? location.pathname === item.path ||
+                (item.path !== '/admin' && location.pathname.startsWith(item.path + '/'))
               : hasChildren &&
                   (
                     (item.title === 'Users' && isUsersRoute) ||

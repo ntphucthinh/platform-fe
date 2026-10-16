@@ -308,4 +308,326 @@ export const MOCK_TRAVEL_MEMORIES: ITravelMemory[] = [
     createdAt: "2026-11-08T11:00:00Z",
     updatedAt: "2026-11-08T11:00:00Z",
   },
+  {
+    id: "trip-dalat-2025",
+    title: "Đà Lạt – Mùa dã quỳ vàng rực",
+    destination: "Đà Lạt, Lâm Đồng",
+    startDate: "2025-11-20",
+    endDate: "2025-11-22",
+    description: "Săn hoa dã quỳ nở vàng rực trên cung đường đèo Prenn và tận hưởng cái lạnh đầu đông vùng cao nguyên.",
+    coverImage: "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=1200&q=80",
+    days: [
+      {
+        date: "2025-11-20",
+        photos: [
+          {
+            id: "dl-25-1",
+            imageUrl: "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=800&q=80",
+            caption: "Sắc hoa dã quỳ phủ vàng hai bên đường đèo",
+            altText: "Hoa dã quỳ Đà Lạt",
+          },
+        ],
+      },
+      {
+        date: "2025-11-21",
+        photos: [
+          {
+            id: "dl-25-2",
+            imageUrl: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80",
+            caption: "Ngồi sưởi ấm bên bếp lửa quán cà phê đồi thông",
+            altText: "Quán cà phê đồi thông",
+          },
+        ],
+      },
+    ],
+    createdAt: "2025-11-23T08:00:00Z",
+    updatedAt: "2025-11-23T08:00:00Z",
+  },
+  {
+    id: "trip-dalat-2024",
+    title: "Đà Lạt – Mùa mai anh đào nở rộ",
+    destination: "Đà Lạt, Lâm Đồng",
+    startDate: "2024-03-15",
+    endDate: "2024-03-17",
+    description: "Ngắm những hàng cây mai anh đào nở rực rỡ sắc hồng dọc đường Trần Hưng Đạo và hồ Tuyền Lâm.",
+    coverImage: "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=1200&q=80",
+    days: [
+      {
+        date: "2024-03-15",
+        photos: [
+          {
+            id: "dl-24-1",
+            imageUrl: "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=800&q=80",
+            caption: "Sắc hồng mai anh đào trong nắng sớm",
+            altText: "Mai anh đào Đà Lạt",
+          },
+        ],
+      },
+    ],
+    createdAt: "2024-03-18T10:00:00Z",
+    updatedAt: "2024-03-18T10:00:00Z",
+  },
+  {
+    id: "trip-dalat-2023",
+    title: "Đà Lạt – Giáng sinh se lạnh",
+    destination: "Đà Lạt, Lâm Đồng",
+    startDate: "2023-12-23",
+    endDate: "2023-12-25",
+    description: "Đón đêm Noel ấm áp tại nhà thờ Domaine de Marie và dạo chợ đêm thưởng thức sữa đậu nành nóng hổi.",
+    coverImage: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
+    days: [
+      {
+        date: "2023-12-24",
+        photos: [
+          {
+            id: "dl-23-1",
+            imageUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
+            caption: "Đêm giáng sinh lung linh tại trung tâm",
+            altText: "Giáng sinh Đà Lạt",
+          },
+        ],
+      },
+    ],
+    createdAt: "2023-12-26T09:00:00Z",
+    updatedAt: "2023-12-26T09:00:00Z",
+  },
+  {
+    id: "trip-danang-2025",
+    title: "Đà Nẵng – Nắng vàng biển Mỹ Khê",
+    destination: "Đà Nẵng",
+    startDate: "2025-07-10",
+    endDate: "2025-07-13",
+    description: "Tắm biển Mỹ Khê nước trong xanh ngắt, đón hoàng hôn trên bán đảo Sơn Trà và thưởng thức hải sản Năm Đảnh.",
+    coverImage: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
+    days: [
+      {
+        date: "2025-07-10",
+        photos: [
+          {
+            id: "dn-25-1",
+            imageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+            caption: "Bình minh rực rỡ bãi biển Mỹ Khê",
+            altText: "Biển Mỹ Khê",
+          },
+        ],
+      },
+      {
+        date: "2025-07-11",
+        photos: [
+          {
+            id: "dn-25-2",
+            imageUrl: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80",
+            caption: "Đỉnh Bàn Cờ nhìn toàn cảnh vịnh Đà Nẵng",
+            altText: "Bán đảo Sơn Trà",
+          },
+        ],
+      },
+    ],
+    createdAt: "2025-07-14T08:00:00Z",
+    updatedAt: "2025-07-14T08:00:00Z",
+  },
+  {
+    id: "trip-danang-2024",
+    title: "Đà Nẵng & Hội An – Hành trình miền Trung",
+    destination: "Đà Nẵng – Hội An",
+    startDate: "2024-06-01",
+    endDate: "2024-06-04",
+    description: "Chuyến đi kết hợp khám phá cây cầu Rồng phun lửa, Bà Nà Hills và phố cổ Hội An rực rỡ đèn lồng.",
+    coverImage: "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&w=1200&q=80",
+    days: [
+      {
+        date: "2024-06-01",
+        photos: [
+          {
+            id: "dn-24-1",
+            imageUrl: "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&w=800&q=80",
+            caption: "Cầu Rồng lung linh trong đêm thứ Bảy",
+            altText: "Cầu Rồng Đà Nẵng",
+          },
+        ],
+      },
+      {
+        date: "2024-06-03",
+        photos: [
+          {
+            id: "dn-24-2",
+            imageUrl: "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=800&q=80",
+            caption: "Thả đèn hoa đăng trên dòng sông Hoài Hội An",
+            altText: "Hội An sông Hoài",
+          },
+        ],
+      },
+    ],
+    createdAt: "2024-06-05T09:00:00Z",
+    updatedAt: "2024-06-05T09:00:00Z",
+  },
+  {
+    id: "trip-danang-2022",
+    title: "Đà Nẵng – Kỳ nghỉ hè cùng gia đình",
+    destination: "Đà Nẵng",
+    startDate: "2022-08-15",
+    endDate: "2022-08-18",
+    description: "Kỳ nghỉ hè tuyệt vời của cả nhà sau chuỗi ngày bận rộn, thưởng thức mì Quảng và dạo chơi Ngũ Hành Sơn.",
+    coverImage: "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=1200&q=80",
+    days: [
+      {
+        date: "2022-08-16",
+        photos: [
+          {
+            id: "dn-22-1",
+            imageUrl: "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=800&q=80",
+            caption: "Gia đình sum vầy bên bờ biển lộng gió",
+            altText: "Gia đình bên bờ biển",
+          },
+        ],
+      },
+    ],
+    createdAt: "2022-08-19T07:00:00Z",
+    updatedAt: "2022-08-19T07:00:00Z",
+  },
+  {
+    id: "trip-phuquoc-2023",
+    title: "Phú Quốc – Lặn biển ngắm hoàng hôn Bãi Sao",
+    destination: "Phú Quốc, Kiên Giang",
+    startDate: "2023-04-28",
+    endDate: "2023-05-01",
+    description: "Tận hưởng kỳ nghỉ lễ 30/4 với biển xanh cát trắng, trải nghiệm cano đi 4 đảo và ngắm hoàng hôn tại Sunset Sanato.",
+    coverImage: "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1200&q=80",
+    days: [
+      {
+        date: "2023-04-29",
+        photos: [
+          {
+            id: "pq-23-1",
+            imageUrl: "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=800&q=80",
+            caption: "Hoàng hôn lộng lẫy trên bờ cát Bãi Trường",
+            altText: "Hoàng hôn Phú Quốc 2023",
+          },
+        ],
+      },
+    ],
+    createdAt: "2023-05-02T10:00:00Z",
+    updatedAt: "2023-05-02T10:00:00Z",
+  },
+  {
+    id: "trip-hanoi-2025",
+    title: "Hà Nội – Mùa thu nồng nàn hoa sữa",
+    destination: "Hà Nội",
+    startDate: "2025-10-10",
+    endDate: "2025-10-12",
+    description: "Đi dạo quanh bờ hồ Hoàn Kiếm ngày giải phóng thủ đô, thưởng thức cốm làng Vòng và cà phê trứng Giảng.",
+    coverImage: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
+    days: [
+      {
+        date: "2025-10-10",
+        photos: [
+          {
+            id: "hn-25-1",
+            imageUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
+            caption: "Hồ Gươm tĩnh lặng sớm mùa thu mát rượi",
+            altText: "Hồ Gươm Hà Nội",
+          },
+        ],
+      },
+    ],
+    createdAt: "2025-10-13T09:00:00Z",
+    updatedAt: "2025-10-13T09:00:00Z",
+  },
+  {
+    id: "trip-hanoi-2024",
+    title: "Hà Nội – Không khí Tết phố cổ",
+    destination: "Hà Nội",
+    startDate: "2024-02-12",
+    endDate: "2024-02-15",
+    description: "Cảm nhận không khí Tết cổ truyền bình yên, ngắm cành đào Nhật Tân khoe sắc trên những con phố 36 phố phường.",
+    coverImage: "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1200&q=80",
+    days: [
+      {
+        date: "2024-02-13",
+        photos: [
+          {
+            id: "hn-24-1",
+            imageUrl: "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=800&q=80",
+            caption: "Chợ hoa Tết Hàng Lược tấp nập sắc xuân",
+            altText: "Chợ hoa Tết phố cổ",
+          },
+        ],
+      },
+    ],
+    createdAt: "2024-02-16T10:00:00Z",
+    updatedAt: "2024-02-16T10:00:00Z",
+  },
+  {
+    id: "trip-sapa-2024",
+    title: "Sa Pa – Chạm vào mây đỉnh Fansipan",
+    destination: "Sa Pa, Lào Cai",
+    startDate: "2024-12-18",
+    endDate: "2024-12-20",
+    description: "Chinh phục nóc nhà Đông Dương Fansipan giữa biển mây bồng bềnh, ghé thăm bản Cát Cát thơ mộng.",
+    coverImage: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80",
+    days: [
+      {
+        date: "2024-12-19",
+        photos: [
+          {
+            id: "sp-24-1",
+            imageUrl: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80",
+            caption: "Biển mây trắng xóa cuồn cuộn dưới chân tượng Phật Fansipan",
+            altText: "Đỉnh Fansipan Sa Pa",
+          },
+        ],
+      },
+    ],
+    createdAt: "2024-12-21T08:00:00Z",
+    updatedAt: "2024-12-21T08:00:00Z",
+  },
+  {
+    id: "trip-hue-2023",
+    title: "Huế – Dấu ấn cung đình trầm mặc",
+    destination: "Huế, Thừa Thiên Huế",
+    startDate: "2023-07-20",
+    endDate: "2023-07-22",
+    description: "Tham quan Đại Nội cổ kính, nghe ca Huế trên sông Hương và thưởng thức bún bò Huế cùng các món bánh gia truyền.",
+    coverImage: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1200&q=80",
+    days: [
+      {
+        date: "2023-07-21",
+        photos: [
+          {
+            id: "hue-23-1",
+            imageUrl: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80",
+            caption: "Cổng Ngọ Môn sừng sững uy nghiêm",
+            altText: "Đại Nội Huế",
+          },
+        ],
+      },
+    ],
+    createdAt: "2023-07-23T09:00:00Z",
+    updatedAt: "2023-07-23T09:00:00Z",
+  },
+  {
+    id: "trip-hcmc-2025",
+    title: "Sài Gòn – Phố thị nhộn nhịp về đêm",
+    destination: "TP. Hồ Chí Minh",
+    startDate: "2025-04-18",
+    endDate: "2025-04-20",
+    description: "Trải nghiệm xe buýt 2 tầng ngắm phố phường, dạo phố đi bộ Nguyễn Huệ và thưởng thức ẩm thực đường phố Chợ Lớn.",
+    coverImage: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
+    days: [
+      {
+        date: "2025-04-19",
+        photos: [
+          {
+            id: "sg-25-1",
+            imageUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
+            caption: "Tòa nhà Bitexco và Landmark 81 rực rỡ bên bờ sông Sài Gòn",
+            altText: "Sài Gòn về đêm",
+          },
+        ],
+      },
+    ],
+    createdAt: "2025-04-21T08:00:00Z",
+    updatedAt: "2025-04-21T08:00:00Z",
+  },
 ];
+

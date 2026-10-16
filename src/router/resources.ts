@@ -42,4 +42,12 @@ export const resources: ResourceProps[] = [
       label: 'Kỷ niệm chuyến đi',
     },
   },
+  {
+    name: 'travel-map',
+    list: '/admin/travel-map',
+    show: '/admin/travel-map/:id',
+    meta: {
+      label: 'Bản đồ hành trình',
+    },
+  },
 ];
