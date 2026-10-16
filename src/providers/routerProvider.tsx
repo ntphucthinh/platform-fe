@@ -12,7 +12,7 @@ import { HeaderTitleProvider } from "@/components/ui/header/headerTitle";
 import { AdminLayout } from "@/components/ui/layout/adminLayout";
 import { AdminAuthGuard } from "@/components/auth/adminAuthGuard";
 import { Login } from "@/pages/auth/login";
-import { Home } from "@/pages/home/home";
+import { DashboardPage } from "@/pages/admin/dashboard/index";
 import { UsersList } from "@/pages/users/list";
 import { UsersCreate } from "@/pages/users/create";
 import { UsersEdit } from "@/pages/users/edit";
@@ -87,7 +87,7 @@ export function AppProvider() {
                     element={<Navigate to="/admin/dashboard" replace />}
                   />
 
-                  <Route path="dashboard" element={<Home />} />
+                  <Route path="dashboard" element={<DashboardPage />} />
 
                   <Route path="homestay" element={<AdminHomestayPage />} />
 

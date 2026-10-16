@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -64,8 +65,13 @@ export const AdminHomestayPage: React.FC = () => {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const location = useLocation();
+  const initialOpenCreate = Boolean(
+    (location.state as { openCreate?: boolean } | null)?.openCreate,
+  );
+
   // Modal dialog states
-  const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [formDialogOpen, setFormDialogOpen] = useState(initialOpenCreate);
   const [selectedHomestay, setSelectedHomestay] =
     useState<IHomestayItem | null>(null);
 

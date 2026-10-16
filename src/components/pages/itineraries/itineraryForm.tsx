@@ -593,8 +593,6 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
         display: "flex",
         flexDirection: "column",
         gap: 3,
-        maxWidth: 1200,
-        mx: "auto",
         width: "100%",
         pb: 8,
       }}
