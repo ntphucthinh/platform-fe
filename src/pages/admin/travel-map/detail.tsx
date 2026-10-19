@@ -159,8 +159,8 @@ export const TravelMapDetailPage: React.FC = () => {
           variant="body1"
           sx={{ color: "#64748B", maxWidth: 480, mb: 3 }}
         >
-          Mã định danh "{id}" không tồn tại hoặc địa điểm này đã bị gỡ bỏ khỏi bản
-          đồ hành trình.
+          Mã định danh "{id}" không tồn tại hoặc địa điểm này đã bị gỡ bỏ khỏi
+          bản đồ hành trình.
         </Typography>
         <Button
           variant="contained"
@@ -281,7 +281,13 @@ export const TravelMapDetailPage: React.FC = () => {
         }}
       >
         {/* Cover Banner with Gradient */}
-        <Box sx={{ position: "relative", width: "100%", height: { xs: 220, sm: 300, md: 340 } }}>
+        <Box
+          sx={{
+            position: "relative",
+            width: "100%",
+            height: { xs: 220, sm: 300, md: 340 },
+          }}
+        >
           <CardMedia
             component="img"
             image={details.coverImage || DEFAULT_NO_IMAGE}
@@ -470,7 +476,12 @@ export const TravelMapDetailPage: React.FC = () => {
             </Typography>
             <Typography
               variant="h4"
-              sx={{ fontWeight: 800, color: "#0F172A", lineHeight: 1.1, my: 0.25 }}
+              sx={{
+                fontWeight: 800,
+                color: "#0F172A",
+                lineHeight: 1.1,
+                my: 0.25,
+              }}
             >
               {details.visitCount}
             </Typography>
@@ -524,7 +535,12 @@ export const TravelMapDetailPage: React.FC = () => {
             </Typography>
             <Typography
               variant="h4"
-              sx={{ fontWeight: 800, color: "#0F172A", lineHeight: 1.1, my: 0.25 }}
+              sx={{
+                fontWeight: 800,
+                color: "#0F172A",
+                lineHeight: 1.1,
+                my: 0.25,
+              }}
             >
               {details.totalPhotos}
             </Typography>
@@ -638,7 +654,7 @@ export const TravelMapDetailPage: React.FC = () => {
               boxShadow: "none",
             }}
           >
-            + Thêm kỷ niệm chuyến đi
+            Thêm kỷ niệm chuyến đi
           </Button>
         </Box>
 
@@ -896,9 +912,7 @@ export const TravelMapDetailPage: React.FC = () => {
               <Card
                 key={it.id}
                 elevation={0}
-                onClick={() =>
-                  navigate(`/admin/itineraries/${it.id}/preview`)
-                }
+                onClick={() => navigate(`/admin/itineraries/${it.id}/preview`)}
                 sx={{
                   borderRadius: "16px",
                   border: "1px solid #E2E8F0",
@@ -953,7 +967,12 @@ export const TravelMapDetailPage: React.FC = () => {
 
                   <Typography
                     variant="h6"
-                    sx={{ fontWeight: 700, color: "#0F172A", fontSize: "1.05rem", mb: 0.5 }}
+                    sx={{
+                      fontWeight: 700,
+                      color: "#0F172A",
+                      fontSize: "1.05rem",
+                      mb: 0.5,
+                    }}
                   >
                     {it.title}
                   </Typography>
@@ -1025,23 +1044,33 @@ export const TravelMapDetailPage: React.FC = () => {
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <Box>
-            <Typography variant="caption" sx={{ fontWeight: 600, color: "#64748B" }}>
+            <Typography
+              variant="caption"
+              sx={{ fontWeight: 600, color: "#64748B" }}
+            >
               Địa chỉ chi tiết
             </Typography>
-            <Typography variant="body1" sx={{ color: "#0F172A", fontWeight: 500, mt: 0.25 }}>
+            <Typography
+              variant="body1"
+              sx={{ color: "#0F172A", fontWeight: 500, mt: 0.25 }}
+            >
               {details.address}
             </Typography>
           </Box>
 
           <Box>
-            <Typography variant="caption" sx={{ fontWeight: 600, color: "#64748B" }}>
+            <Typography
+              variant="caption"
+              sx={{ fontWeight: 600, color: "#64748B" }}
+            >
               Tọa độ địa lý (GPS)
             </Typography>
             <Typography
               variant="body1"
               sx={{ color: "#0F172A", fontFamily: "monospace", mt: 0.25 }}
             >
-              Vĩ độ (Latitude): {details.latitude} | Kinh độ (Longitude): {details.longitude}
+              Vĩ độ (Latitude): {details.latitude} | Kinh độ (Longitude):{" "}
+              {details.longitude}
             </Typography>
           </Box>
 
@@ -1057,12 +1086,20 @@ export const TravelMapDetailPage: React.FC = () => {
                 gap: 1.5,
               }}
             >
-              <NotesOutlinedIcon sx={{ color: "#D97706", fontSize: 20, mt: 0.25 }} />
+              <NotesOutlinedIcon
+                sx={{ color: "#D97706", fontSize: 20, mt: 0.25 }}
+              />
               <Box>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#92400E", mb: 0.25 }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontWeight: 700, color: "#92400E", mb: 0.25 }}
+                >
                   Ghi chú cá nhân / Kinh nghiệm chuyến đi
                 </Typography>
-                <Typography variant="body2" sx={{ color: "#78350F", lineHeight: 1.6 }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: "#78350F", lineHeight: 1.6 }}
+                >
                   {details.notes}
                 </Typography>
               </Box>

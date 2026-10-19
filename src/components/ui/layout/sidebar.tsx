@@ -22,6 +22,7 @@ import MapOutlinedIcon from '@mui/icons-material/MapOutlined'
 import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined'
 import ExploreOutlinedIcon from '@mui/icons-material/ExploreOutlined'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { APP_NAME } from '@/constants/commonConstant'
 
 const SIDEBAR_WIDTH = 260
 const COLLAPSED_WIDTH = 72
@@ -142,25 +143,21 @@ export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: Si
         }}
       >
         <Box
+          component="img"
+          src="/logo.svg"
+          alt={APP_NAME}
           sx={{
             width: 32,
             height: 32,
             borderRadius: '8px',
-            bgcolor: '#2F80ED',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#FFFFFF',
-            fontWeight: 700,
-            fontSize: '1.1rem',
             flexShrink: 0,
+            objectFit: 'contain',
+            boxShadow: '0 2px 6px rgba(37, 99, 235, 0.25)',
           }}
-        >
-          P
-        </Box>
+        />
         {(!isCollapsed || isMobile) && (
           <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: '-0.01em', color: '#172033' }}>
-            Platform
+            {APP_NAME}
           </Typography>
         )}
       </Box>

@@ -44,7 +44,9 @@ export const TravelMapHeader: React.FC<TravelMapHeaderProps> = ({
       value: summary.visitedLocations,
       subtitle: "Đã từng đặt chân",
       icon: (
-        <CheckCircleOutlineRoundedIcon sx={{ fontSize: 26, color: "#059669" }} />
+        <CheckCircleOutlineRoundedIcon
+          sx={{ fontSize: 26, color: "#059669" }}
+        />
       ),
       bgColor: "#ECFDF5",
       borderColor: "#A7F3D0",
@@ -101,8 +103,8 @@ export const TravelMapHeader: React.FC<TravelMapHeaderProps> = ({
             Bản đồ hành trình
           </Typography>
           <Typography variant="body2" sx={{ color: "#64748B" }}>
-            Khám phá các điểm đến đã ghi dấu chân, nơi muốn đến và toàn bộ kỷ niệm
-            gắn liền với từng vùng đất.
+            Khám phá các điểm đến đã ghi dấu chân, nơi muốn đến và toàn bộ kỷ
+            niệm gắn liền với từng vùng đất.
           </Typography>
         </Box>
 
@@ -168,7 +170,7 @@ export const TravelMapHeader: React.FC<TravelMapHeaderProps> = ({
               whiteSpace: "nowrap",
             }}
           >
-            + Thêm địa điểm
+            Thêm địa điểm
           </Button>
         </Box>
       </Box>
@@ -258,4 +260,3 @@ export const TravelMapHeader: React.FC<TravelMapHeaderProps> = ({
     </Box>
   );
 };
-

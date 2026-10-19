@@ -42,6 +42,7 @@ interface LocationDetailPanelProps {
   onEdit: (location: ILocationWithDetails) => void;
   onDelete: (id: string, name: string) => void;
   isMobile?: boolean;
+  variant?: "side" | "inline";
 }
 
 export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
@@ -51,6 +52,7 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
   onEdit,
   onDelete,
   isMobile,
+  variant = "side",
 }) => {
   const navigate = useNavigate();
   const theme = useTheme();
@@ -381,7 +383,7 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
       {/* Top Header Image & Controls */}
       <Box sx={{ position: "relative", flexShrink: 0 }}>
         {/* Grab Handle Touch Zone for mobile bottom sheet */}
-        {effectiveIsMobile && (
+        {effectiveIsMobile ? (
           <Box
             onPointerDown={handleDragStart}
             onPointerMove={handleDragMove}
@@ -424,7 +426,23 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
               }}
             />
           </Box>
-        )}
+        ) : variant === "inline" ? (
+          <Box
+            sx={{
+              position: "absolute",
+              top: 8,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 44,
+              height: 4,
+              borderRadius: "2px",
+              bgcolor: "rgba(255, 255, 255, 0.85)",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+              zIndex: 6,
+              pointerEvents: "none",
+            }}
+          />
+        ) : null}
 
         <CardMedia
           component="img"
@@ -1077,6 +1095,38 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
           {panelContent}
         </Box>
       </Portal>
+    );
+  }
+
+  // Desktop Inline Panel (Bottom Sheet style within list panel area)
+  if (variant === "inline") {
+    return (
+      <Box
+        sx={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 10,
+          bgcolor: "#FFFFFF",
+          borderRadius: "16px",
+          border: "1px solid #E2E8F0",
+          overflow: "hidden",
+          boxShadow: "0 8px 30px rgba(0,0,0,0.08)",
+          display: "flex",
+          flexDirection: "column",
+          transform: isEntered ? "translateY(0)" : "translateY(40px)",
+          opacity: isEntered ? 1 : 0,
+          transition: prefersReducedMotion
+            ? "none"
+            : `transform 340ms cubic-bezier(0.22, 1, 0.36, 1),
+               opacity 340ms cubic-bezier(0.22, 1, 0.36, 1)`,
+          pointerEvents: isEntered ? "auto" : "none",
+        }}
+      >
+        {panelContent}
+      </Box>
     );
   }
 

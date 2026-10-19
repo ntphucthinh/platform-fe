@@ -8,7 +8,6 @@ import {
   Button,
   Grid,
   Chip,
-  Alert,
   Collapse,
   IconButton,
 } from "@mui/material";
@@ -170,6 +169,21 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
     [startDate, endDate],
   );
 
+  // Resolve specific validation messages for each date field
+  const startDateError = useMemo(() => {
+    if (errors.startDate) return errors.startDate;
+    if (!startDate && errors.dateRange && !errors.endDate) return errors.dateRange;
+    return undefined;
+  }, [errors.startDate, errors.dateRange, errors.endDate, startDate]);
+
+  const endDateError = useMemo(() => {
+    if (errors.endDate) return errors.endDate;
+    if (startDate && endDate && errors.dateRange) return errors.dateRange;
+    if (!endDate && errors.dateRange && startDate) return errors.dateRange;
+    return undefined;
+  }, [errors.endDate, errors.dateRange, startDate, endDate]);
+
+
   // Hidden file inputs refs
   const coverInputRef = useRef<HTMLInputElement>(null);
   const dayInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -226,13 +240,25 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
       // Allow user to temporarily type or pick invalid date, but record validation error
       setStartDate(newStart);
       setEndDate(newEnd);
-      setErrors((prev) => ({ ...prev, dateRange: validation.error || "" }));
+      setErrors((prev) => {
+        const next = { ...prev };
+        if (newStart) delete next.startDate;
+        if (newEnd) delete next.endDate;
+        if (newStart && newEnd) {
+          next.dateRange = validation.error || "";
+        } else {
+          delete next.dateRange;
+        }
+        return next;
+      });
       return;
     }
 
     setErrors((prev) => {
       const next = { ...prev };
       delete next.dateRange;
+      delete next.startDate;
+      delete next.endDate;
       return next;
     });
 
@@ -372,9 +398,24 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
       newErrors.destination = "Vui lòng nhập địa điểm chuyến đi.";
     }
 
-    const dateVal = validateDateRange(startDate, endDate);
-    if (!dateVal.isValid) {
-      newErrors.dateRange = dateVal.error || "Khoảng thời gian không hợp lệ.";
+    if (!startDate) {
+      newErrors.startDate = "Vui lòng chọn ngày khởi hành.";
+    }
+    if (!endDate) {
+      newErrors.endDate = "Vui lòng chọn ngày kết thúc.";
+    }
+
+    if (startDate && endDate) {
+      const dateVal = validateDateRange(startDate, endDate);
+      if (!dateVal.isValid) {
+        newErrors.dateRange = dateVal.error || "Khoảng thời gian không hợp lệ.";
+      }
+    } else if (!startDate && !endDate) {
+      newErrors.dateRange = "Vui lòng chọn ngày khởi hành và ngày kết thúc.";
+    } else if (!startDate) {
+      newErrors.dateRange = "Vui lòng chọn ngày khởi hành.";
+    } else if (!endDate) {
+      newErrors.dateRange = "Vui lòng chọn ngày kết thúc.";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -471,13 +512,6 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
         </Box>
       </Box>
 
-      {/* Date Range Error Alert if any */}
-      {errors.dateRange && (
-        <Alert severity="error" sx={{ borderRadius: "10px" }}>
-          {errors.dateRange}
-        </Alert>
-      )}
-
       {/* 6.2 Trip Information Card */}
       <Card
         elevation={1}
@@ -549,14 +583,20 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
           <Grid sx={{ width: "100%" }}>
             <Box
               sx={{
-                display: "flex",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: { xs: 2, sm: 1.5 },
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  sm: "1fr auto 1fr",
+                  lg: "minmax(180px, 1fr) auto minmax(180px, 1fr) auto",
+                },
+                alignItems: "start",
+                columnGap: { xs: 2, sm: 1.5 },
+                rowGap: { xs: 2, sm: 1.5 },
+                width: "100%",
               }}
             >
-              {/* Start Date */}
-              <Box sx={{ flex: "1 1 180px", minWidth: 160 }}>
+              {/* Start Date Field Wrapper */}
+              <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
                 <DatePicker
                   label="Ngày khởi hành"
                   format="DD/MM/YYYY"
@@ -579,32 +619,70 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                     textField: {
                       required: true,
                       fullWidth: true,
-                      error: Boolean(errors.dateRange) || !startDate,
-                      helperText:
-                        errors.dateRange ||
-                        (!startDate ? "Vui lòng chọn ngày khởi hành" : undefined),
+                      error: Boolean(startDateError),
+                      helperText: undefined,
+                      sx: {
+                        "& .MuiOutlinedInput-root": {
+                          height: "50px",
+                          borderRadius: "8px",
+                        },
+                      },
                     },
                   }}
                 />
+                <Box
+                  sx={{
+                    minHeight: {
+                      xs: startDateError ? "20px" : 0,
+                      sm: startDateError || endDateError ? "20px" : 0,
+                    },
+                    mt: startDateError || endDateError ? 0.5 : 0,
+                    px: 1.75,
+                    transition: "min-height 0.15s ease",
+                  }}
+                >
+                  {startDateError && (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "error.main",
+                        fontSize: "0.75rem",
+                        lineHeight: 1.25,
+                        fontWeight: 500,
+                        display: "block",
+                      }}
+                    >
+                      {startDateError}
+                    </Typography>
+                  )}
+                </Box>
               </Box>
 
-              {/* ~ Separator */}
-              <Typography
+              {/* ~ Separator Box */}
+              <Box
                 sx={{
-                  color: "#94A3B8",
-                  fontWeight: 600,
-                  fontSize: "1.2rem",
-                  flexShrink: 0,
+                  display: { xs: "none", sm: "flex" },
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "50px",
                   userSelect: "none",
-                  mt: 0.5,
-                  display: { xs: "none", sm: "block" },
+                  px: 0.5,
                 }}
               >
-                ~
-              </Typography>
+                <Typography
+                  sx={{
+                    color: "#94A3B8",
+                    fontWeight: 600,
+                    fontSize: "1.25rem",
+                    lineHeight: 1,
+                  }}
+                >
+                  ~
+                </Typography>
+              </Box>
 
-              {/* End Date */}
-              <Box sx={{ flex: "1 1 180px", minWidth: 160 }}>
+              {/* End Date Field Wrapper */}
+              <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
                 <DatePicker
                   label="Ngày kết thúc"
                   format="DD/MM/YYYY"
@@ -632,21 +710,52 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                     textField: {
                       required: true,
                       fullWidth: true,
-                      error: Boolean(errors.dateRange) || !endDate,
-                      helperText:
-                        !endDate ? "Vui lòng chọn ngày kết thúc" : undefined,
+                      error: Boolean(endDateError),
+                      helperText: undefined,
+                      sx: {
+                        "& .MuiOutlinedInput-root": {
+                          height: "50px",
+                          borderRadius: "8px",
+                        },
+                      },
                     },
                   }}
                 />
+                <Box
+                  sx={{
+                    minHeight: {
+                      xs: endDateError ? "20px" : 0,
+                      sm: startDateError || endDateError ? "20px" : 0,
+                    },
+                    mt: startDateError || endDateError ? 0.5 : 0,
+                    px: 1.75,
+                    transition: "min-height 0.15s ease",
+                  }}
+                >
+                  {endDateError && (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "error.main",
+                        fontSize: "0.75rem",
+                        lineHeight: 1.25,
+                        fontWeight: 500,
+                        display: "block",
+                      }}
+                    >
+                      {endDateError}
+                    </Typography>
+                  )}
+                </Box>
               </Box>
 
-              {/* Duration Badge - inline after dates */}
+              {/* Duration Badge */}
               <Box
                 sx={{
-                  flex: "0 0 auto",
-                  height: 50,
+                  gridColumn: { xs: "1", sm: "1 / -1", lg: "auto" },
+                  height: "50px",
                   px: 2,
-                  py: 1,
+                  py: 0.5,
                   borderRadius: "8px",
                   bgcolor: dateRangeValidation.isValid ? "#EFF6FF" : "#FEF2F2",
                   border: "1px solid",
@@ -655,7 +764,9 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                   alignItems: "center",
                   gap: 1.5,
                   boxSizing: "border-box",
-                  minWidth: 200,
+                  minWidth: { xs: "100%", sm: "fit-content", lg: 200 },
+                  width: { xs: "100%", sm: "fit-content", lg: "auto" },
+                  transition: "background-color 0.2s ease, border-color 0.2s ease",
                 }}
               >
                 <CalendarMonthOutlinedIcon
@@ -668,7 +779,13 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                 <Box>
                   <Typography
                     variant="caption"
-                    sx={{ color: "#64748B", display: "block", lineHeight: 1.2, fontWeight: 500 }}
+                    sx={{
+                      color: "#64748B",
+                      display: "block",
+                      fontSize: "0.75rem",
+                      lineHeight: 1.15,
+                      fontWeight: 500,
+                    }}
                   >
                     Thời lượng tính toán
                   </Typography>
@@ -676,6 +793,8 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                     variant="body2"
                     sx={{
                       fontWeight: 700,
+                      fontSize: "0.875rem",
+                      lineHeight: 1.25,
                       color: dateRangeValidation.isValid ? "#1E40AF" : "#DC2626",
                     }}
                   >

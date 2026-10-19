@@ -7,7 +7,6 @@ import {
   TextField,
   Button,
   Chip,
-  Alert,
   IconButton,
   MenuItem,
   Select,
@@ -29,7 +28,6 @@ import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
@@ -695,21 +693,6 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
           </Button>
         </Box>
       </Box>
-
-      {/* Demo notice banner */}
-      <Alert
-        severity="info"
-        icon={<InfoOutlinedIcon />}
-        sx={{
-          borderRadius: "10px",
-          bgcolor: "#EFF6FF",
-          color: "#1E40AF",
-          border: "1px solid #BFDBFE",
-        }}
-      >
-        Dữ liệu được lưu trong phiên làm việc trình duyệt (Demo UI/Mock State).
-        Không lưu vào cơ sở dữ liệu thật.
-      </Alert>
 
       {/* FORM SECTION 1: THÔNG TIN CHUNG */}
       <Card

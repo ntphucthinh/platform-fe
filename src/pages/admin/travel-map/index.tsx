@@ -270,15 +270,33 @@ export function TravelMapPage() {
           />
         </Box>
       ) : (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-          <TravelMapListView
-            locations={locationsWithDetails}
-            selectedLocationId={selectedLocationId}
-            onSelectLocation={handleSelectLocation}
-            onResetFilters={handleResetFilters}
-          />
+        <Box
+          sx={{
+            position: "relative",
+            width: "100%",
+            minHeight: { xs: 520, sm: 640, md: 720 },
+          }}
+        >
+          {/* List View: kept mounted so currentGroup and filters are fully preserved */}
+          <Box
+            sx={{
+              pointerEvents:
+                Boolean(selectedLocationDetails) && !isMobile
+                  ? "none"
+                  : "auto",
+            }}
+            aria-hidden={Boolean(selectedLocationDetails) && !isMobile}
+          >
+            <TravelMapListView
+              locations={locationsWithDetails}
+              selectedLocationId={selectedLocationId}
+              onSelectLocation={handleSelectLocation}
+              onResetFilters={handleResetFilters}
+              filters={filters}
+            />
+          </Box>
 
-          {/* Detail Panel in list view */}
+          {/* Detail Panel in list view (inline mobile-style bottom sheet for desktop, portal bottom sheet for mobile) */}
           <LocationDetailPanel
             location={selectedLocationDetails}
             open={Boolean(selectedLocationDetails)}
@@ -286,6 +304,7 @@ export function TravelMapPage() {
             onEdit={handleOpenEdit}
             onDelete={handleRequestDelete}
             isMobile={isMobile}
+            variant="inline"
           />
         </Box>
       )}
