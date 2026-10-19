@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -9,7 +9,7 @@ import {
   Card,
   CardMedia,
   CardContent,
-  Drawer,
+  Portal,
   Tooltip,
   useTheme,
   useMediaQuery,
@@ -45,7 +45,7 @@ interface LocationDetailPanelProps {
 }
 
 export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
-  location,
+  location: propLocation,
   open,
   onClose,
   onEdit,
@@ -56,13 +56,308 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
   const theme = useTheme();
   const isMobileQuery = useMediaQuery(theme.breakpoints.down("md"));
   const effectiveIsMobile = isMobile !== undefined ? isMobile : isMobileQuery;
+  const prefersReducedMotion = useMediaQuery(
+    "@media (prefers-reduced-motion: reduce)",
+  );
 
-  if (!location) return null;
+  // Cached location to keep details rendered during exit animation
+  const [prevPropLocation, setPrevPropLocation] = useState(propLocation);
+  const [cachedLocation, setCachedLocation] = useState(propLocation);
+  if (propLocation && propLocation !== prevPropLocation) {
+    setPrevPropLocation(propLocation);
+    setCachedLocation(propLocation);
+  }
+  const location = propLocation || cachedLocation;
 
+  // Animation lifecycle state: "unmounted" | "entering" | "entered" | "exiting"
+  const [animStatus, setAnimStatus] = useState<
+    "unmounted" | "entering" | "entered" | "exiting"
+  >(() => (open && propLocation ? "entered" : "unmounted"));
+
+  // Adjust animation status during render when open prop changes
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    if (open && location) {
+      setAnimStatus(prefersReducedMotion ? "entered" : "entering");
+    } else if (!open && animStatus !== "unmounted") {
+      setAnimStatus(prefersReducedMotion ? "unmounted" : "exiting");
+    }
+  }
+
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const prevPropLocationIdRef = useRef<string | null>(propLocation?.id || null);
+
+  // Mobile Bottom Sheet DOM refs for direct transform updates (avoids re-rendering during drag)
+  const mobileSheetRef = useRef<HTMLDivElement | null>(null);
+  const backdropRef = useRef<HTMLDivElement | null>(null);
+  const isDismissingViaDragRef = useRef(false);
+  const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rafDragRef = useRef<number | null>(null);
+
+  // Drag state tracking ref
+  const dragStateRef = useRef<{
+    isDragging: boolean;
+    startY: number;
+    currentY: number;
+    lastY: number;
+    lastTime: number;
+    velocity: number;
+    pointerId: number | null;
+  }>({
+    isDragging: false,
+    startY: 0,
+    currentY: 0,
+    lastY: 0,
+    lastTime: 0,
+    velocity: 0,
+    pointerId: null,
+  });
+
+  // Drag Gesture Handlers for Mobile Grab Handle
+  const handleDragStart = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!effectiveIsMobile || e.button !== 0) return;
+
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {
+        // Fallback for browsers with restricted pointer capture
+      }
+
+      if (snapTimerRef.current) {
+        clearTimeout(snapTimerRef.current);
+        snapTimerRef.current = null;
+      }
+
+      const now = performance.now();
+      dragStateRef.current = {
+        isDragging: true,
+        startY: e.clientY,
+        currentY: e.clientY,
+        lastY: e.clientY,
+        lastTime: now,
+        velocity: 0,
+        pointerId: e.pointerId,
+      };
+
+      // Disable transition during direct finger drag
+      if (mobileSheetRef.current) {
+        mobileSheetRef.current.style.transition = "none";
+      }
+      if (backdropRef.current) {
+        backdropRef.current.style.transition = "none";
+      }
+    },
+    [effectiveIsMobile],
+  );
+
+  const handleDragMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const state = dragStateRef.current;
+    if (!state.isDragging) return;
+
+    state.currentY = e.clientY;
+    const now = performance.now();
+    const dt = now - state.lastTime;
+    if (dt > 10) {
+      state.velocity = (e.clientY - state.lastY) / dt;
+      state.lastY = e.clientY;
+      state.lastTime = now;
+    }
+
+    const rawDeltaY = e.clientY - state.startY;
+    // Clamping upward movement at 0 per requirement: "Kéo lên: không đóng popup; giữ sheet tại vị trí mở ban đầu"
+    const deltaY = Math.max(0, rawDeltaY);
+
+    if (rafDragRef.current) {
+      cancelAnimationFrame(rafDragRef.current);
+    }
+
+    rafDragRef.current = requestAnimationFrame(() => {
+      if (!mobileSheetRef.current) return;
+      mobileSheetRef.current.style.transform = `translateY(${deltaY}px)`;
+
+      if (backdropRef.current) {
+        const sheetHeight =
+          mobileSheetRef.current.offsetHeight || window.innerHeight;
+        const progress = Math.min(1, deltaY / (sheetHeight * 0.6));
+        backdropRef.current.style.opacity = String(
+          Math.max(0, 1 - progress * 0.75),
+        );
+      }
+    });
+  }, []);
+
+  const handleDragEnd = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const state = dragStateRef.current;
+      if (!state.isDragging) return;
+
+      state.isDragging = false;
+      if (state.pointerId !== null) {
+        try {
+          e.currentTarget.releasePointerCapture(state.pointerId);
+        } catch {
+          // ignore
+        }
+        state.pointerId = null;
+      }
+
+      if (rafDragRef.current) {
+        cancelAnimationFrame(rafDragRef.current);
+        rafDragRef.current = null;
+      }
+
+      const totalDeltaY = Math.max(0, e.clientY - state.startY);
+      const sheetHeight =
+        mobileSheetRef.current?.offsetHeight || window.innerHeight * 0.92;
+
+      // Threshold: 110px or 20% of sheet height
+      const distanceThreshold = Math.min(130, sheetHeight * 0.2);
+      // Fast swipe threshold: velocity > 0.45 px/ms and pulled down > 25px
+      const isFastSwipe = state.velocity > 0.45 && totalDeltaY > 25;
+      const shouldDismiss = totalDeltaY >= distanceThreshold || isFastSwipe;
+
+      if (shouldDismiss) {
+        isDismissingViaDragRef.current = true;
+        // Animate smooth slide down to exit
+        if (mobileSheetRef.current) {
+          mobileSheetRef.current.style.transition = prefersReducedMotion
+            ? "none"
+            : "transform 260ms cubic-bezier(0.22, 1, 0.36, 1), opacity 260ms cubic-bezier(0.22, 1, 0.36, 1)";
+          mobileSheetRef.current.style.transform = "translateY(100%)";
+          mobileSheetRef.current.style.opacity = "0";
+        }
+        if (backdropRef.current) {
+          backdropRef.current.style.transition = prefersReducedMotion
+            ? "none"
+            : "opacity 260ms ease";
+          backdropRef.current.style.opacity = "0";
+        }
+
+        onClose();
+      } else {
+        // Revert smoothly back to open position
+        if (mobileSheetRef.current) {
+          mobileSheetRef.current.style.transition = prefersReducedMotion
+            ? "none"
+            : "transform 280ms cubic-bezier(0.22, 1, 0.36, 1), opacity 280ms cubic-bezier(0.22, 1, 0.36, 1)";
+          mobileSheetRef.current.style.transform = "translateY(0)";
+          mobileSheetRef.current.style.opacity = "1";
+        }
+        if (backdropRef.current) {
+          backdropRef.current.style.transition = prefersReducedMotion
+            ? "none"
+            : "opacity 280ms ease";
+          backdropRef.current.style.opacity = "1";
+        }
+
+        // Clean up inline styles once snapback transition finishes
+        snapTimerRef.current = setTimeout(() => {
+          if (mobileSheetRef.current && !dragStateRef.current.isDragging) {
+            mobileSheetRef.current.style.transform = "";
+            mobileSheetRef.current.style.transition = "";
+            mobileSheetRef.current.style.opacity = "";
+          }
+          if (backdropRef.current && !dragStateRef.current.isDragging) {
+            backdropRef.current.style.opacity = "";
+            backdropRef.current.style.transition = "";
+          }
+        }, 280);
+      }
+    },
+    [onClose, prefersReducedMotion],
+  );
+
+  // Clear drag inline styles when closed via external actions (X button, backdrop click, Escape key)
+  useEffect(() => {
+    if (!open) {
+      if (snapTimerRef.current) {
+        clearTimeout(snapTimerRef.current);
+        snapTimerRef.current = null;
+      }
+      if (!isDismissingViaDragRef.current) {
+        if (mobileSheetRef.current) {
+          mobileSheetRef.current.style.transform = "";
+          mobileSheetRef.current.style.transition = "";
+          mobileSheetRef.current.style.opacity = "";
+        }
+        if (backdropRef.current) {
+          backdropRef.current.style.opacity = "";
+          backdropRef.current.style.transition = "";
+        }
+      }
+    } else {
+      isDismissingViaDragRef.current = false;
+    }
+  }, [open]);
+
+  // Clean up timers on unmount
+  useEffect(() => {
+    return () => {
+      if (rafDragRef.current) {
+        cancelAnimationFrame(rafDragRef.current);
+      }
+      if (snapTimerRef.current) {
+        clearTimeout(snapTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Scroll to top when location changes while panel is already open
+  useEffect(() => {
+    if (propLocation?.id && prevPropLocationIdRef.current !== propLocation.id) {
+      prevPropLocationIdRef.current = propLocation.id;
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTo({ top: 0, behavior: "instant" });
+      }
+    }
+  }, [propLocation?.id]);
+
+  // Handle async lifecycle transitions (entering -> entered, exiting -> unmounted)
+  useEffect(() => {
+    if (animStatus === "entering") {
+      let rafId2 = 0;
+      const rafId1 = requestAnimationFrame(() => {
+        rafId2 = requestAnimationFrame(() => {
+          setAnimStatus("entered");
+        });
+      });
+      return () => {
+        cancelAnimationFrame(rafId1);
+        if (rafId2) cancelAnimationFrame(rafId2);
+      };
+    }
+
+    if (animStatus === "exiting") {
+      const exitDuration = effectiveIsMobile ? 360 : 320;
+      const timer = setTimeout(() => {
+        setAnimStatus("unmounted");
+      }, exitDuration);
+      return () => clearTimeout(timer);
+    }
+  }, [animStatus, effectiveIsMobile]);
+
+  // Escape key listener for closing mobile bottom sheet
+  useEffect(() => {
+    if (!effectiveIsMobile || animStatus === "unmounted") return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [effectiveIsMobile, animStatus, onClose]);
+
+  if (animStatus === "unmounted" || !location) return null;
+
+  const isEntered = animStatus === "entered";
   const isVisited = location.status === "Visited";
 
   const panelContent = (
     <Box
+      key={location.id}
       sx={{
         display: "flex",
         flexDirection: "column",
@@ -70,27 +365,65 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
         minHeight: 0,
         bgcolor: "#FFFFFF",
         overflow: "hidden",
+        animation: prefersReducedMotion
+          ? "none"
+          : "panelContentFadeIn 220ms cubic-bezier(0.22, 1, 0.36, 1)",
+        "@keyframes panelContentFadeIn": {
+          "0%": {
+            opacity: 0.5,
+          },
+          "100%": {
+            opacity: 1,
+          },
+        },
       }}
     >
       {/* Top Header Image & Controls */}
       <Box sx={{ position: "relative", flexShrink: 0 }}>
-        {/* Grab Handle for mobile bottom sheet */}
+        {/* Grab Handle Touch Zone for mobile bottom sheet */}
         {effectiveIsMobile && (
           <Box
+            onPointerDown={handleDragStart}
+            onPointerMove={handleDragMove}
+            onPointerUp={handleDragEnd}
+            onPointerCancel={handleDragEnd}
+            role="slider"
+            aria-label="Kéo xuống để đóng"
+            aria-valuemin={0}
+            aria-valuemax={100}
             sx={{
               position: "absolute",
-              top: 8,
+              top: 0,
               left: "50%",
               transform: "translateX(-50%)",
-              width: 38,
-              height: 4,
-              borderRadius: "2px",
-              bgcolor: "rgba(255, 255, 255, 0.85)",
-              zIndex: 10,
-              pointerEvents: "none",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+              width: { xs: 160, sm: 200 },
+              height: 48,
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "center",
+              pt: "8px",
+              zIndex: 15,
+              touchAction: "none",
+              cursor: "grab",
+              userSelect: "none",
+              WebkitUserSelect: "none",
+              "&:active": {
+                cursor: "grabbing",
+              },
             }}
-          />
+          >
+            {/* Visual Grab Handle bar */}
+            <Box
+              sx={{
+                width: 38,
+                height: 4,
+                borderRadius: "2px",
+                bgcolor: "rgba(255, 255, 255, 0.85)",
+                pointerEvents: "none",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+              }}
+            />
+          </Box>
         )}
 
         <CardMedia
@@ -185,6 +518,7 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
 
       {/* Scrollable Content Body */}
       <Box
+        ref={scrollContainerRef}
         sx={{
           p: { xs: 2, sm: 2.5 },
           flex: 1,
@@ -685,54 +1019,105 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
 
   if (effectiveIsMobile) {
     return (
-      <Drawer
-        anchor="bottom"
-        open={open}
-        onClose={onClose}
-        slotProps={{
-          paper: {
-            sx: {
-              height: "92dvh",
-              maxHeight: "92dvh",
-              "@supports not (height: 92dvh)": {
-                height: "92vh",
-                maxHeight: "92vh",
-              },
-              display: "flex",
-              flexDirection: "column",
-              minHeight: 0,
-              borderTopLeftRadius: "20px",
-              borderTopRightRadius: "20px",
-              overflow: "hidden",
-              bgcolor: "#FFFFFF",
-              boxShadow: "0 -8px 32px rgba(0,0,0,0.18)",
+      <Portal>
+        {/* Backdrop */}
+        <Box
+          ref={backdropRef}
+          onClick={onClose}
+          aria-hidden="true"
+          sx={{
+            position: "fixed",
+            inset: 0,
+            bgcolor: "rgba(15, 23, 42, 0.45)",
+            backdropFilter: "blur(2px)",
+            zIndex: 1200,
+            opacity: isEntered ? 1 : 0,
+            transition: prefersReducedMotion
+              ? "none"
+              : "opacity 350ms cubic-bezier(0.22, 1, 0.36, 1)",
+            pointerEvents: isEntered ? "auto" : "none",
+          }}
+        />
+
+        {/* Bottom Sheet */}
+        <Box
+          ref={mobileSheetRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Chi tiết địa điểm ${location.name}`}
+          sx={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1201,
+            height: "92dvh",
+            maxHeight: "92dvh",
+            "@supports not (height: 92dvh)": {
+              height: "92vh",
+              maxHeight: "92vh",
             },
-          },
-        }}
-      >
-        {panelContent}
-      </Drawer>
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
+            borderTopLeftRadius: "20px",
+            borderTopRightRadius: "20px",
+            overflow: "hidden",
+            bgcolor: "#FFFFFF",
+            boxShadow: "0 -8px 32px rgba(0,0,0,0.18)",
+            transform: isEntered ? "translateY(0)" : "translateY(40px)",
+            opacity: isEntered ? 1 : 0,
+            transition: prefersReducedMotion
+              ? "none"
+              : `transform 380ms cubic-bezier(0.22, 1, 0.36, 1),
+                 opacity 380ms cubic-bezier(0.22, 1, 0.36, 1)`,
+            pointerEvents: isEntered ? "auto" : "none",
+          }}
+        >
+          {panelContent}
+        </Box>
+      </Portal>
     );
   }
 
   // Desktop Side Panel
-  if (!open) return null;
-
   return (
     <Box
       sx={{
-        width: 400,
-        height: "100%",
-        flexShrink: 0,
-        bgcolor: "#FFFFFF",
-        borderRadius: "16px",
-        border: "1px solid #E2E8F0",
+        width: isEntered ? 400 : 0,
+        marginLeft: (t) => (isEntered ? 0 : `-${t.spacing(2.5)}`),
+        opacity: isEntered ? 1 : 0,
+        transition: prefersReducedMotion
+          ? "none"
+          : `width 320ms cubic-bezier(0.22, 1, 0.36, 1),
+             margin-left 320ms cubic-bezier(0.22, 1, 0.36, 1),
+             opacity 320ms cubic-bezier(0.22, 1, 0.36, 1)`,
         overflow: "hidden",
-        boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
-        transition: "width 0.25s ease-in-out",
+        flexShrink: 0,
+        height: "100%",
+        pointerEvents: isEntered ? "auto" : "none",
       }}
     >
-      {panelContent}
+      <Box
+        sx={{
+          width: 400,
+          height: "100%",
+          flexShrink: 0,
+          bgcolor: "#FFFFFF",
+          borderRadius: "16px",
+          border: "1px solid #E2E8F0",
+          overflow: "hidden",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
+          transform: isEntered ? "translateX(0)" : "translateX(24px)",
+          opacity: isEntered ? 1 : 0,
+          transition: prefersReducedMotion
+            ? "none"
+            : `transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+               opacity 320ms cubic-bezier(0.22, 1, 0.36, 1)`,
+        }}
+      >
+        {panelContent}
+      </Box>
     </Box>
   );
 };

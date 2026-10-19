@@ -77,9 +77,21 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
       if (mapInstanceRef.current) {
         mapInstanceRef.current.invalidateSize();
       }
-    }, 280);
+    }, 330);
     return () => clearTimeout(timer);
   }, [panelOpen]);
+
+  // Keep map dimensions strictly updated on container resize
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+    const observer = new ResizeObserver(() => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    });
+    observer.observe(mapContainerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   // 3. Render markers whenever locations or selectedLocationId change
   useEffect(() => {
