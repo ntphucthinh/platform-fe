@@ -22,6 +22,7 @@
     "@refinedev/mui": "^8.0.2",
     "@refinedev/react-router": "^2.0.4",
     "@types/leaflet": "^1.9.22",
+    "country-state-city": "^3.2.1",
     "dayjs": "^1.11.13",
     "leaflet": "^1.9.4",
     "react": "^19.2.8",

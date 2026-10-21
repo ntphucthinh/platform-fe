@@ -629,5 +629,39 @@ export const MOCK_TRAVEL_MEMORIES: ITravelMemory[] = [
     createdAt: "2025-04-21T08:00:00Z",
     updatedAt: "2025-04-21T08:00:00Z",
   },
+  {
+    id: "trip-seoul-2025",
+    title: "Seoul – Mùa thu lá vàng rực rỡ",
+    destination: "Seoul, Hàn Quốc",
+    startDate: "2025-10-24",
+    endDate: "2025-10-28",
+    description:
+      "Dạo bước dưới những tán cây ngân hạnh vàng rực tại hoàng cung Gyeongbokgung, ngắm toàn cảnh thành phố từ tháp N Seoul và thưởng thức thịt nướng Hongdae.",
+    coverImage:
+      "https://images.unsplash.com/photo-1538485399081-7191377e8241?auto=format&fit=crop&w=1200&q=80",
+    days: [
+      {
+        date: "2025-10-25",
+        photos: [
+          {
+            id: "seoul-25-1",
+            imageUrl:
+              "https://images.unsplash.com/photo-1538485399081-7191377e8241?auto=format&fit=crop&w=800&q=80",
+            caption: "Lá ngân hạnh vàng rực bao quanh cung điện Gyeongbokgung",
+            altText: "Cung điện Gyeongbokgung mùa thu",
+          },
+          {
+            id: "seoul-25-2",
+            imageUrl:
+              "https://images.unsplash.com/photo-1517154421773-0529f29ea451?auto=format&fit=crop&w=800&q=80",
+            caption: "Hoàng hôn lộng lẫy nhìn từ đỉnh tháp N Seoul",
+            altText: "Tháp N Seoul hoàng hôn",
+          },
+        ],
+      },
+    ],
+    createdAt: "2025-10-29T08:00:00Z",
+    updatedAt: "2025-10-29T08:00:00Z",
+  },
 ];
 

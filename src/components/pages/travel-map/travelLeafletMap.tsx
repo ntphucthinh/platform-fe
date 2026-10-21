@@ -43,7 +43,7 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
       zoom: VIETNAM_DEFAULT_ZOOM,
       zoomControl: false,
       attributionControl: false,
-      minZoom: 4,
+      minZoom: 2,
       maxZoom: 18,
     });
 
@@ -156,8 +156,16 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
             box-shadow: 0 2px 6px rgba(0,0,0,0.25);
             pointer-events: none;
             backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            gap: 5px;
           ">
-            ${loc.name}
+            ${
+              loc.countryCode
+                ? `<img src="https://flagcdn.com/${loc.countryCode.toLowerCase()}.svg" width="14" height="10" style="border-radius: 1px; object-fit: cover;" onerror="this.style.display='none'" />`
+                : ""
+            }
+            <span>${loc.name}</span>
           </div>
         </div>
       `;
@@ -168,6 +176,10 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
         iconSize: [0, 0],
         iconAnchor: [0, 0],
       });
+
+      if (loc.latitude === null || loc.longitude === null) {
+        return;
+      }
 
       const marker = L.marker([loc.latitude, loc.longitude], {
         icon: customIcon,
@@ -186,7 +198,7 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
   useEffect(() => {
     if (!selectedLocationId || !mapInstanceRef.current) return;
     const target = locations.find((l) => l.id === selectedLocationId);
-    if (target) {
+    if (target && target.latitude !== null && target.longitude !== null) {
       mapInstanceRef.current.flyTo([target.latitude, target.longitude], 10, {
         duration: 1,
       });

@@ -5,10 +5,14 @@ export type LocationStatus = "Visited" | "Wishlist";
 
 export interface ILocation {
   id: string;
+  countryCode?: string;
+  countryName?: string;
+  stateCode?: string;
+  provinceCode?: string;
   name: string;
   address: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
   coverImage: string;
   status: LocationStatus;
   description?: string;
@@ -19,10 +23,14 @@ export interface ILocation {
 }
 
 export interface ILocationFormData {
+  countryCode?: string;
+  countryName?: string;
+  stateCode?: string;
+  provinceCode?: string;
   name: string;
   address: string;
-  latitude: number | "";
-  longitude: number | "";
+  latitude: number | "" | null;
+  longitude: number | "" | null;
   coverImage: string;
   status: LocationStatus;
   description?: string;

@@ -554,17 +554,44 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
       >
         {/* Title & Address */}
         <Box>
-          <Typography
-            variant="h5"
+          <Box
             sx={{
-              fontWeight: 700,
-              color: "#0F172A",
-              fontSize: "1.35rem",
+              display: "flex",
+              alignItems: "center",
+              gap: 1.25,
               mb: 0.75,
             }}
           >
-            {location.name}
-          </Typography>
+            {location.countryCode && (
+              <Box
+                component="img"
+                loading="lazy"
+                width="24"
+                height="16"
+                src={`https://flagcdn.com/${location.countryCode.toLowerCase()}.svg`}
+                alt={location.countryCode}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+                sx={{
+                  borderRadius: "2px",
+                  objectFit: "cover",
+                  border: "1px solid #CBD5E1",
+                  flexShrink: 0,
+                }}
+              />
+            )}
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 700,
+                color: "#0F172A",
+                fontSize: "1.35rem",
+              }}
+            >
+              {location.name}
+            </Typography>
+          </Box>
 
           <Box
             sx={{
@@ -600,7 +627,9 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
               variant="caption"
               sx={{ color: "#64748B", fontFamily: "monospace" }}
             >
-              {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+              {location.latitude !== null && location.longitude !== null
+                ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
+                : "Chưa có tọa độ"}
             </Typography>
 
             {location.googleMapsUrl && (

@@ -390,18 +390,46 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                 }}
               >
                 <Box sx={{ mb: 2 }}>
-                  <Typography
-                    variant="h6"
+                  <Box
                     sx={{
-                      fontWeight: 700,
-                      color: "#0F172A",
-                      fontSize: "1.05rem",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
                       mb: 0.5,
-                      lineHeight: 1.3,
                     }}
                   >
-                    {loc.name}
-                  </Typography>
+                    {loc.countryCode && (
+                      <Box
+                        component="img"
+                        loading="lazy"
+                        width="20"
+                        height="13"
+                        src={`https://flagcdn.com/${loc.countryCode.toLowerCase()}.svg`}
+                        alt={loc.countryCode}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                        sx={{
+                          borderRadius: "2px",
+                          objectFit: "cover",
+                          border: "1px solid #CBD5E1",
+                          flexShrink: 0,
+                        }}
+                      />
+                    )}
+                    <Typography
+                      variant="h6"
+                      noWrap
+                      sx={{
+                        fontWeight: 700,
+                        color: "#0F172A",
+                        fontSize: "1.05rem",
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {loc.name}
+                    </Typography>
+                  </Box>
 
                   <Box
                     sx={{

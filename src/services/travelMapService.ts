@@ -17,10 +17,15 @@ import { getItineraryById } from "@/services/itineraryService";
 import type { ITravelMemory } from "@/types/pages/travel-memories/travelMemory";
 import type { ITravelItinerary } from "@/types/pages/itineraries/itinerary";
 import { countTotalPhotos } from "@/utils/travelMemoryUtils";
+import {
+  findStateByCode,
+  findCountryByCode,
+  findDestinationForLegacyLocation,
+} from "@/services/globalGeoService";
 
-const LOCATIONS_STORAGE_KEY = "platform_travel_map_locations";
-const MEMORY_RELATIONS_KEY = "platform_travel_map_memory_relations";
-const ITINERARY_RELATIONS_KEY = "platform_travel_map_itinerary_relations";
+const LOCATIONS_STORAGE_KEY = "platform_travel_map_locations_v2";
+const MEMORY_RELATIONS_KEY = "platform_travel_map_memory_relations_v2";
+const ITINERARY_RELATIONS_KEY = "platform_travel_map_itinerary_relations_v2";
 
 // In-memory store with sessionStorage sync
 let locationStore: ILocation[] = (() => {
@@ -28,7 +33,11 @@ let locationStore: ILocation[] = (() => {
     try {
       const stored = window.sessionStorage.getItem(LOCATIONS_STORAGE_KEY);
       if (stored) {
-        return JSON.parse(stored) as ILocation[];
+        const parsed = JSON.parse(stored) as ILocation[];
+        // Ensure stored data conforms to new schema with countryCode
+        if (parsed.length > 0 && parsed.every((item) => Boolean(item.countryCode))) {
+          return parsed;
+        }
       }
     } catch {
       // Fallback
@@ -292,12 +301,45 @@ export function getLocationWithDetails(
  * Create a new Location (mock state).
  */
 export function createLocation(input: ILocationFormData): ILocation {
+  const legacyMatch =
+    !input.countryCode || !input.stateCode
+      ? findDestinationForLegacyLocation(input.name || input.address)
+      : undefined;
+
+  const targetCountryCode = input.countryCode || legacyMatch?.country.iso2;
+  const targetCountry = findCountryByCode(targetCountryCode);
+  const targetState =
+    findStateByCode(
+      targetCountryCode,
+      input.stateCode || legacyMatch?.state.stateCode || legacyMatch?.state.name,
+    ) || legacyMatch?.state;
+
+  const finalName = targetState ? targetState.name : input.name.trim();
+  const finalAddress =
+    targetState && targetCountry
+      ? `${targetState.name}, ${targetCountry.name}`
+      : input.address.trim() || finalName;
+  const finalLat = targetState
+    ? targetState.latitude
+    : input.latitude === "" || input.latitude === null
+      ? null
+      : Number(input.latitude);
+  const finalLng = targetState
+    ? targetState.longitude
+    : input.longitude === "" || input.longitude === null
+      ? null
+      : Number(input.longitude);
+
   const newLocation: ILocation = {
     id: `loc-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-    name: input.name.trim(),
-    address: input.address.trim(),
-    latitude: Number(input.latitude),
-    longitude: Number(input.longitude),
+    countryCode: targetCountry?.iso2 || input.countryCode,
+    countryName: targetCountry?.name || input.countryName,
+    stateCode: targetState?.stateCode || input.stateCode,
+    provinceCode: targetState?.stateCode || input.provinceCode,
+    name: finalName,
+    address: finalAddress,
+    latitude: finalLat,
+    longitude: finalLng,
     coverImage:
       input.coverImage.trim() ||
       "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
@@ -306,7 +348,9 @@ export function createLocation(input: ILocationFormData): ILocation {
     notes: input.notes?.trim(),
     googleMapsUrl:
       input.googleMapsUrl?.trim() ||
-      `https://maps.google.com/?q=${encodeURIComponent(input.name.trim())}`,
+      (finalLat !== null && finalLng !== null
+        ? `https://www.google.com/maps?q=${finalLat},${finalLng}`
+        : ""),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -327,17 +371,58 @@ export function updateLocation(
   if (index === -1) return null;
 
   const existing = locationStore[index];
+  const legacyMatch =
+    !input.countryCode || !input.stateCode
+      ? findDestinationForLegacyLocation(input.name || input.address)
+      : undefined;
+
+  const targetCountryCode =
+    input.countryCode || legacyMatch?.country.iso2 || existing.countryCode;
+  const targetCountry = findCountryByCode(targetCountryCode);
+  const targetState =
+    findStateByCode(
+      targetCountryCode,
+      input.stateCode || legacyMatch?.state.stateCode || legacyMatch?.state.name,
+    ) || legacyMatch?.state;
+
+  const finalName = targetState ? targetState.name : input.name.trim();
+  const finalAddress =
+    targetState && targetCountry
+      ? `${targetState.name}, ${targetCountry.name}`
+      : input.address.trim() || finalName;
+  const finalLat = targetState
+    ? targetState.latitude
+    : input.latitude === "" || input.latitude === null
+      ? null
+      : Number(input.latitude);
+  const finalLng = targetState
+    ? targetState.longitude
+    : input.longitude === "" || input.longitude === null
+      ? null
+      : Number(input.longitude);
+
   const updated: ILocation = {
     ...existing,
-    name: input.name.trim(),
-    address: input.address.trim(),
-    latitude: Number(input.latitude),
-    longitude: Number(input.longitude),
+    countryCode:
+      targetCountry?.iso2 || input.countryCode || existing.countryCode,
+    countryName:
+      targetCountry?.name || input.countryName || existing.countryName,
+    stateCode: targetState?.stateCode || input.stateCode || existing.stateCode,
+    provinceCode:
+      targetState?.stateCode || input.provinceCode || existing.provinceCode,
+    name: finalName,
+    address: finalAddress,
+    latitude: finalLat,
+    longitude: finalLng,
     coverImage: input.coverImage.trim() || existing.coverImage,
     status: input.status,
     description: input.description?.trim(),
     notes: input.notes?.trim(),
-    googleMapsUrl: input.googleMapsUrl?.trim() || existing.googleMapsUrl,
+    googleMapsUrl:
+      input.googleMapsUrl?.trim() ||
+      (finalLat !== null && finalLng !== null
+        ? `https://www.google.com/maps?q=${finalLat},${finalLng}`
+        : existing.googleMapsUrl),
     updatedAt: new Date().toISOString(),
   };
 

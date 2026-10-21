@@ -341,23 +341,54 @@ export const TravelMapDetailPage: React.FC = () => {
                   borderRadius: "6px",
                 }}
               >
-                {details.latitude.toFixed(4)}, {details.longitude.toFixed(4)}
+                {details.latitude !== null && details.longitude !== null
+                  ? `${details.latitude.toFixed(4)}, ${details.longitude.toFixed(4)}`
+                  : "Chưa có tọa độ"}
               </Typography>
             </Box>
 
-            <Typography
-              variant="h3"
+            <Box
               sx={{
-                fontWeight: 800,
-                color: "#FFFFFF",
-                fontSize: { xs: "1.75rem", sm: "2.35rem", md: "2.75rem" },
-                letterSpacing: "-0.02em",
-                textShadow: "0 2px 10px rgba(0,0,0,0.4)",
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
                 mb: 0.75,
+                flexWrap: "wrap",
               }}
             >
-              {details.name}
-            </Typography>
+              {details.countryCode && (
+                <Box
+                  component="img"
+                  loading="lazy"
+                  width="36"
+                  height="24"
+                  src={`https://flagcdn.com/${details.countryCode.toLowerCase()}.svg`}
+                  alt={details.countryCode}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                  sx={{
+                    borderRadius: "4px",
+                    objectFit: "cover",
+                    border: "1.5px solid rgba(255,255,255,0.85)",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                    flexShrink: 0,
+                  }}
+                />
+              )}
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 800,
+                  color: "#FFFFFF",
+                  fontSize: { xs: "1.75rem", sm: "2.35rem", md: "2.75rem" },
+                  letterSpacing: "-0.02em",
+                  textShadow: "0 2px 10px rgba(0,0,0,0.4)",
+                }}
+              >
+                {details.name}
+              </Typography>
+            </Box>
 
             <Box
               sx={{
@@ -1069,8 +1100,8 @@ export const TravelMapDetailPage: React.FC = () => {
               variant="body1"
               sx={{ color: "#0F172A", fontFamily: "monospace", mt: 0.25 }}
             >
-              Vĩ độ (Latitude): {details.latitude} | Kinh độ (Longitude):{" "}
-              {details.longitude}
+              Vĩ độ (Latitude): {details.latitude ?? "—"} | Kinh độ (Longitude):{" "}
+              {details.longitude ?? "—"}
             </Typography>
           </Box>
 
