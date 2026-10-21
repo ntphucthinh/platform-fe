@@ -39,9 +39,8 @@ export interface DbHomestayRoom {
   homestay_id: number;
   name: string;
   description: string | null;
-  price_text: string | null;
-  price_amount?: number | null;
-  price_unit?: string | null;
+  price_amount: number | null;
+  price_unit: string | null;
   sort_order: number;
   created_at?: string;
   updated_at?: string;
@@ -53,7 +52,6 @@ export interface DbHomestay {
   name: string;
   address: string;
   description: string | null;
-  price: string | null;
   google_maps_url: string | null;
   created_at?: string;
   updated_at?: string;
@@ -242,7 +240,7 @@ export function mapDbHomestayToItem(dbRow: DbHomestay): IHomestayItem {
       homestayId: room.homestay_id,
       name: room.name ?? "",
       description: room.description ?? null,
-      priceText: room.price_text ?? null,
+      priceText: null,
       priceAmount:
         room.price_amount !== undefined && room.price_amount !== null
           ? Number(room.price_amount)
@@ -582,12 +580,11 @@ export async function createHomestay(
       });
     });
 
-    // 1. Insert main homestay record (do not write new room prices to homestays.price)
+    // 1. Insert main homestay record (price is stored per room in homestay_rooms)
     const homestayPayload = {
       name: formData.name.trim(),
       address: formData.address.trim(),
       description: formData.description?.trim() || null,
-      price: null,
       google_maps_url: formData.googleMapsUrl?.trim() || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -805,7 +802,7 @@ export async function updateHomestay(
       }
     }
 
-    // 1. Update main homestay record (leave homestays.price unchanged in DB)
+    // 1. Update main homestay record (price is stored per room in homestay_rooms)
     const homestayPayload = {
       name: formData.name.trim(),
       address: formData.address.trim(),
