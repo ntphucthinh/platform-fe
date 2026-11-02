@@ -45,6 +45,23 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
       attributionControl: false,
       minZoom: 2,
       maxZoom: 18,
+      worldCopyJump: true,
+    });
+
+    // Clamp vertical dragging to prevent scrolling into blank polar void
+    const MAX_LAT = 85.051129;
+    const MIN_LAT = -85.051129;
+    map.on("drag", () => {
+      const center = map.getCenter();
+      let clampedLat = center.lat;
+      if (center.lat > MAX_LAT) {
+        clampedLat = MAX_LAT;
+      } else if (center.lat < MIN_LAT) {
+        clampedLat = MIN_LAT;
+      }
+      if (center.lat !== clampedLat) {
+        map.panTo([clampedLat, center.lng], { animate: false });
+      }
     });
 
     const tileLayer = L.tileLayer(
@@ -181,16 +198,20 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
         return;
       }
 
-      const marker = L.marker([loc.latitude, loc.longitude], {
-        icon: customIcon,
-        zIndexOffset: isSelected ? 1000 : 100,
-      });
+      // Replicate markers on adjacent world copies (-360, 0, +360) so data remains visible when panning horizontally
+      const WORLD_OFFSETS = [-360, 0, 360];
+      WORLD_OFFSETS.forEach((offset) => {
+        const marker = L.marker([loc.latitude!, loc.longitude! + offset], {
+          icon: customIcon,
+          zIndexOffset: isSelected ? 1000 : 100,
+        });
 
-      marker.on("click", () => {
-        onSelectLocation(loc.id);
-      });
+        marker.on("click", () => {
+          onSelectLocation(loc.id);
+        });
 
-      marker.addTo(markersGroup);
+        marker.addTo(markersGroup);
+      });
     });
   }, [locations, selectedLocationId, onSelectLocation]);
 
@@ -199,7 +220,13 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
     if (!selectedLocationId || !mapInstanceRef.current) return;
     const target = locations.find((l) => l.id === selectedLocationId);
     if (target && target.latitude !== null && target.longitude !== null) {
-      mapInstanceRef.current.flyTo([target.latitude, target.longitude], 10, {
+      const currentCenter = mapInstanceRef.current.getCenter();
+      // Target the closest world copy longitude to the current view center
+      const diff = currentCenter.lng - target.longitude;
+      const roundWorlds = Math.round(diff / 360);
+      const targetLng = target.longitude + roundWorlds * 360;
+
+      mapInstanceRef.current.flyTo([target.latitude, targetLng], 10, {
         duration: 1,
       });
     }
@@ -214,7 +241,13 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
   };
 
   const handleResetView = () => {
-    mapInstanceRef.current?.flyTo(VIETNAM_DEFAULT_CENTER, VIETNAM_DEFAULT_ZOOM, {
+    if (!mapInstanceRef.current) return;
+    const currentCenter = mapInstanceRef.current.getCenter();
+    const diff = currentCenter.lng - VIETNAM_DEFAULT_CENTER[1];
+    const roundWorlds = Math.round(diff / 360);
+    const targetLng = VIETNAM_DEFAULT_CENTER[1] + roundWorlds * 360;
+
+    mapInstanceRef.current.flyTo([VIETNAM_DEFAULT_CENTER[0], targetLng], VIETNAM_DEFAULT_ZOOM, {
       duration: 1,
     });
   };

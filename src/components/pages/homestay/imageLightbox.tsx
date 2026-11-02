@@ -575,12 +575,13 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({
                       alt={`Thumbnail ${idx + 1}`}
                       onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                         e.currentTarget.src = DEFAULT_NO_IMAGE;
+                        e.currentTarget.style.objectFit = "contain";
                       }}
                       draggable={false}
                       sx={{
                         width: "100%",
                         height: "100%",
-                        objectFit: "cover",
+                        objectFit: imgUrl === DEFAULT_NO_IMAGE ? "contain" : "cover",
                       }}
                     />
                   )}

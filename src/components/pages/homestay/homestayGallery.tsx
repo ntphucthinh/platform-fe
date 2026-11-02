@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Box, CardMedia, Paper, IconButton, Tooltip } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -29,6 +29,7 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
   // True when gallery has no real images — only showing the placeholder
   const isNoImage = allImages.length === 1 && allImages[0] === DEFAULT_NO_IMAGE;
 
+  const [failedUrls, setFailedUrls] = useState<Set<string>>(() => new Set());
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState<boolean>(false);
   const mainImageFrameRef = useRef<HTMLDivElement | null>(null);
@@ -43,7 +44,25 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
     setPrevKey(currentKey);
     const coverIdx = allImages.indexOf(mainImage);
     setSelectedIndex(coverIdx >= 0 ? coverIdx : 0);
+    setFailedUrls(new Set());
   }
+
+  const handleImageError = (url: string) => {
+    setFailedUrls((prev) => {
+      if (prev.has(url)) return prev;
+      const next = new Set(prev);
+      next.add(url);
+      return next;
+    });
+  };
+
+  const isImageBroken = (url: string) =>
+    !url || url === DEFAULT_NO_IMAGE || failedUrls.has(url);
+
+  const allImagesFailed =
+    allImages.length === 0 || allImages.every((url) => isImageBroken(url));
+  const hasNoValidImages = isNoImage || allImagesFailed;
+  const showMultipleControls = !hasNoValidImages && allImages.length > 1;
 
   const safeIndex = selectedIndex < allImages.length ? selectedIndex : 0;
 
@@ -64,15 +83,15 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
     }
   }, [safeIndex]);
 
-  const handlePrev = useCallback(() => {
-    if (allImages.length <= 1) return;
+  const handlePrev = () => {
+    if (!showMultipleControls) return;
     setSelectedIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1));
-  }, [allImages.length]);
+  };
 
-  const handleNext = useCallback(() => {
-    if (allImages.length <= 1) return;
+  const handleNext = () => {
+    if (!showMultipleControls) return;
     setSelectedIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
-  }, [allImages.length]);
+  };
 
   const handleScrollStrip = (direction: "left" | "right") => {
     if (!thumbnailScrollRef.current) return;
@@ -83,8 +102,6 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
     });
   };
 
-  const hasMultipleImages = allImages.length > 1;
-
   const dragStartX = useRef<number | null>(null);
   const dragStartY = useRef<number | null>(null);
   const [dragOffset, setDragOffset] = useState<number>(0);
@@ -93,7 +110,7 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
   // Touch handlers for mobile swipe
   const handleTouchStart = (e: React.TouchEvent) => {
     hasDraggedRef.current = false;
-    if (!hasMultipleImages) return;
+    if (!showMultipleControls) return;
     if (e.touches.length === 1) {
       dragStartX.current = e.touches[0].clientX;
       dragStartY.current = e.touches[0].clientY;
@@ -103,7 +120,7 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (
-      !hasMultipleImages ||
+      !showMultipleControls ||
       dragStartX.current === null ||
       dragStartY.current === null ||
       e.touches.length !== 1
@@ -131,7 +148,7 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
   };
 
   const handleTouchEnd = () => {
-    if (!hasMultipleImages) return;
+    if (!showMultipleControls) return;
     if (dragStartX.current !== null) {
       if (dragOffset < -40 && safeIndex < allImages.length - 1) {
         setSelectedIndex((prev) => prev + 1);
@@ -148,7 +165,7 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
     hasDraggedRef.current = false;
-    if (!hasMultipleImages) return;
+    if (!showMultipleControls) return;
     dragStartX.current = e.clientX;
     dragStartY.current = e.clientY;
     setIsMouseDown(true);
@@ -157,7 +174,7 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (
-      !hasMultipleImages ||
+      !showMultipleControls ||
       !isMouseDown ||
       dragStartX.current === null ||
       dragStartY.current === null
@@ -183,7 +200,7 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
   };
 
   const handleMouseUp = () => {
-    if (!hasMultipleImages) return;
+    if (!showMultipleControls) return;
     if (isMouseDown && dragStartX.current !== null) {
       if (dragOffset < -40 && safeIndex < allImages.length - 1) {
         setSelectedIndex((prev) => prev + 1);
@@ -204,7 +221,7 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
   };
 
   const handleClickMainFrame = () => {
-    if (hasDraggedRef.current || isNoImage) {
+    if (hasDraggedRef.current || hasNoValidImages) {
       return;
     }
     setIsLightboxOpen(true);
@@ -245,21 +262,21 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
           boxShadow: "0 10px 30px -10px rgba(15, 23, 42, 0.08)",
           userSelect: "none",
           touchAction: "pan-y",
-          cursor: isNoImage
+          cursor: hasNoValidImages
             ? "default"
-            : hasMultipleImages
+            : showMultipleControls
             ? isMouseDown
               ? "grabbing"
               : "grab"
             : "pointer",
           outline: "none",
           "&:focus-visible": {
-            boxShadow: isNoImage ? "none" : "0 0 0 3px #2563EB",
+            boxShadow: hasNoValidImages ? "none" : "0 0 0 3px #2563EB",
           },
         }}
       >
         {/* Fullscreen Expand Button — hidden when no real images */}
-        {!isNoImage && (
+        {!hasNoValidImages && (
           <Tooltip title="Xem toàn màn hình (Lightbox)">
             <IconButton
               aria-label="Xem toàn màn hình"
@@ -312,55 +329,63 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
             willChange: "transform",
           }}
         >
-          {allImages.map((imgUrl, idx) => (
-            <Box
-              key={idx}
-              sx={{
-                width: "100%",
-                height: "100%",
-                flex: "0 0 100%",
-                position: "relative",
-              }}
-            >
-              {isVideoMedia(imgUrl) ? (
-                <Box
-                  component="video"
-                  src={imgUrl}
-                  muted
-                  autoPlay
-                  loop
-                  playsInline
-                  draggable={false}
-                  sx={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    pointerEvents: "none",
-                  }}
-                />
-              ) : (
-                <CardMedia
-                  component="img"
-                  image={imgUrl}
-                  alt={`${title} - image ${idx + 1}`}
-                  draggable={false}
-                  onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                    e.currentTarget.src = DEFAULT_NO_IMAGE;
-                  }}
-                  sx={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: isNoImage ? "contain" : "cover",
-                    pointerEvents: "none",
-                  }}
-                />
-              )}
-            </Box>
-          ))}
+          {allImages.map((imgUrl, idx) => {
+            const isBroken = isImageBroken(imgUrl);
+            const isPlaceholder = hasNoValidImages || isBroken;
+            const currentSrc = isBroken ? DEFAULT_NO_IMAGE : imgUrl;
+
+            return (
+              <Box
+                key={idx}
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  flex: "0 0 100%",
+                  position: "relative",
+                }}
+              >
+                {isVideoMedia(imgUrl) ? (
+                  <Box
+                    component="video"
+                    src={imgUrl}
+                    muted
+                    autoPlay
+                    loop
+                    playsInline
+                    draggable={false}
+                    sx={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      pointerEvents: "none",
+                    }}
+                  />
+                ) : (
+                  <CardMedia
+                    component="img"
+                    image={currentSrc}
+                    alt={`${title} - image ${idx + 1}`}
+                    draggable={false}
+                    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                      e.currentTarget.src = DEFAULT_NO_IMAGE;
+                      e.currentTarget.style.objectFit = "contain";
+                      handleImageError(imgUrl);
+                    }}
+                    sx={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: isPlaceholder ? "contain" : "cover",
+                      pointerEvents: "none",
+                    }}
+                  />
+                )}
+              </Box>
+            );
+          })}
         </Box>
 
         {/* Overlay Navigation Buttons on Main Image */}
-        {hasMultipleImages && (
+        {showMultipleControls && (
           <>
             <IconButton
               aria-label="Previous image"
@@ -450,7 +475,7 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
       </Paper>
 
       {/* 2. Single Horizontal Thumbnail Strip */}
-      {hasMultipleImages && (
+      {showMultipleControls && (
         <Box
           sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%" }}
         >
@@ -493,6 +518,10 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
           >
             {allImages.map((imgUrl, index) => {
               const isSelected = index === safeIndex;
+              const isBroken = isImageBroken(imgUrl);
+              const isPlaceholder = hasNoValidImages || isBroken;
+              const thumbSrc = isBroken ? DEFAULT_NO_IMAGE : imgUrl;
+
               return (
                 <Paper
                   key={index}
@@ -515,6 +544,7 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
                       ? "0 0 0 2px rgba(37, 99, 235, 0.3), 0 4px 10px rgba(37, 99, 235, 0.2)"
                       : "0 2px 6px rgba(0,0,0,0.05)",
                     opacity: isSelected ? 1 : 0.65,
+                    bgcolor: isPlaceholder ? "#F8FAFC" : undefined,
                     transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                     "&:hover": {
                       opacity: 1,
@@ -557,15 +587,17 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
                   ) : (
                     <CardMedia
                       component="img"
-                      image={imgUrl}
+                      image={thumbSrc}
                       alt={`${title} thumbnail ${index + 1}`}
                       onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                         e.currentTarget.src = DEFAULT_NO_IMAGE;
+                        e.currentTarget.style.objectFit = "contain";
+                        handleImageError(imgUrl);
                       }}
                       sx={{
                         width: "100%",
                         height: "100%",
-                        objectFit: "cover",
+                        objectFit: isPlaceholder ? "contain" : "cover",
                       }}
                     />
                   )}
@@ -596,7 +628,7 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
 
       {/* 3. Fullscreen Lightbox Modal */}
       <ImageLightbox
-        isOpen={isLightboxOpen}
+        isOpen={isLightboxOpen && !hasNoValidImages}
         images={allImages}
         currentIndex={safeIndex}
         title={title}

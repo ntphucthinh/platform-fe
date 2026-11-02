@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardMedia,
@@ -22,9 +22,19 @@ export interface HomestayCardProps {
 
 export const HomestayCard: React.FC<HomestayCardProps> = ({ homestay }) => {
   const navigate = useNavigate();
-
   const rawCover = homestay.mainImage || (homestay.images && homestay.images.length > 0 ? homestay.images[0] : null);
   const coverImage = rawCover && rawCover.trim() !== "" ? rawCover : DEFAULT_NO_IMAGE;
+
+  const [prevCover, setPrevCover] = useState<string>(coverImage);
+  const [hasError, setHasError] = useState<boolean>(false);
+
+  if (coverImage !== prevCover) {
+    setPrevCover(coverImage);
+    setHasError(false);
+  }
+
+  const isNoCover = coverImage === DEFAULT_NO_IMAGE || hasError;
+  const currentCover = hasError ? DEFAULT_NO_IMAGE : coverImage;
 
   const handleCardClick = () => {
     navigate(`/homestay/${homestay.id}`);
@@ -50,7 +60,7 @@ export const HomestayCard: React.FC<HomestayCardProps> = ({ homestay }) => {
             "0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.03)",
           borderColor: "#CBD5E1",
           "& .card-media": {
-            transform: "scale(1.05)",
+            transform: isNoCover ? "none" : "scale(1.05)",
           },
           "& .view-button": {
             color: "#2563EB",
@@ -60,14 +70,16 @@ export const HomestayCard: React.FC<HomestayCardProps> = ({ homestay }) => {
       }}
     >
       {/* Cover Image */}
-      <Box sx={{ position: "relative", overflow: "hidden", pt: "62%" }}>
+      <Box sx={{ position: "relative", overflow: "hidden", pt: "62%", bgcolor: "#F8FAFC" }}>
         <CardMedia
           component="img"
-          image={coverImage}
+          image={currentCover}
           alt={homestay.name}
           className="card-media"
           onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
             e.currentTarget.src = DEFAULT_NO_IMAGE;
+            e.currentTarget.style.objectFit = "contain";
+            setHasError(true);
           }}
           sx={{
             position: "absolute",
@@ -75,7 +87,7 @@ export const HomestayCard: React.FC<HomestayCardProps> = ({ homestay }) => {
             left: 0,
             width: "100%",
             height: "100%",
-            objectFit: "cover",
+            objectFit: isNoCover ? "contain" : "cover",
             transition: "transform 0.5s ease",
           }}
         />

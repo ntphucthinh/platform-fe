@@ -244,6 +244,7 @@ export const AdminHomestayPage: React.FC = () => {
                 img: {
                   onError: (e: React.SyntheticEvent<HTMLImageElement>) => {
                     e.currentTarget.src = DEFAULT_NO_IMAGE;
+                    e.currentTarget.style.objectFit = "contain";
                   },
                 },
               }}

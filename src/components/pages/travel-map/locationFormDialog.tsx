@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import {
   Dialog,
   DialogTitle,
@@ -134,6 +140,7 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
       attributionControl: false,
       minZoom: 2,
       maxZoom: 18,
+      worldCopyJump: true,
       dragging: true,
       touchZoom: true,
       scrollWheelZoom: true,
@@ -322,8 +329,8 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
           <Typography
             sx={{ fontSize: "12px", color: "#94A3B8", fontStyle: "italic" }}
           >
-            💡 Vui lòng chọn quốc gia và tỉnh/bang/vùng ở trên để hiển thị vị trí
-            trên bản đồ
+            💡 Vui lòng chọn quốc gia và tỉnh/bang/vùng ở trên để hiển thị vị
+            trí trên bản đồ
           </Typography>
         )}
       </Box>
@@ -411,10 +418,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
     if (initialData.countryCode) {
       const c = findCountry(initialData.countryCode) || null;
       const s = c
-        ? findState(
-            c.iso2,
-            initialData.stateCode || initialData.name,
-          ) || null
+        ? findState(c.iso2, initialData.stateCode || initialData.name) || null
         : null;
       if (c) return { country: c, state: s };
     }
@@ -429,11 +433,13 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
     return { country: null, state: null };
   }, [initialData, findCountry, findState, findLegacyDestination]);
 
-  const [selectedCountry, setSelectedCountry] =
-    useState<IGlobalCountry | null>(initialResolved.country);
+  const [selectedCountry, setSelectedCountry] = useState<IGlobalCountry | null>(
+    initialResolved.country,
+  );
 
-  const [selectedState, setSelectedState] =
-    useState<IGlobalState | null>(initialResolved.state);
+  const [selectedState, setSelectedState] = useState<IGlobalState | null>(
+    initialResolved.state,
+  );
 
   // Danh sách địa điểm hiện có trên bản đồ để kiểm tra trùng lặp
   const existingLocations = useMemo(() => getLocations(), []);
@@ -492,7 +498,10 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
-        setFormData((prev) => ({ ...prev, coverImage: reader.result as string }));
+        setFormData((prev) => ({
+          ...prev,
+          coverImage: reader.result as string,
+        }));
       }
     };
     reader.readAsDataURL(file);
@@ -555,7 +564,9 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
       latitude: "",
       longitude: "",
       // Xóa Google Maps URL tự sinh từ tọa độ cũ nếu có
-      googleMapsUrl: prev.googleMapsUrl?.startsWith("https://www.google.com/maps?q=")
+      googleMapsUrl: prev.googleMapsUrl?.startsWith(
+        "https://www.google.com/maps?q=",
+      )
         ? ""
         : prev.googleMapsUrl,
     }));
@@ -721,7 +732,9 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
                   : option.name
               }
               value={selectedCountry}
-              isOptionEqualToValue={(option, value) => option.iso2 === value.iso2}
+              isOptionEqualToValue={(option, value) =>
+                option.iso2 === value.iso2
+              }
               onChange={(_, newValue) => handleCountryChange(newValue)}
               renderOption={(props, option) => {
                 const { key, ...rest } = props;
@@ -1018,7 +1031,9 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
 
           {/* Trạng thái (1 hàng riêng) */}
           <FormControl fullWidth size="small">
-            <InputLabel id="form-location-status-label">Trạng thái *</InputLabel>
+            <InputLabel id="form-location-status-label">
+              Trạng thái *
+            </InputLabel>
             <Select
               labelId="form-location-status-label"
               label="Trạng thái *"
@@ -1107,7 +1122,12 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
                   size="small"
                   startIcon={<DeleteOutlinedIcon fontSize="small" />}
                   onClick={handleRemoveImage}
-                  sx={{ textTransform: "none", fontWeight: 600, fontSize: "0.8rem", p: 0.5 }}
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 600,
+                    fontSize: "0.8rem",
+                    p: 0.5,
+                  }}
                 >
                   Xoá ảnh
                 </Button>
@@ -1279,7 +1299,9 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
           variant="contained"
           color="primary"
           onClick={handleSave}
-          disabled={Boolean(selectedState && isStateAlreadyAdded(selectedState))}
+          disabled={Boolean(
+            selectedState && isStateAlreadyAdded(selectedState),
+          )}
           sx={{
             borderRadius: "8px",
             textTransform: "none",
