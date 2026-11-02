@@ -11,7 +11,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import type { ITravelMemoryPhoto } from "@/types/pages/travel-memories/travelMemory";
-import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 
 export interface TravelMemoryPhotoLightboxProps {
   open: boolean;

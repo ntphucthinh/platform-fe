@@ -1,6 +1,6 @@
 import { type ObjectSchema, object, string } from "yup";
 import type { IUserFormData } from "@/types/pages/users/user";
-import { UserRole, UserStatus } from "@/constants/userConstant";
+import { UserRole, UserStatus } from "@/constants/user";
 
 /**
  * Validation schema for the user form.

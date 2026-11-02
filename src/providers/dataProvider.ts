@@ -3,7 +3,7 @@ import {
   DEFAULT_PAGE_SIZE,
   MAX_PAGE_SIZE,
   PaginationMode,
-} from "@/constants/paginationConstant";
+} from "@/constants/pagination";
 import { normalizeFetchErrorResponse } from "@/providers/normalizeFetchErrorResponse";
 import { fetcher } from "@/utils/fetchUtils";
 import type {

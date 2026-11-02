@@ -14,7 +14,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useNavigate } from "react-router-dom";
 import type { IHomestayItem } from "@/types/pages/homestay/homestay";
 
-import { DEFAULT_NO_IMAGE, formatRoomPrice } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE, formatRoomPrice } from "@/constants/homestay";
 
 export interface HomestayCardProps {
   homestay: IHomestayItem;

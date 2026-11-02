@@ -10,7 +10,7 @@ import {
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import type { IItineraryGalleryImage } from '@/types/pages/itineraries/itinerary'
-import { DEFAULT_NO_IMAGE } from '@/constants/homestayConstant'
+import { DEFAULT_NO_IMAGE } from '@/constants/homestay'
 
 interface ItineraryImageGalleryProps {
   images: IItineraryGalleryImage[]

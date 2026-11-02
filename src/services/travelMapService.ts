@@ -4,7 +4,7 @@ import {
   LOCATION_ITINERARY_RELATIONS,
   type ILocationMemoryRelation,
   type ILocationItineraryRelation,
-} from "@/constants/travelMapConstant";
+} from "@/constants/travelMap";
 import type {
   ILocation,
   ILocationFormData,

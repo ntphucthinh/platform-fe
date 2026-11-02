@@ -15,7 +15,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined'
 import type { ITravelItinerary, IItineraryHighlight } from '@/types/pages/itineraries/itinerary'
 import type { ItineraryTabKey } from '@/components/pages/itineraries/itineraryDayTabs'
-import { DEFAULT_NO_IMAGE } from '@/constants/homestayConstant'
+import { DEFAULT_NO_IMAGE } from '@/constants/homestay'
 
 interface ItineraryOverviewProps {
   itinerary: ITravelItinerary

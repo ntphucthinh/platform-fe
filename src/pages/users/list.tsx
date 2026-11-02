@@ -18,7 +18,7 @@ import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import { useNavigate } from "react-router-dom";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { tableSx } from "@/components/ui/table/tableStyles";
-import { MOCK_USERS } from "@/constants/userConstant";
+import { MOCK_USERS } from "@/constants/user";
 import type { IUserItem } from "@/types/pages/users/user";
 import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
 

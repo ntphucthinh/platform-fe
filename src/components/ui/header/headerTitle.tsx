@@ -1,6 +1,6 @@
 import { ReactNode, useContext, useEffect, useState } from "react";
 import { HeaderTitleContext } from "@/components/ui/header/headerTitleContext";
-import { APP_NAME } from "@/constants/commonConstant";
+import { APP_NAME } from "@/constants/common";
 
 export const HeaderTitleProvider = ({ children }: { children: ReactNode }) => {
   const [headerTitle, setHeaderTitle] = useState("");

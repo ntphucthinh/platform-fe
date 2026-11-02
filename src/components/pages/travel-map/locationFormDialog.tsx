@@ -34,7 +34,7 @@ import type {
 import {
   VIETNAM_DEFAULT_CENTER,
   VIETNAM_DEFAULT_ZOOM,
-} from "@/constants/travelMapConstant";
+} from "@/constants/travelMap";
 import {
   useCountries,
   useStatesByCountry,

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Box, Typography, Chip } from '@mui/material'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
-import { DEFAULT_NO_IMAGE } from '@/constants/homestayConstant'
+import { DEFAULT_NO_IMAGE } from '@/constants/homestay'
 
 interface ItineraryHeroProps {
   coverImage: string

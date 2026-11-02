@@ -3,7 +3,7 @@ import { Box, CardMedia, Paper, IconButton, Tooltip } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
-import { DEFAULT_NO_IMAGE, isVideoMedia } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE, isVideoMedia } from "@/constants/homestay";
 import { ImageLightbox } from "./imageLightbox";
 
 export interface HomestayGalleryProps {

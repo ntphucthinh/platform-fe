@@ -4,7 +4,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ZoomInRoundedIcon from "@mui/icons-material/ZoomInRounded";
 import CollectionsOutlinedIcon from "@mui/icons-material/CollectionsOutlined";
 import type { ITravelMemoryPhoto } from "@/types/pages/travel-memories/travelMemory";
-import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 
 export interface TravelMemoryPhotoGridProps {
   photos: ITravelMemoryPhoto[];

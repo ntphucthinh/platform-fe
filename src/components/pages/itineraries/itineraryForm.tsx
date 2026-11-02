@@ -43,8 +43,8 @@ import type {
 import {
   ITINERARY_CATEGORY_COLORS,
   MOCK_DALAT_ITINERARY,
-} from "@/constants/itineraryConstant";
-import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
+} from "@/constants/itinerary";
+import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 import { ItineraryHero } from "@/components/pages/itineraries/itineraryHero";
 import { ItineraryInfoPanel } from "@/components/pages/itineraries/itineraryInfoPanel";
 import {

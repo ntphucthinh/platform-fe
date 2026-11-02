@@ -37,7 +37,7 @@ import {
 } from "@/services/itineraryService";
 import type { IItineraryListItem } from "@/types/pages/itineraries/itinerary";
 import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
-import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 
 function CustomNoRowsOverlay() {
   return (

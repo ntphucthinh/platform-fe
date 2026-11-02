@@ -4,7 +4,7 @@ import { Box, IconButton, Typography, Tooltip } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { DEFAULT_NO_IMAGE, isVideoMedia } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE, isVideoMedia } from "@/constants/homestay";
 
 export interface ImageLightboxProps {
   isOpen: boolean;

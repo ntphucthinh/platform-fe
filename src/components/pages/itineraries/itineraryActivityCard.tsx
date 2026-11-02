@@ -13,8 +13,8 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import type { IItineraryActivity } from '@/types/pages/itineraries/itinerary'
-import { ITINERARY_CATEGORY_COLORS } from '@/constants/itineraryConstant'
-import { DEFAULT_NO_IMAGE } from '@/constants/homestayConstant'
+import { ITINERARY_CATEGORY_COLORS } from '@/constants/itinerary'
+import { DEFAULT_NO_IMAGE } from '@/constants/homestay'
 
 interface ItineraryActivityCardProps {
   activity: IItineraryActivity

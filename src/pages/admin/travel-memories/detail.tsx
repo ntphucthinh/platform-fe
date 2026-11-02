@@ -25,7 +25,7 @@ import {
 } from "@/utils/travelMemoryUtils";
 import { TravelMemoryPhotoGrid } from "@/components/pages/travel-memories/travelMemoryPhotoGrid";
 import { TravelMemoryPhotoLightbox } from "@/components/pages/travel-memories/travelMemoryPhotoLightbox";
-import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 import type { ITravelMemoryPhoto } from "@/types/pages/travel-memories/travelMemory";
 
 export const TravelMemoryDetailPage: React.FC = () => {

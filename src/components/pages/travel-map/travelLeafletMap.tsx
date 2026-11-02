@@ -11,7 +11,7 @@ import type { ILocationWithDetails } from "@/types/pages/travel-map/travelMap";
 import {
   VIETNAM_DEFAULT_CENTER,
   VIETNAM_DEFAULT_ZOOM,
-} from "@/constants/travelMapConstant";
+} from "@/constants/travelMap";
 
 interface TravelLeafletMapProps {
   locations: ILocationWithDetails[];

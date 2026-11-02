@@ -1,4 +1,4 @@
-import { UserRole, UserStatus } from "@/constants/userConstant";
+import { UserRole, UserStatus } from "@/constants/user";
 
 export interface IUserFormData {
   name: string;

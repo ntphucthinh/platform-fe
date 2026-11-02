@@ -3,7 +3,7 @@ import { Box, Card, TextField, MenuItem, Button, Grid } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { userSchema } from "@/schemas/users/userSchema";
-import { UserRole, UserStatus } from "@/constants/userConstant";
+import { UserRole, UserStatus } from "@/constants/user";
 import type { IUserFormData } from "@/types/pages/users/user";
 
 export interface UserFormProps {

@@ -1,4 +1,4 @@
-import { MOCK_ALL_ITINERARIES } from '@/constants/itineraryConstant'
+import { MOCK_ALL_ITINERARIES } from '@/constants/itinerary'
 import type {
   ITravelItinerary,
   ICreateItineraryInput,

@@ -38,7 +38,7 @@ import {
 import { TravelMemoryPhotoGrid } from "@/components/pages/travel-memories/travelMemoryPhotoGrid";
 import { TravelMemoryPhotoLightbox } from "@/components/pages/travel-memories/travelMemoryPhotoLightbox";
 import { TravelMemoryDateConfirmDialog } from "@/components/pages/travel-memories/travelMemoryDateConfirmDialog";
-import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 
 export interface TravelMemoryFormProps {
   initialData?: ITravelMemory | null;

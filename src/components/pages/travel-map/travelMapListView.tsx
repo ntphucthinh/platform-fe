@@ -23,7 +23,7 @@ import type {
   ILocationWithDetails,
   ILocationFilterState,
 } from "@/types/pages/travel-map/travelMap";
-import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 
 interface TravelMapListViewProps {
   locations: ILocationWithDetails[];

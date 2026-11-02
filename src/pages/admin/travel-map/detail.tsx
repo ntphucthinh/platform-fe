@@ -37,7 +37,7 @@ import {
   countTotalPhotos,
 } from "@/utils/travelMemoryUtils";
 import { LocationFormDialog } from "@/components/pages/travel-map/locationFormDialog";
-import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 import type {
   ILocation,
   ILocationFormData,

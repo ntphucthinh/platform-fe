@@ -23,7 +23,7 @@ import { PublicFooter } from "@/components/pages/homestay/publicFooter";
 import { HomestayGallery } from "@/components/pages/homestay/homestayGallery";
 import type { HomestayRoom } from "@/types/pages/homestay/homestay";
 import { useHomestayDetail } from "@/hooks/homestays/useHomestayDetail";
-import { DEFAULT_NO_IMAGE, formatRoomPrice } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE, formatRoomPrice } from "@/constants/homestay";
 
 export const HomestayDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

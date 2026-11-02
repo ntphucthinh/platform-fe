@@ -17,7 +17,7 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import MeetingRoomOutlinedIcon from "@mui/icons-material/MeetingRoomOutlined";
 import type { IHomestayItem, HomestayRoom } from "@/types/pages/homestay/homestay";
 import { HomestayGallery } from "./homestayGallery";
-import { DEFAULT_NO_IMAGE, formatRoomPrice } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE, formatRoomPrice } from "@/constants/homestay";
 
 export interface HomestayDetailDialogProps {
   open: boolean;

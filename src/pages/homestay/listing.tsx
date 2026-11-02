@@ -20,7 +20,7 @@ import { PublicFooter } from "@/components/pages/homestay/publicFooter";
 import { HomestayCard } from "@/components/pages/homestay/homestayCard";
 import type { IHomestayItem } from "@/types/pages/homestay/homestay";
 import { useHomestayList } from "@/hooks/homestays/useHomestayList";
-import { formatRoomPrice } from "@/constants/homestayConstant";
+import { formatRoomPrice } from "@/constants/homestay";
 
 export const HomestayListingPage: React.FC = () => {
   const {

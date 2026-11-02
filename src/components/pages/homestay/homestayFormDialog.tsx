@@ -50,7 +50,7 @@ import {
   MAX_MEDIA_FILE_SIZE_MB,
   PRICE_UNIT_OPTIONS,
   formatRoomPrice,
-} from "@/constants/homestayConstant";
+} from "@/constants/homestay";
 
 export interface HomestayFormDialogProps {
   open: boolean;

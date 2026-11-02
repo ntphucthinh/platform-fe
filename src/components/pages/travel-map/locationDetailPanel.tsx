@@ -33,7 +33,7 @@ import {
   countTotalPhotos,
   formatDateRangeVietnamese,
 } from "@/utils/travelMemoryUtils";
-import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 
 interface LocationDetailPanelProps {
   location: ILocationWithDetails | null;

@@ -1,4 +1,4 @@
-import { HttpStatusCode } from "@/constants/httpConstant";
+import { HttpStatusCode } from "@/constants/http";
 
 /** Expected format of an error response received from API calls such as save operations */
 interface RawErrorBody {

@@ -1,4 +1,4 @@
-import { MOCK_TRAVEL_MEMORIES } from "@/constants/travelMemoryConstant";
+import { MOCK_TRAVEL_MEMORIES } from "@/constants/travelMemory";
 import type {
   ITravelMemory,
   ITravelMemoryDay,

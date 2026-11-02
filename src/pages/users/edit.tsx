@@ -2,7 +2,7 @@ import { Box } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { UserForm } from "@/components/pages/users/userForm";
-import { MOCK_USERS, UserRole, UserStatus } from "@/constants/userConstant";
+import { MOCK_USERS, UserRole, UserStatus } from "@/constants/user";
 import type { IUserFormData } from "@/types/pages/users/user";
 
 export function UsersEdit() {

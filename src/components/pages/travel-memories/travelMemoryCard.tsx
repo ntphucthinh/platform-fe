@@ -22,7 +22,7 @@ import {
   countTotalPhotos,
   formatDateRangeVietnamese,
 } from "@/utils/travelMemoryUtils";
-import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 
 export interface TravelMemoryCardProps {
   memory: ITravelMemory;

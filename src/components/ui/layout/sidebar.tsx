@@ -22,7 +22,7 @@ import MapOutlinedIcon from '@mui/icons-material/MapOutlined'
 import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined'
 import ExploreOutlinedIcon from '@mui/icons-material/ExploreOutlined'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { APP_NAME } from '@/constants/commonConstant'
+import { APP_NAME } from '@/constants/common'
 
 const SIDEBAR_WIDTH = 260
 const COLLAPSED_WIDTH = 72

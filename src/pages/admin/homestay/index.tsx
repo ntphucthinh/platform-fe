@@ -35,7 +35,7 @@ import { useHomestayList } from "@/hooks/homestays/useHomestayList";
 import { useCreateHomestay } from "@/hooks/homestays/useCreateHomestay";
 import { useUpdateHomestay } from "@/hooks/homestays/useUpdateHomestay";
 import { useDeleteHomestay } from "@/hooks/homestays/useDeleteHomestay";
-import { DEFAULT_NO_IMAGE, formatRoomPrice } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE, formatRoomPrice } from "@/constants/homestay";
 
 function CustomNoRowsOverlay() {
   return (

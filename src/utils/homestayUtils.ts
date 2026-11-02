@@ -3,7 +3,7 @@
  */
 
 import { env } from "@/config/env";
-import { formatRoomPrice } from "@/constants/homestayConstant";
+import { formatRoomPrice } from "@/constants/homestay";
 import {
   PriceUnit,
   type IHomestayItem,

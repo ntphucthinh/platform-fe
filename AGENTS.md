@@ -143,7 +143,7 @@ src/types/pages/users/user.ts
 
 ## Data, Errors, and Environment
 
-- `MOCK_USERS` in `src/constants/userConstants.ts` is the present users data source. Treat it as read-only fixture data unless the task explicitly adds a state/API flow.
+- `MOCK_USERS` in `src/constants/user.ts` is the present users data source. Treat it as read-only fixture data unless the task explicitly adds a state/API flow.
 - Existing error UI is an inline MUI `Alert` on login. For new async flows, clear prior error before retry, render user-facing error feedback, and narrow unknown errors safely.
 - Read Vite settings through `env` in `src/config/env.ts`. Use only `VITE_*` values; never commit `.env` files.
 

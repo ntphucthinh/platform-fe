@@ -43,7 +43,7 @@ import {
   formatDateRangeVietnamese,
   calculateCalendarDuration,
 } from "@/utils/travelMemoryUtils";
-import { DEFAULT_NO_IMAGE } from "@/constants/homestayConstant";
+import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 
 interface RecentlyUpdatedItem {
   id: string;
