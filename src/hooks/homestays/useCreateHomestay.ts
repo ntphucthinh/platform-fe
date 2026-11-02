@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useCreate } from "@refinedev/core";
+import { AppResource } from "@/constants/resources";
 import type {
   IHomestayFormData,
   IHomestayItem,
@@ -63,7 +64,7 @@ export function useCreateHomestay(): UseCreateHomestayResult {
           setIsUploading(true);
           const uploadResult = await uploadBatch(
             allFilesToUpload,
-            "homestays",
+            AppResource.Homestay,
             3,
             onProgress,
           );
@@ -111,7 +112,7 @@ export function useCreateHomestay(): UseCreateHomestayResult {
         };
 
         const response = await createMutate({
-          resource: "homestays",
+          resource: AppResource.Homestay,
           values: payload,
         });
 

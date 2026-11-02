@@ -6,6 +6,7 @@
  */
 
 import { env } from "@/config/env";
+import { AppResource } from "@/constants/resources";
 
 export const ADMIN_AUTH_KEY = "admin_authenticated";
 export const ADMIN_USER_KEY = "admin_user";
@@ -219,7 +220,7 @@ export async function refreshAdminSession(): Promise<string | null> {
         headers["X-CSRF-Token"] = csrf;
       }
 
-      const response = await fetch(`${env.apiUrl}/auth/refresh`, {
+      const response = await fetch(`${env.apiUrl}/${AppResource.Refresh}`, {
         method: "POST",
         headers,
         credentials: "include",

@@ -1,3 +1,4 @@
+import { AppResource } from "@/constants/resources";
 import { fetcher } from "@/utils/fetchUtils";
 import {
   type StoredAdminUser,
@@ -27,7 +28,7 @@ const login = async (
   password: string,
 ): Promise<LoginResponse> => {
   const response = await fetcher(
-    "/auth/login",
+    AppResource.Login,
     {
       method: "POST",
       body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
@@ -47,7 +48,7 @@ const login = async (
 };
 
 const logout = async (): Promise<void> => {
-  const response = await fetcher("/auth/logout", {
+  const response = await fetcher(AppResource.Logout, {
     method: "POST",
   });
 
@@ -57,7 +58,7 @@ const logout = async (): Promise<void> => {
 };
 
 const getMe = async (): Promise<UserMeResponse> => {
-  const response = await fetcher("/auth/me", {
+  const response = await fetcher(AppResource.Me, {
     method: "GET",
   });
 
@@ -70,7 +71,7 @@ const getMe = async (): Promise<UserMeResponse> => {
 
 const refreshToken = async (): Promise<LoginResponse> => {
   const response = await fetcher(
-    "/auth/refresh",
+    AppResource.Refresh,
     {
       method: "POST",
     },

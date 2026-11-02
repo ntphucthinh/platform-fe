@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { AppResource } from "@/constants/resources";
 import { fetcher } from "@/utils/fetchUtils";
 
 export interface UploadFileResult {
@@ -44,7 +45,10 @@ export function useUploadFile(): UseUploadFileResult {
    * Upload a single file to storage via POST /uploads.
    */
   const uploadFile = useCallback(
-    async (file: File, folder = "homestays"): Promise<UploadFileResult> => {
+    async (
+      file: File,
+      folder: string = AppResource.Homestay,
+    ): Promise<UploadFileResult> => {
       setIsUploading(true);
       setUploadError(null);
       try {
@@ -52,7 +56,7 @@ export function useUploadFile(): UseUploadFileResult {
         formData.append("folder", folder);
         formData.append("files", file, file.name);
 
-        const response = await fetcher("/uploads", {
+        const response = await fetcher(AppResource.Upload, {
           method: "POST",
           body: formData,
         });
@@ -93,7 +97,7 @@ export function useUploadFile(): UseUploadFileResult {
   const uploadBatch = useCallback(
     async <T = unknown>(
       filesToUpload: UploadBatchItem<T>[],
-      folder = "homestays",
+      folder: string = AppResource.Homestay,
       concurrencyLimit = 3,
       onProgress?: (completed: number, total: number) => void,
     ): Promise<UploadBatchResult<T>> => {
@@ -175,7 +179,7 @@ export function useUploadFile(): UseUploadFileResult {
           resourceType: "image",
         }));
 
-        await fetcher("/uploads", {
+        await fetcher(AppResource.Upload, {
           method: "DELETE",
           body: JSON.stringify(deletePayload),
         });

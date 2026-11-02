@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useOne } from "@refinedev/core";
+import { AppResource } from "@/constants/resources";
 import type { IHomestayItem, DbHomestay } from "@/types/pages/homestay/homestay";
 import { mapDbHomestayToItem } from "@/utils/homestayUtils";
 
@@ -20,7 +21,7 @@ export function useHomestayDetail(
   const isValidId = !isNaN(numericId) && numericId > 0;
 
   const { query, result } = useOne<DbHomestay>({
-    resource: "homestays",
+    resource: AppResource.Homestay,
     id: isValidId ? numericId : "",
     queryOptions: {
       enabled: isValidId,

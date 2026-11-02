@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { useDelete } from "@refinedev/core";
+import { AppResource } from "@/constants/resources";
 
 export interface UseDeleteHomestayResult {
   deleteHomestay: (
@@ -19,7 +20,7 @@ export function useDeleteHomestay(): UseDeleteHomestayResult {
     async (id: number) => {
       try {
         await mutateAsync({
-          resource: "homestays",
+          resource: AppResource.Homestay,
           id,
         });
         return { success: true, error: null };

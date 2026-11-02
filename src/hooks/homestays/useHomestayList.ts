@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { useList } from "@refinedev/core";
+import { AppResource } from "@/constants/resources";
 import type {
   IHomestayItem,
   DbHomestay,
@@ -46,7 +47,7 @@ export function useHomestayList(
   );
 
   const { query, result } = useList<DbHomestay>({
-    resource: "homestays",
+    resource: AppResource.Homestay,
     pagination: {
       currentPage: page,
       pageSize,
