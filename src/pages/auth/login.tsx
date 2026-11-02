@@ -20,13 +20,14 @@ import {
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate } from "react-router-dom";
-import { isAuthenticated, setAdminAuthenticated } from "@/utils/auth";
-import { loginWithEmail } from "@/services/authService";
+import { useLogin } from "@refinedev/core";
+import { isAuthenticated } from "@/utils/auth";
 import { loginSchema } from "@/schemas/auth/loginSchema";
 import type { ILoginFormData } from "@/types/pages/auth/login";
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
+  const { mutateAsync: login } = useLogin<ILoginFormData>();
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -52,21 +53,11 @@ export const Login: React.FC = () => {
   const onSubmit = async (data: ILoginFormData) => {
     setErrorMsg(null);
     try {
-      const result = await loginWithEmail(data.email, data.password);
-
-      if (!result.success) {
-        setErrorMsg(result.message);
+      const response = await login(data);
+      if (response && !response.success && response.error) {
+        setErrorMsg(response.error.message);
         return;
       }
-
-      // Store minimal user profile, JWT token, refresh token, and expiration timestamp
-      setAdminAuthenticated(
-        true,
-        result.user,
-        result.accessToken,
-        result.refreshToken,
-        result.expiresIn
-      );
       navigate("/admin/homestay");
     } catch (err: unknown) {
       const message =

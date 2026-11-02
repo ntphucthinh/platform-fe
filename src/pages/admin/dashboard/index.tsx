@@ -35,8 +35,7 @@ import {
   getTravelMemories,
   subscribeTravelMemories,
 } from "@/services/travelMemoryService";
-import { getHomestays } from "@/services/homestayService";
-import type { IHomestayItem } from "@/types/pages/homestay/homestay";
+import { useHomestayList } from "@/hooks/homestays/useHomestayList";
 import type { IItineraryListItem } from "@/types/pages/itineraries/itinerary";
 import type { ITravelMemory } from "@/types/pages/travel-memories/travelMemory";
 import {
@@ -61,21 +60,14 @@ export function DashboardPage() {
   const navigate = useNavigate();
 
   // 1. Data States
-  const [homestays, setHomestays] = useState<IHomestayItem[]>([]);
+  const { data: homestays } = useHomestayList();
   const [itineraries, setItineraries] = useState<IItineraryListItem[]>(
     getItineraryListItems(),
   );
   const [memories, setMemories] = useState<ITravelMemory[]>(getTravelMemories());
 
-  // 2. Fetch Homestays and Subscribe to real-time updates for Itineraries and Memories
+  // 2. Subscribe to real-time updates for Itineraries and Memories
   useEffect(() => {
-    let active = true;
-    getHomestays().then(({ data }) => {
-      if (active && data) {
-        setHomestays(data);
-      }
-    });
-
     const unsubscribeItineraries = subscribeItineraries(() => {
       setItineraries(getItineraryListItems());
     });
@@ -85,7 +77,6 @@ export function DashboardPage() {
     });
 
     return () => {
-      active = false;
       unsubscribeItineraries();
       unsubscribeMemories();
     };

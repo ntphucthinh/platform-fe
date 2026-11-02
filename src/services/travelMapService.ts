@@ -21,7 +21,7 @@ import {
   findStateByCode,
   findCountryByCode,
   findDestinationForLegacyLocation,
-} from "@/services/globalGeoService";
+} from "@/hooks/common/useGlobalGeo";
 
 const LOCATIONS_STORAGE_KEY = "platform_travel_map_locations_v2";
 const MEMORY_RELATIONS_KEY = "platform_travel_map_memory_relations_v2";

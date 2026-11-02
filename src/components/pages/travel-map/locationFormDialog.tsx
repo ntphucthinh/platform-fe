@@ -36,14 +36,12 @@ import {
   VIETNAM_DEFAULT_ZOOM,
 } from "@/constants/travelMapConstant";
 import {
+  useCountries,
+  useStatesByCountry,
+  useGlobalGeo,
   type IGlobalCountry,
   type IGlobalState,
-  getAllCountries,
-  findCountryByCode,
-  getStatesByCountryCode,
-  findStateByCode,
-  findDestinationForLegacyLocation,
-} from "@/services/globalGeoService";
+} from "@/hooks/common/useGlobalGeo";
 
 /**
  * Icon ghim tĩnh trên bản đồ xem trước (không cho phép kéo/thả)
@@ -398,6 +396,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
   onSubmit,
 }) => {
   const isEdit = Boolean(initialData);
+  const { findCountry, findState, findLegacyDestination } = useGlobalGeo();
 
   // Xác định cặp Quốc gia & Tỉnh/Bang ban đầu khi mở form (tương thích dữ liệu mới lẫn lịch sử)
   const initialResolved = useMemo<{
@@ -407,9 +406,9 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
     if (!initialData) return { country: null, state: null };
 
     if (initialData.countryCode) {
-      const c = findCountryByCode(initialData.countryCode) || null;
+      const c = findCountry(initialData.countryCode) || null;
       const s = c
-        ? findStateByCode(
+        ? findState(
             c.iso2,
             initialData.stateCode || initialData.name,
           ) || null
@@ -417,7 +416,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
       if (c) return { country: c, state: s };
     }
 
-    const legacy = findDestinationForLegacyLocation(
+    const legacy = findLegacyDestination(
       initialData.name || initialData.address,
     );
     if (legacy) {
@@ -425,7 +424,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
     }
 
     return { country: null, state: null };
-  }, [initialData]);
+  }, [initialData, findCountry, findState, findLegacyDestination]);
 
   const [selectedCountry, setSelectedCountry] =
     useState<IGlobalCountry | null>(initialResolved.country);
@@ -456,12 +455,9 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
   );
 
   // Danh sách các bang/tỉnh tương ứng của quốc gia đã chọn
-  const availableStates = useMemo<IGlobalState[]>(() => {
-    if (!selectedCountry) return [];
-    return getStatesByCountryCode(selectedCountry.iso2);
-  }, [selectedCountry]);
+  const availableStates = useStatesByCountry(selectedCountry?.iso2);
 
-  const allCountries = useMemo(() => getAllCountries(), []);
+  const allCountries = useCountries();
 
   const [formData, setFormData] = useState<ILocationFormData>(() =>
     getInitialFormData(

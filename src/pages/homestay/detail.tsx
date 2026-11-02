@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Box,
   Container,
@@ -21,44 +21,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import { PublicHeader } from "@/components/pages/homestay/publicHeader";
 import { PublicFooter } from "@/components/pages/homestay/publicFooter";
 import { HomestayGallery } from "@/components/pages/homestay/homestayGallery";
-import type { IHomestayItem, HomestayRoom } from "@/types/pages/homestay/homestay";
-import { getHomestayById } from "@/services/homestayService";
+import type { HomestayRoom } from "@/types/pages/homestay/homestay";
+import { useHomestayDetail } from "@/hooks/homestays/useHomestayDetail";
 import { DEFAULT_NO_IMAGE, formatRoomPrice } from "@/constants/homestayConstant";
 
 export const HomestayDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-
-  const [homestay, setHomestay] = useState<IHomestayItem | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: homestay, isLoading: loading } = useHomestayDetail(id);
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-    const numericId = Number(id);
-
-    if (!isNaN(numericId) && numericId > 0) {
-      getHomestayById(numericId).then(({ data }) => {
-        if (!isMounted) return;
-        setHomestay(data);
-        if (data && data.rooms && data.rooms.length > 0) {
-          // Select first room by default
-          setSelectedRoomId(data.rooms[0].id);
-        }
-        setLoading(false);
-      });
-    } else {
-      Promise.resolve().then(() => {
-        if (!isMounted) return;
-        setHomestay(null);
-        setLoading(false);
-      });
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [id]);
 
   // Order rooms deterministically by sort_order, then id
   const rooms: HomestayRoom[] = useMemo(() => {

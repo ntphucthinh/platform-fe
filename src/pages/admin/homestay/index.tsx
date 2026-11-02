@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import {
   Box,
@@ -31,7 +31,10 @@ import type {
 import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
 import { HomestayFormDialog } from "@/components/pages/homestay/homestayFormDialog";
 import { HomestayDetailDialog } from "@/components/pages/homestay/homestayDetailDialog";
-import * as homestayService from "@/services/homestayService";
+import { useHomestayList } from "@/hooks/homestays/useHomestayList";
+import { useCreateHomestay } from "@/hooks/homestays/useCreateHomestay";
+import { useUpdateHomestay } from "@/hooks/homestays/useUpdateHomestay";
+import { useDeleteHomestay } from "@/hooks/homestays/useDeleteHomestay";
 import { DEFAULT_NO_IMAGE, formatRoomPrice } from "@/constants/homestayConstant";
 
 function CustomNoRowsOverlay() {
@@ -52,7 +55,7 @@ function CustomNoRowsOverlay() {
         Không tìm thấy homestay nào
       </Typography>
       <Typography variant="body2" sx={{ color: "#94A3B8", mt: 0.5 }}>
-        Chưa có dữ liệu homestay trong cơ sở dữ liệu Supabase hoặc từ khóa tìm
+        Chưa có dữ liệu homestay trong cơ sở dữ liệu hoặc từ khóa tìm
         kiếm không khớp.
       </Typography>
     </Box>
@@ -60,9 +63,19 @@ function CustomNoRowsOverlay() {
 }
 
 export const AdminHomestayPage: React.FC = () => {
-  const [homestays, setHomestays] = useState<IHomestayItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [fetchError, setFetchError] = useState<string | null>(null);
+  const {
+    data: homestays,
+    total,
+    paginationModel,
+    setPaginationModel,
+    isLoading,
+    error: fetchError,
+    refetch: loadHomestays,
+  } = useHomestayList();
+  const { createHomestay } = useCreateHomestay();
+  const { updateHomestay } = useUpdateHomestay();
+  const { deleteHomestay } = useDeleteHomestay();
+
   const [searchTerm, setSearchTerm] = useState("");
 
   const location = useLocation();
@@ -105,38 +118,6 @@ export const AdminHomestayPage: React.FC = () => {
     [],
   );
 
-  // Fetch homestays list from Supabase
-  const loadHomestays = useCallback(async () => {
-    setIsLoading(true);
-    setFetchError(null);
-
-    const { data, error } = await homestayService.getHomestays();
-
-    if (error) {
-      setFetchError(error);
-      // Inline Alert is displayed, avoiding duplicate toast
-    } else {
-      setHomestays(data);
-    }
-    setIsLoading(false);
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    homestayService.getHomestays().then(({ data, error }) => {
-      if (!active) return;
-      if (error) {
-        setFetchError(error);
-      } else {
-        setHomestays(data);
-      }
-      setIsLoading(false);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
-
   // Client-side search filtering
   const filteredHomestays = homestays.filter((h) => {
     const term = searchTerm.toLowerCase();
@@ -176,12 +157,12 @@ export const AdminHomestayPage: React.FC = () => {
     setDetailDialogOpen(true);
   };
 
-  // Confirm Delete Operation with Supabase
+  // Confirm Delete Operation via API
   const handleConfirmDelete = async () => {
     if (!homestayToDelete) return;
     setIsDeleting(true);
     try {
-      const { success, error } = await homestayService.deleteHomestay(
+      const { success, error } = await deleteHomestay(
         homestayToDelete.id,
       );
 
@@ -197,14 +178,14 @@ export const AdminHomestayPage: React.FC = () => {
     }
   };
 
-  // Handle Form Submit (Create or Update with Supabase Storage)
+  // Handle Form Submit (Create or Update via API)
   const handleFormSubmit = async (
     formData: IHomestayFormData,
     onProgress?: (completed: number, total: number) => void,
   ) => {
     if (selectedHomestay) {
       // Edit mode
-      const { data, error } = await homestayService.updateHomestay(
+      const { data, error } = await updateHomestay(
         selectedHomestay.id,
         formData,
         selectedHomestay,
@@ -222,7 +203,7 @@ export const AdminHomestayPage: React.FC = () => {
       );
     } else {
       // Create mode
-      const { data, error } = await homestayService.createHomestay(
+      const { data, error } = await createHomestay(
         formData,
         onProgress,
       );
@@ -510,7 +491,10 @@ export const AdminHomestayPage: React.FC = () => {
           placeholder="Tìm kiếm homestay theo tên, địa điểm, mô tả..."
           size="small"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setPaginationModel((prev) => (prev.page === 0 ? prev : { ...prev, page: 0 }));
+          }}
           slotProps={{
             input: {
               startAdornment: (
@@ -573,10 +557,11 @@ export const AdminHomestayPage: React.FC = () => {
           columns={columns}
           getRowId={(row) => row.id}
           loading={isLoading}
-          pageSizeOptions={[5, 10, 25]}
-          initialState={{
-            pagination: { paginationModel: { pageSize: 10, page: 0 } },
-          }}
+          paginationMode="server"
+          rowCount={searchTerm ? filteredHomestays.length : total}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          pageSizeOptions={[5, 10, 25, 50]}
           rowHeight={64}
           columnHeaderHeight={48}
           autoHeight

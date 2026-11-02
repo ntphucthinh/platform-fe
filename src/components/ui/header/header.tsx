@@ -16,16 +16,16 @@ import MenuIcon from "@mui/icons-material/Menu";
 import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import { useNavigate } from "react-router-dom";
+import { useLogout } from "@refinedev/core";
 import { HeaderTitleContext } from "@/components/ui/header/headerTitleContext";
-import { clearAdminAuthenticated, getStoredAdminUser } from "@/utils/auth";
+import { getStoredAdminUser } from "@/utils/auth";
 
 export interface HeaderProps {
   onToggleSidebar: () => void;
 }
 
 export const Header = ({ onToggleSidebar }: HeaderProps) => {
-  const navigate = useNavigate();
+  const { mutate: logout } = useLogout();
   const context = useContext(HeaderTitleContext);
   const headerTitle = context?.headerTitle;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -43,8 +43,9 @@ export const Header = ({ onToggleSidebar }: HeaderProps) => {
   const handleCloseUserMenu = () => setAnchorEl(null);
   const handleLogout = () => {
     handleCloseUserMenu();
-    clearAdminAuthenticated();
-    navigate("/admin/login");
+    logout({
+      redirectPath: "/admin/login",
+    });
   };
 
   return (

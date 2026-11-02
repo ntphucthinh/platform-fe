@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Box,
   Container,
@@ -18,45 +18,18 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { PublicHeader } from "@/components/pages/homestay/publicHeader";
 import { PublicFooter } from "@/components/pages/homestay/publicFooter";
 import { HomestayCard } from "@/components/pages/homestay/homestayCard";
-
 import type { IHomestayItem } from "@/types/pages/homestay/homestay";
-import { getHomestays } from "@/services/homestayService";
+import { useHomestayList } from "@/hooks/homestays/useHomestayList";
 import { formatRoomPrice } from "@/constants/homestayConstant";
 
 export const HomestayListingPage: React.FC = () => {
-  const [dbHomestays, setDbHomestays] = useState<IHomestayItem[]>([]);
+  const {
+    data: dbHomestays,
+    isLoading: loading,
+    error,
+    refetch: handleRetry,
+  } = useHomestayList();
   const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleRetry = () => {
-    setLoading(true);
-    setError(null);
-    getHomestays().then(({ data, error: err }) => {
-      if (err) {
-        setError(err);
-      } else if (data) {
-        setDbHomestays(data);
-      }
-      setLoading(false);
-    });
-  };
-
-  useEffect(() => {
-    let active = true;
-    getHomestays().then(({ data, error: err }) => {
-      if (!active) return;
-      if (err) {
-        setError(err);
-      } else if (data) {
-        setDbHomestays(data);
-      }
-      setLoading(false);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const homestayList = dbHomestays;
 

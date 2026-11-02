@@ -1265,7 +1265,7 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                     variant="body2"
                     sx={{ fontWeight: 600, color: "#1E40AF", mb: 0.5 }}
                   >
-                    Đang tải ảnh lên Supabase Storage... {uploadProgress.completed}/
+                    Đang tải ảnh lên... {uploadProgress.completed}/
                     {uploadProgress.total} tệp (
                     {Math.round(
                       (uploadProgress.completed / uploadProgress.total) * 100

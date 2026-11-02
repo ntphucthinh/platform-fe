@@ -1,3 +1,4 @@
+import { useMemo, useCallback } from "react";
 import { Country, State } from "country-state-city";
 
 export interface IGlobalCountry {
@@ -122,3 +123,56 @@ export function findDestinationForLegacyLocation(
 
   return undefined;
 }
+
+// ---------------------------------------------------------------------------
+// Custom Hooks
+// ---------------------------------------------------------------------------
+
+/**
+ * Hook to retrieve all supported countries (with Vietnam prioritized).
+ */
+export function useCountries(): IGlobalCountry[] {
+  return useMemo(() => getAllCountries(), []);
+}
+
+/**
+ * Hook to retrieve all states/provinces for a given country code.
+ */
+export function useStatesByCountry(countryCode?: string): IGlobalState[] {
+  return useMemo(() => getStatesByCountryCode(countryCode), [countryCode]);
+}
+
+/**
+ * Hook providing geographical data and lookup utilities.
+ */
+export function useGlobalGeo() {
+  const countries = useCountries();
+
+  const getStates = useCallback((countryCode?: string) => {
+    return getStatesByCountryCode(countryCode);
+  }, []);
+
+  const findCountry = useCallback((iso2?: string) => {
+    return findCountryByCode(iso2);
+  }, []);
+
+  const findState = useCallback(
+    (countryCode?: string, stateCodeOrName?: string) => {
+      return findStateByCode(countryCode, stateCodeOrName);
+    },
+    [],
+  );
+
+  const findLegacyDestination = useCallback((nameOrAddress?: string) => {
+    return findDestinationForLegacyLocation(nameOrAddress);
+  }, []);
+
+  return {
+    countries,
+    getStates,
+    findCountry,
+    findState,
+    findLegacyDestination,
+  };
+}
+

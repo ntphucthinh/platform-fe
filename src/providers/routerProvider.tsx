@@ -31,11 +31,13 @@ import { TravelMemoryEditPage } from "@/pages/admin/travel-memories/edit";
 import { TravelMapPage } from "@/pages/admin/travel-map/index";
 import { TravelMapDetailPage } from "@/pages/admin/travel-map/detail";
 import { resources } from "@/router/resources";
+import { authProvider } from "@/providers/authProvider";
 import { ErrorComponent } from "@refinedev/mui";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { viVN } from "@mui/x-date-pickers/locales";
 import "dayjs/locale/vi";
+import { dataProvider } from "@/providers/dataProvider";
 
 export function AppProvider() {
   return (
@@ -48,96 +50,104 @@ export function AppProvider() {
         }
       >
         <HeaderTitleProvider>
-        <BrowserRouter>
-          <Refine
-            routerProvider={routerProvider}
-            options={{
-              syncWithLocation: true,
-              warnWhenUnsavedChanges: false,
-              projectId: "platform-fe",
-            }}
-            resources={resources}
-          >
-            <Routes>
-              {/* Public Website Routes — Root '/' is the public main discovery page */}
-              <Route path="/" element={<HomestayListingPage />} />
-              <Route path="/homestay" element={<HomestayListingPage />} />
-              <Route path="/homestay/:id" element={<HomestayDetailPage />} />
+          <BrowserRouter>
+            <Refine
+              routerProvider={routerProvider}
+              dataProvider={dataProvider}
+              authProvider={authProvider}
+              options={{
+                syncWithLocation: true,
+                warnWhenUnsavedChanges: false,
+                projectId: "platform-fe",
+              }}
+              resources={resources}
+            >
+              <Routes>
+                {/* Public Website Routes — Root '/' is the public main discovery page */}
+                <Route path="/" element={<HomestayListingPage />} />
+                <Route path="/homestay" element={<HomestayListingPage />} />
+                <Route path="/homestay/:id" element={<HomestayDetailPage />} />
 
-              {/* Admin Authentication Route */}
-              <Route path="/admin/login" element={<Login />} />
-              <Route
-                path="/login"
-                element={<Navigate to="/admin/login" replace />}
-              />
+                {/* Admin Authentication Route */}
+                <Route path="/admin/login" element={<Login />} />
+                <Route
+                  path="/login"
+                  element={<Navigate to="/admin/login" replace />}
+                />
 
-              {/* Protected Admin Dashboard & Management Routes */}
+                {/* Protected Admin Dashboard & Management Routes */}
 
-              <Route
-                element={
-                  <AdminAuthGuard>
-                    <AdminLayout>
-                      <Outlet />
-                    </AdminLayout>
-                  </AdminAuthGuard>
-                }
-              >
-                {/* Admin */}
-                <Route path="admin">
-                  <Route
-                    index
-                    element={<Navigate to="/admin/dashboard" replace />}
-                  />
-
-                  <Route path="dashboard" element={<DashboardPage />} />
-
-                  <Route path="homestay" element={<AdminHomestayPage />} />
-
-                  {/* Itineraries */}
-                  <Route path="itineraries">
-                    <Route index element={<ItineraryListPage />} />
-                    <Route path="create" element={<ItineraryCreatePage />} />
+                <Route
+                  element={
+                    <AdminAuthGuard>
+                      <AdminLayout>
+                        <Outlet />
+                      </AdminLayout>
+                    </AdminAuthGuard>
+                  }
+                >
+                  {/* Admin */}
+                  <Route path="admin">
                     <Route
-                      path=":id/preview"
-                      element={<ItineraryPreviewPage />}
+                      index
+                      element={<Navigate to="/admin/dashboard" replace />}
                     />
-                    <Route path=":id/edit" element={<ItineraryEditPage />} />
+
+                    <Route path="dashboard" element={<DashboardPage />} />
+
+                    <Route path="homestay" element={<AdminHomestayPage />} />
+
+                    {/* Itineraries */}
+                    <Route path="itineraries">
+                      <Route index element={<ItineraryListPage />} />
+                      <Route path="create" element={<ItineraryCreatePage />} />
+                      <Route
+                        path=":id/preview"
+                        element={<ItineraryPreviewPage />}
+                      />
+                      <Route path=":id/edit" element={<ItineraryEditPage />} />
+                    </Route>
+
+                    {/* Travel Memories */}
+                    <Route path="travel-memories">
+                      <Route index element={<TravelMemoryListPage />} />
+                      <Route
+                        path="create"
+                        element={<TravelMemoryCreatePage />}
+                      />
+                      <Route path=":id" element={<TravelMemoryDetailPage />} />
+                      <Route
+                        path=":id/edit"
+                        element={<TravelMemoryEditPage />}
+                      />
+                    </Route>
+
+                    {/* Travel Map */}
+                    <Route path="travel-map">
+                      <Route index element={<TravelMapPage />} />
+                      <Route path=":id" element={<TravelMapDetailPage />} />
+                    </Route>
                   </Route>
 
-                  {/* Travel Memories */}
-                  <Route path="travel-memories">
-                    <Route index element={<TravelMemoryListPage />} />
-                    <Route path="create" element={<TravelMemoryCreatePage />} />
-                    <Route path=":id" element={<TravelMemoryDetailPage />} />
-                    <Route path=":id/edit" element={<TravelMemoryEditPage />} />
+                  {/* Users */}
+                  <Route path="users">
+                    <Route
+                      index
+                      element={<Navigate to="/users/list" replace />}
+                    />
+                    <Route path="list" element={<UsersList />} />
+                    <Route path="create" element={<UsersCreate />} />
+                    <Route path="edit/:id" element={<UsersEdit />} />
+                    <Route path="setting" element={<UsersSetting />} />
                   </Route>
 
-                  {/* Travel Map */}
-                  <Route path="travel-map">
-                    <Route index element={<TravelMapPage />} />
-                    <Route path=":id" element={<TravelMapDetailPage />} />
-                  </Route>
+                  {/* Not Found */}
+                  <Route path="*" element={<ErrorComponent />} />
                 </Route>
-
-                {/* Users */}
-                <Route path="users">
-                  <Route
-                    index
-                    element={<Navigate to="/users/list" replace />}
-                  />
-                  <Route path="list" element={<UsersList />} />
-                  <Route path="create" element={<UsersCreate />} />
-                  <Route path="edit/:id" element={<UsersEdit />} />
-                  <Route path="setting" element={<UsersSetting />} />
-                </Route>
-
-                {/* Not Found */}
-                <Route path="*" element={<ErrorComponent />} />
-              </Route>
-            </Routes>
-          </Refine>
-        </BrowserRouter>
-      </HeaderTitleProvider>
+              </Routes>
+            </Refine>
+          </BrowserRouter>
+        </HeaderTitleProvider>
       </LocalizationProvider>
     </CustomThemeProvider>
   );
