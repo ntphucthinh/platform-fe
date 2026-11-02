@@ -23,6 +23,9 @@ import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import ExploreOutlinedIcon from "@mui/icons-material/ExploreOutlined";
 import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
+import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 import { getLocations } from "@/services/travelMapService";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -468,6 +471,72 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
   );
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // File upload & Drag-and-drop cho ảnh đại diện
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
+
+  const processImageFile = (file: File) => {
+    setImageError(null);
+    if (!file.type.startsWith("image/")) {
+      setImageError("Vui lòng chọn tệp hình ảnh hợp lệ (PNG, JPG, WebP, GIF).");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setImageError("Kích thước tệp quá lớn. Vui lòng chọn ảnh nhỏ hơn 10MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setFormData((prev) => ({ ...prev, coverImage: reader.result as string }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData((prev) => ({ ...prev, coverImage: "" }));
+    setImageError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   // Xử lý khi thay đổi Quốc gia
   const handleCountryChange = (newCountry: IGlobalCountry | null) => {
@@ -1016,36 +1085,150 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
             }}
           />
 
-          {/* Ảnh đại diện (URL) (1 hàng riêng) */}
-          <TextField
-            label="Ảnh đại diện (URL)"
-            placeholder="https://images.unsplash.com/..."
-            value={formData.coverImage}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, coverImage: e.target.value }))
-            }
-            fullWidth
-            size="small"
-          />
-
-          {/* Ảnh preview nếu có */}
-          {formData.coverImage && (
+          {/* Ảnh đại diện (Kéo thả hoặc chọn tệp) */}
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             <Box
-              component="img"
-              src={formData.coverImage}
-              alt="Preview"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
               sx={{
-                width: "100%",
-                height: 140,
-                borderRadius: "10px",
-                objectFit: "cover",
-                border: "1px solid #E2E8F0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
               }}
+            >
+              <Typography
+                variant="subtitle2"
+                sx={{ fontWeight: 600, color: "#1E293B" }}
+              >
+                Ảnh đại diện điểm đến
+              </Typography>
+              {formData.coverImage && (
+                <Button
+                  variant="text"
+                  color="error"
+                  size="small"
+                  startIcon={<DeleteOutlinedIcon fontSize="small" />}
+                  onClick={handleRemoveImage}
+                  sx={{ textTransform: "none", fontWeight: 600, fontSize: "0.8rem", p: 0.5 }}
+                >
+                  Xoá ảnh
+                </Button>
+              )}
+            </Box>
+
+            {/* Hidden file input */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              style={{ display: "none" }}
+              onChange={handleFileInputChange}
             />
-          )}
+
+            {formData.coverImage ? (
+              <Box
+                sx={{
+                  position: "relative",
+                  width: "100%",
+                  height: 180,
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  border: "1px solid #E2E8F0",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                }}
+              >
+                <Box
+                  component="img"
+                  src={formData.coverImage}
+                  alt="Ảnh đại diện điểm đến"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = DEFAULT_NO_IMAGE;
+                  }}
+                  sx={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                />
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<CloudUploadOutlinedIcon fontSize="small" />}
+                  onClick={() => fileInputRef.current?.click()}
+                  sx={{
+                    position: "absolute",
+                    bottom: 12,
+                    right: 12,
+                    bgcolor: "rgba(15, 23, 42, 0.8)",
+                    backdropFilter: "blur(4px)",
+                    color: "#FFFFFF",
+                    textTransform: "none",
+                    fontWeight: 600,
+                    borderRadius: "8px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
+                    "&:hover": { bgcolor: "rgba(15, 23, 42, 0.95)" },
+                  }}
+                >
+                  Thay đổi ảnh
+                </Button>
+              </Box>
+            ) : (
+              <Box
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                sx={{
+                  p: 3,
+                  border: "2px dashed",
+                  borderColor: isDragging ? "#2563EB" : "#CBD5E1",
+                  borderRadius: "12px",
+                  bgcolor: isDragging ? "#EFF6FF" : "#F8FAFC",
+                  textAlign: "center",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease-in-out",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  "&:hover": {
+                    borderColor: "#2563EB",
+                    bgcolor: "#F1F5F9",
+                  },
+                }}
+              >
+                <CloudUploadOutlinedIcon
+                  sx={{
+                    fontSize: 40,
+                    color: isDragging ? "#2563EB" : "#94A3B8",
+                    mb: 1,
+                  }}
+                />
+                <Typography
+                  variant="body2"
+                  sx={{ fontWeight: 600, color: "#1E293B" }}
+                >
+                  Kéo và thả ảnh vào đây, hoặc{" "}
+                  <Box
+                    component="span"
+                    sx={{ color: "#2563EB", textDecoration: "underline" }}
+                  >
+                    chọn ảnh từ thiết bị
+                  </Box>
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ color: "#64748B", mt: 0.5 }}
+                >
+                  Hỗ trợ PNG, JPG, WebP (Tối đa 10MB)
+                </Typography>
+              </Box>
+            )}
+
+            {imageError && (
+              <Typography variant="caption" sx={{ color: "#DC2626", mt: 0.5 }}>
+                {imageError}
+              </Typography>
+            )}
+          </Box>
 
           {/* Giới thiệu điểm đến (1 hàng riêng) */}
           <TextField
