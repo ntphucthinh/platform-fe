@@ -55,8 +55,8 @@ function CustomNoRowsOverlay() {
         Không tìm thấy homestay nào
       </Typography>
       <Typography variant="body2" sx={{ color: "#94A3B8", mt: 0.5 }}>
-        Chưa có dữ liệu homestay trong cơ sở dữ liệu hoặc từ khóa tìm
-        kiếm không khớp.
+        Chưa có dữ liệu homestay trong cơ sở dữ liệu hoặc từ khóa tìm kiếm không
+        khớp.
       </Typography>
     </Box>
   );
@@ -122,7 +122,10 @@ export const AdminHomestayPage: React.FC = () => {
   const filteredHomestays = homestays.filter((h) => {
     const term = searchTerm.toLowerCase();
     const matchesRoom = (h.rooms || []).some((r) => {
-      const formatted = formatRoomPrice(r.priceAmount, r.priceUnit).toLowerCase();
+      const formatted = formatRoomPrice(
+        r.priceAmount,
+        r.priceUnit,
+      ).toLowerCase();
       return (
         r.name.toLowerCase().includes(term) ||
         (r.description ?? "").toLowerCase().includes(term) ||
@@ -162,9 +165,7 @@ export const AdminHomestayPage: React.FC = () => {
     if (!homestayToDelete) return;
     setIsDeleting(true);
     try {
-      const { success, error } = await deleteHomestay(
-        homestayToDelete.id,
-      );
+      const { success, error } = await deleteHomestay(homestayToDelete.id);
 
       if (success) {
         handleShowSnackbar(`Đã xóa homestay thành công`, "success");
@@ -185,7 +186,7 @@ export const AdminHomestayPage: React.FC = () => {
   ) => {
     if (selectedHomestay) {
       // Edit mode
-      const { data, error } = await updateHomestay(
+      const { error } = await updateHomestay(
         selectedHomestay.id,
         formData,
         selectedHomestay,
@@ -197,26 +198,17 @@ export const AdminHomestayPage: React.FC = () => {
         return;
       }
 
-      handleShowSnackbar(
-        `Đã cập nhật homestay "${data?.name ?? formData.name}" thành công`,
-        "success",
-      );
+      handleShowSnackbar(`Cập nhật homestay thành công`, "success");
     } else {
       // Create mode
-      const { data, error } = await createHomestay(
-        formData,
-        onProgress,
-      );
+      const { error } = await createHomestay(formData, onProgress);
 
       if (error) {
         handleShowSnackbar(error, "error");
         return;
       }
 
-      handleShowSnackbar(
-        `Đã tạo homestay "${data?.name ?? formData.name}" thành công`,
-        "success",
-      );
+      handleShowSnackbar(`Tạo homestay thành công`, "success");
     }
 
     setFormDialogOpen(false);
@@ -493,7 +485,9 @@ export const AdminHomestayPage: React.FC = () => {
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
-            setPaginationModel((prev) => (prev.page === 0 ? prev : { ...prev, page: 0 }));
+            setPaginationModel((prev) =>
+              prev.page === 0 ? prev : { ...prev, page: 0 },
+            );
           }}
           slotProps={{
             input: {

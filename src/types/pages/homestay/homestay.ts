@@ -1,8 +1,8 @@
 export type HomestayStatus = "Active" | "Maintenance" | "Inactive";
 
 export enum PriceUnit {
-  PerRoomPerNight = "per_room_per_night",
-  PerHousePerNight = "per_house_per_night",
+  PerRoomPerNight = "night_per_room",
+  PerHousePerNight = "night_per_house",
 }
 
 /**
