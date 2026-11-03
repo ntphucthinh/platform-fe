@@ -71,6 +71,7 @@ export const HomestayDetailDialog: React.FC<HomestayDetailDialogProps> = ({
       }}
     >
       <DialogTitle
+        component="div"
         sx={{
           display: "flex",
           justifyContent: "space-between",
@@ -79,7 +80,11 @@ export const HomestayDetailDialog: React.FC<HomestayDetailDialogProps> = ({
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, color: "#172033" }}>
+          <Typography
+            variant="h6"
+            component="h2"
+            sx={{ fontWeight: 700, color: "#172033" }}
+          >
             {homestay.name}
           </Typography>
           <Chip

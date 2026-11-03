@@ -664,6 +664,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
   return (
     <>
       <DialogTitle
+        component="div"
         sx={{
           display: "flex",
           alignItems: "center",
@@ -692,12 +693,14 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
           <Box>
             <Typography
               variant="h6"
+              component="h2"
               sx={{ fontWeight: 700, color: "#0F172A", fontSize: "1.15rem" }}
             >
               {isEdit ? "Chỉnh sửa điểm đến" : "Thêm điểm đến mới"}
             </Typography>
             <Typography
               variant="caption"
+              component="p"
               sx={{ color: "#64748B", fontSize: "0.825rem" }}
             >
               {isEdit

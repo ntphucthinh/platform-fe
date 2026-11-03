@@ -547,6 +547,7 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
         }}
       >
         <DialogTitle
+          component="div"
           sx={{
             display: "flex",
             justifyContent: "space-between",
@@ -554,7 +555,11 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
             pb: 1,
           }}
         >
-          <Typography variant="h6" sx={{ fontWeight: 700, color: "#172033" }}>
+          <Typography
+            variant="h6"
+            component="h2"
+            sx={{ fontWeight: 700, color: "#172033" }}
+          >
             {isEdit ? "Chỉnh Sửa Homestay" : "Thêm Homestay Mới"}
           </Typography>
           <IconButton

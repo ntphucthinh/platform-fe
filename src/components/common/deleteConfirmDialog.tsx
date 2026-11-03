@@ -81,7 +81,7 @@ export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
         },
       }}
     >
-      <DialogTitle sx={{ pb: 1 }}>
+      <DialogTitle component="div" sx={{ pb: 1 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <Box
             sx={{
@@ -98,7 +98,7 @@ export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
           >
             <WarningAmberIcon fontSize="small" />
           </Box>
-          <Typography variant="h6" component="span" sx={{ fontWeight: 600 }}>
+          <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
             {title}
           </Typography>
         </Box>

@@ -1412,18 +1412,23 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
         slotProps={{ paper: { sx: { borderRadius: "16px" } } }}
       >
         <DialogTitle
+          component="div"
           sx={{
-            fontWeight: 700,
-            color: "#0F172A",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             pb: 1,
           }}
         >
-          {activityModal.activityIndex !== null
-            ? "Chỉnh sửa hoạt động"
-            : "Thêm hoạt động mới"}
+          <Typography
+            variant="h6"
+            component="h2"
+            sx={{ fontWeight: 700, color: "#0F172A" }}
+          >
+            {activityModal.activityIndex !== null
+              ? "Chỉnh sửa hoạt động"
+              : "Thêm hoạt động mới"}
+          </Typography>
           <IconButton
             size="small"
             onClick={() =>
