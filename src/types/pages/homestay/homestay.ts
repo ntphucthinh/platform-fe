@@ -136,35 +136,42 @@ export interface IHomestayFormData {
 
 export interface DbHomestayImage {
   id: number;
-  homestay_id?: number | null;
-  room_id: number;
-  image_path: string;
-  sort_order: number;
-  is_cover: boolean;
-  created_at?: string;
+  roomId?: number;
+  homestayId?: number | null;
+  imagePath: string;
+  sortOrder?: number;
+  isCover?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  url?: string;
+  mediaType?: "image" | "video";
 }
 
 export interface DbHomestayRoom {
   id: number;
-  homestay_id: number;
   name: string;
-  description: string | null;
-  price_amount: number | null;
-  price_unit: string | null;
-  sort_order: number;
-  created_at?: string;
-  updated_at?: string;
-  homestay_images?: DbHomestayImage[];
+  description?: string | null;
+  homestayId?: number;
+  priceAmount?: number | null;
+  priceUnit?: string | null;
+  sortOrder?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  images?: DbHomestayImage[];
+  homestayImages?: DbHomestayImage[];
 }
 
 export interface DbHomestay {
   id: number;
   name: string;
   address: string;
-  description: string | null;
-  google_maps_url: string | null;
-  created_at?: string;
-  updated_at?: string;
-  homestay_rooms?: DbHomestayRoom[];
-  homestay_images?: DbHomestayImage[];
+  location?: string;
+  description?: string | null;
+  googleMapsUrl?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  rooms?: DbHomestayRoom[];
+  homestayRooms?: DbHomestayRoom[];
+  images?: DbHomestayImage[];
+  homestayImages?: DbHomestayImage[];
 }

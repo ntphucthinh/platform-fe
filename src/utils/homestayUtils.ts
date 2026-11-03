@@ -40,54 +40,71 @@ export function getPublicImageUrl(path: string | null | undefined): string {
 // ---------------------------------------------------------------------------
 
 export function mapDbHomestayToItem(dbRow: DbHomestay): IHomestayItem {
-  const rawRooms = dbRow.homestay_rooms ?? [];
+  const rawRooms = dbRow.rooms ?? dbRow.homestayRooms ?? [];
 
   const sortedRooms = [...rawRooms].sort((a, b) => {
-    const orderA = a.sort_order ?? 0;
-    const orderB = b.sort_order ?? 0;
+    const orderA = a.sortOrder ?? 0;
+    const orderB = b.sortOrder ?? 0;
     if (orderA !== orderB) return orderA - orderB;
     return a.id - b.id;
   });
 
   const rooms: HomestayRoom[] = sortedRooms.map((room) => {
-    const rawImages = room.homestay_images ?? [];
+    const rawImages = room.images ?? room.homestayImages ?? [];
 
     const sortedImages = [...rawImages].sort((a, b) => {
-      const orderA = a.sort_order ?? 0;
-      const orderB = b.sort_order ?? 0;
+      const orderA = a.sortOrder ?? 0;
+      const orderB = b.sortOrder ?? 0;
       if (orderA !== orderB) return orderA - orderB;
       return a.id - b.id;
     });
 
-    const imageRecords: HomestayRoomImage[] = sortedImages.map((img) => ({
-      id: img.id,
-      roomId: img.room_id,
-      homestayId: img.homestay_id ?? dbRow.id,
-      imagePath: img.image_path,
-      sortOrder: img.sort_order ?? 1,
-      isCover: Boolean(img.is_cover),
-      createdAt: img.created_at,
-      url: getPublicImageUrl(img.image_path),
-    }));
+    const imageRecords: HomestayRoomImage[] = sortedImages.map((img) => {
+      const path = img.imagePath || img.url || "";
+      const isCover = Boolean(img.isCover);
+      const sortOrder = img.sortOrder ?? 1;
+      const roomId = img.roomId ?? room.id;
+      const homestayId = img.homestayId ?? room.homestayId ?? dbRow.id;
+
+      return {
+        id: img.id,
+        roomId,
+        homestayId,
+        imagePath: path,
+        sortOrder,
+        isCover,
+        createdAt: img.createdAt,
+        url: img.url || getPublicImageUrl(path),
+        mediaType: img.mediaType,
+      };
+    });
 
     const images = imageRecords
       .map((img) => img.url || getPublicImageUrl(img.imagePath))
       .filter((url): url is string => Boolean(url && url.trim().length > 0));
 
+    const priceAmount =
+      room.priceAmount !== undefined &&
+      room.priceAmount !== null &&
+      !isNaN(Number(room.priceAmount))
+        ? Number(room.priceAmount)
+        : null;
+
+    const priceUnit = (room.priceUnit as PriceUnit) || null;
+    const sortOrder = room.sortOrder ?? 1;
+    const homestayId = room.homestayId ?? dbRow.id;
+
     return {
       id: room.id,
-      homestayId: room.homestay_id,
+      homestayId,
       name: room.name ?? "",
       description: room.description ?? null,
       priceText: null,
-      priceAmount:
-        room.price_amount !== undefined && room.price_amount !== null
-          ? Number(room.price_amount)
-          : null,
-      priceUnit: (room.price_unit as PriceUnit) || null,
-      sortOrder: room.sort_order ?? 1,
-      createdAt: room.created_at,
-      updatedAt: room.updated_at,
+      priceAmount,
+      priceUnit,
+      sortOrder,
+      createdAt: room.createdAt,
+      updatedAt: room.updatedAt,
       images,
       imageRecords,
     };
@@ -109,6 +126,33 @@ export function mapDbHomestayToItem(dbRow: DbHomestay): IHomestayItem {
       }
     });
   });
+
+  // Direct homestay-level images if returned by API
+  const directImages = dbRow.images ?? dbRow.homestayImages ?? [];
+  if (directImages.length > 0 && allImageRecords.length === 0) {
+    directImages.forEach((img) => {
+      const path = img.imagePath || img.url || "";
+      const isCover = Boolean(img.isCover);
+      const url = img.url || getPublicImageUrl(path);
+      if (url) {
+        allRoomImages.push(url);
+        allImageRecords.push({
+          id: img.id,
+          roomId: img.roomId ?? 0,
+          homestayId: img.homestayId ?? dbRow.id,
+          imagePath: path,
+          sortOrder: img.sortOrder ?? 1,
+          isCover,
+          createdAt: img.createdAt,
+          url,
+          mediaType: img.mediaType,
+        });
+        if (isCover && !detectedCoverUrl) {
+          detectedCoverUrl = url;
+        }
+      }
+    });
+  }
 
   const representativePrice =
     rooms.length > 0
@@ -132,20 +176,23 @@ export function mapDbHomestayToItem(dbRow: DbHomestay): IHomestayItem {
       ? firstRoom.images
       : allRoomImages;
 
+  const googleMapsUrl = dbRow.googleMapsUrl ?? null;
+  const address = dbRow.address ?? dbRow.location ?? "";
+
   return {
     id: dbRow.id,
     name: dbRow.name ?? "",
-    address: dbRow.address ?? "",
-    location: dbRow.address ?? "",
+    address,
+    location: address,
     description: dbRow.description ?? null,
     price: representativePrice,
-    googleMapsUrl: dbRow.google_maps_url ?? null,
-    googleMapLink: dbRow.google_maps_url ?? null,
+    googleMapsUrl,
+    googleMapLink: googleMapsUrl,
     rooms,
     images,
     imageRecords: allImageRecords,
     mainImage,
-    createdAt: dbRow.created_at,
-    updatedAt: dbRow.updated_at,
+    createdAt: dbRow.createdAt,
+    updatedAt: dbRow.updatedAt,
   };
 }
