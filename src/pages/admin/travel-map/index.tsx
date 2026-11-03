@@ -1,11 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import {
-  Box,
-  Snackbar,
-  Alert,
-  useTheme,
-  useMediaQuery,
-} from "@mui/material";
+import { Box, Snackbar, Alert, useTheme, useMediaQuery } from "@mui/material";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { TravelMapHeader } from "@/components/pages/travel-map/travelMapHeader";
 import { TravelMapFilters } from "@/components/pages/travel-map/travelMapFilters";
@@ -37,10 +31,12 @@ import type {
 export function TravelMapPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const prefersReducedMotion = useMediaQuery(
+    "@media (prefers-reduced-motion: reduce)",
+  );
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const initialViewMode =
-    searchParams.get("view") === "list" ? "list" : "map";
+  const initialViewMode = searchParams.get("view") === "list" ? "list" : "map";
   const initialSearch = searchParams.get("q") || "";
   const rawStatus = searchParams.get("status");
   const initialStatus =
@@ -77,7 +73,9 @@ export function TravelMapPage() {
 
   // 3. Dialog & Notification States
   const [formDialogOpen, setFormDialogOpen] = useState(false);
-  const [editingLocation, setEditingLocation] = useState<ILocation | null>(null);
+  const [editingLocation, setEditingLocation] = useState<ILocation | null>(
+    null,
+  );
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [locationToDelete, setLocationToDelete] = useState<{
@@ -248,8 +246,22 @@ export function TravelMapPage() {
             position: "relative",
           }}
         >
-          {/* Leaflet Map Canvas */}
-          <Box sx={{ flex: 1, minWidth: 0, height: "100%" }}>
+          {/* Leaflet Map Canvas (70% width on desktop when panel open, 100% when closed) */}
+          <Box
+            sx={{
+              flex: selectedLocationDetails
+                ? { xs: "1 1 auto", md: "0 0 calc(70% - 14px)" }
+                : "1 1 100%",
+              width: selectedLocationDetails
+                ? { xs: "100%", md: "calc(70% - 14px)" }
+                : "100%",
+              minWidth: 0,
+              height: "100%",
+              transition: prefersReducedMotion
+                ? "none"
+                : "width 320ms cubic-bezier(0.22, 1, 0.36, 1), flex 320ms cubic-bezier(0.22, 1, 0.36, 1)",
+            }}
+          >
             <TravelLeafletMap
               locations={locationsWithDetails}
               selectedLocationId={selectedLocationId}
@@ -281,9 +293,7 @@ export function TravelMapPage() {
           <Box
             sx={{
               pointerEvents:
-                Boolean(selectedLocationDetails) && !isMobile
-                  ? "none"
-                  : "auto",
+                Boolean(selectedLocationDetails) && !isMobile ? "none" : "auto",
             }}
             aria-hidden={Boolean(selectedLocationDetails) && !isMobile}
           >
@@ -324,7 +334,9 @@ export function TravelMapPage() {
       <DeleteConfirmDialog
         open={deleteConfirmOpen}
         title="Xác nhận xóa địa điểm"
-        message={`Bạn có chắc chắn muốn xóa địa điểm "${locationToDelete?.name || ""}" khỏi bản đồ? Các chuyến đi và kỷ niệm liên quan sẽ không bị xóa.`}
+        message={`Bạn có chắc chắn muốn xóa địa điểm "${
+          locationToDelete?.name || ""
+        }" khỏi bản đồ? Các chuyến đi và kỷ niệm liên quan sẽ không bị xóa.`}
         onClose={() => {
           setDeleteConfirmOpen(false);
           setLocationToDelete(null);

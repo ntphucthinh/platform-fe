@@ -282,159 +282,150 @@ export const TravelMemoryListPage: React.FC = () => {
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 2.5,
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(3, 1fr)",
+          },
+          gap: { xs: 1.25, sm: 1.5 },
         }}
       >
-        <Box>
+        {[
+          {
+            title: "Tổng chuyến đi",
+            value: totalTrips,
+            subtitle: "Hành trình đã ghi lại",
+            icon: (
+              <CollectionsBookmarkOutlinedIcon
+                sx={{ fontSize: { xs: 20, sm: 22 }, color: "#1976D2" }}
+              />
+            ),
+            bgColor: "#EFF6FF",
+            borderColor: "#BFDBFE",
+          },
+          {
+            title: "Tổng địa điểm",
+            value: uniqueDestinationsCount,
+            subtitle: "Điểm đến trên khắp cả nước",
+            icon: (
+              <LocationOnOutlinedIcon
+                sx={{ fontSize: { xs: 20, sm: 22 }, color: "#059669" }}
+              />
+            ),
+            bgColor: "#ECFDF5",
+            borderColor: "#A7F3D0",
+          },
+          {
+            title: "Tổng hình ảnh",
+            value: totalPhotosCount,
+            subtitle: "Khoảnh khắc lưu giữ",
+            icon: (
+              <PhotoLibraryOutlinedIcon
+                sx={{ fontSize: { xs: 20, sm: 22 }, color: "#D97706" }}
+              />
+            ),
+            bgColor: "#FFFBEB",
+            borderColor: "#FDE68A",
+          },
+        ].map((c) => (
           <Card
-            elevation={1}
+            key={c.title}
+            elevation={0}
             sx={{
               borderRadius: "12px",
               border: "1px solid #E2E8F0",
               bgcolor: "#FFFFFF",
+              minHeight: { xs: 70, sm: 75 },
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              transition: "transform 0.15s ease, box-shadow 0.15s ease",
+              "&:hover": {
+                transform: "translateY(-2px)",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+              },
             }}
           >
-            <CardContent sx={{ p: 2.5, "&:last-child": { pb: 2.5 } }}>
+            <CardContent
+              sx={{
+                py: { xs: 1.25, sm: 1.6 },
+                px: { xs: 1.5, sm: 2 },
+                "&:last-child": { pb: { xs: 1.25, sm: 1.6 } },
+                display: "flex",
+                alignItems: "center",
+                gap: { xs: 1.25, sm: 1.75 },
+              }}
+            >
               <Box
                 sx={{
+                  width: { xs: 36, sm: 44 },
+                  height: { xs: 36, sm: 44 },
+                  borderRadius: "10px",
+                  bgcolor: c.bgColor,
+                  border: `1px solid ${c.borderColor}`,
                   display: "flex",
-                  justifyContent: "space-between",
                   alignItems: "center",
-                  mb: 1,
+                  justifyContent: "center",
+                  flexShrink: 0,
                 }}
               >
-                <Typography
-                  variant="subtitle2"
-                  sx={{ color: "text.secondary", fontWeight: 600 }}
-                >
-                  Tổng chuyến đi
-                </Typography>
-                <Box
-                  sx={{
-                    p: 0.8,
-                    borderRadius: "8px",
-                    bgcolor: "#EFF6FF",
-                    color: "primary.main",
-                  }}
-                >
-                  <CollectionsBookmarkOutlinedIcon sx={{ fontSize: 20 }} />
-                </Box>
+                {c.icon}
               </Box>
-              <Typography
-                variant="h5"
-                sx={{ fontWeight: 700, color: "text.primary" }}
-              >
-                {totalTrips}
-              </Typography>
-              <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                Hành trình đã ghi lại
-              </Typography>
-            </CardContent>
-          </Card>
-        </Box>
 
-        <Box>
-          <Card
-            elevation={1}
-            sx={{
-              borderRadius: "12px",
-              border: "1px solid #E2E8F0",
-              bgcolor: "#FFFFFF",
-            }}
-          >
-            <CardContent sx={{ p: 2.5, "&:last-child": { pb: 2.5 } }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mb: 1,
-                }}
-              >
+              <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography
-                  variant="subtitle2"
-                  sx={{ color: "text.secondary", fontWeight: 600 }}
-                >
-                  Tổng địa điểm
-                </Typography>
-                <Box
+                  variant="caption"
+                  noWrap
                   sx={{
-                    p: 0.8,
-                    borderRadius: "8px",
-                    bgcolor: "#ECFDF5",
-                    color: "#059669",
+                    display: "block",
+                    fontWeight: 700,
+                    color: "#64748B",
+                    textTransform: "uppercase",
+                    letterSpacing: { xs: "0.01em", sm: "0.03em" },
+                    fontSize: { xs: "0.62rem", sm: "0.72rem" },
+                    lineHeight: 1.3,
+                    mb: 0.35,
                   }}
                 >
-                  <LocationOnOutlinedIcon sx={{ fontSize: 20 }} />
-                </Box>
-              </Box>
-              <Typography
-                variant="h5"
-                sx={{ fontWeight: 700, color: "text.primary" }}
-              >
-                {uniqueDestinationsCount}
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{ color: "#059669", fontWeight: 600 }}
-              >
-                Điểm đến trên khắp cả nước
-              </Typography>
-            </CardContent>
-          </Card>
-        </Box>
+                  {c.title}
+                </Typography>
 
-        <Box>
-          <Card
-            elevation={1}
-            sx={{
-              borderRadius: "12px",
-              border: "1px solid #E2E8F0",
-              bgcolor: "#FFFFFF",
-            }}
-          >
-            <CardContent sx={{ p: 2.5, "&:last-child": { pb: 2.5 } }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mb: 1,
-                }}
-              >
-                <Typography
-                  variant="subtitle2"
-                  sx={{ color: "text.secondary", fontWeight: 600 }}
-                >
-                  Tổng hình ảnh
-                </Typography>
                 <Box
                   sx={{
-                    p: 0.8,
-                    borderRadius: "8px",
-                    bgcolor: "#FFFBEB",
-                    color: "#D97706",
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    alignItems: { xs: "flex-start", sm: "baseline" },
+                    gap: { xs: 0.1, sm: 0.75 },
                   }}
                 >
-                  <PhotoLibraryOutlinedIcon sx={{ fontSize: 20 }} />
+                  <Typography
+                    component="span"
+                    sx={{
+                      fontWeight: 800,
+                      color: "#0F172A",
+                      fontSize: { xs: "1.15rem", sm: "1.42rem" },
+                      lineHeight: 1.1,
+                    }}
+                  >
+                    {c.value}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    noWrap
+                    sx={{
+                      color: "#94A3B8",
+                      fontSize: { xs: "0.68rem", sm: "0.76rem" },
+                      lineHeight: 1.2,
+                      maxWidth: "100%",
+                    }}
+                  >
+                    {c.subtitle}
+                  </Typography>
                 </Box>
               </Box>
-              <Typography
-                variant="h5"
-                sx={{ fontWeight: 700, color: "text.primary" }}
-              >
-                {totalPhotosCount}
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{ color: "#D97706", fontWeight: 600 }}
-              >
-                Khoảnh khắc lưu giữ
-              </Typography>
             </CardContent>
           </Card>
-        </Box>
+        ))}
       </Box>
 
       {/* 5.3 Search & Filters Bar */}

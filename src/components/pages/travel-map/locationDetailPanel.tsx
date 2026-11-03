@@ -1159,16 +1159,18 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
     );
   }
 
-  // Desktop Side Panel
+  // Desktop Side Panel (30% width on desktop matching 7:3 ratio with map)
   return (
     <Box
       sx={{
-        width: isEntered ? 400 : 0,
+        width: isEntered ? { md: "calc(30% - 6px)" } : 0,
+        flex: isEntered ? { md: "0 0 calc(30% - 6px)" } : "0 0 0px",
         marginLeft: (t) => (isEntered ? 0 : `-${t.spacing(2.5)}`),
         opacity: isEntered ? 1 : 0,
         transition: prefersReducedMotion
           ? "none"
           : `width 320ms cubic-bezier(0.22, 1, 0.36, 1),
+             flex 320ms cubic-bezier(0.22, 1, 0.36, 1),
              margin-left 320ms cubic-bezier(0.22, 1, 0.36, 1),
              opacity 320ms cubic-bezier(0.22, 1, 0.36, 1)`,
         overflow: "hidden",
@@ -1179,7 +1181,8 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
     >
       <Box
         sx={{
-          width: 400,
+          width: "100%",
+          minWidth: { md: 280 },
           height: "100%",
           flexShrink: 0,
           bgcolor: "#FFFFFF",
