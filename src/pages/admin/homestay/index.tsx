@@ -293,12 +293,12 @@ export const AdminHomestayPage: React.FC = () => {
     {
       field: "rooms",
       headerName: "Loại Phòng",
-      width: 120,
+      width: 160,
       sortable: false,
       renderCell: ({ row }) => (
         <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
           <Chip
-            label={`${(row.rooms || []).length} phòng`}
+            label={`${(row.rooms || []).length} loại phòng`}
             size="small"
             sx={{
               bgcolor: "#F1F5F9",
@@ -312,37 +312,9 @@ export const AdminHomestayPage: React.FC = () => {
       ),
     },
     {
-      field: "price",
-      headerName: "Giá Thuê",
-      flex: 1.2,
-      minWidth: 180,
-      renderCell: ({ row }) => {
-        const firstRoom = row.rooms?.[0];
-        const displayPrice = firstRoom
-          ? formatRoomPrice(firstRoom.priceAmount, firstRoom.priceUnit)
-          : "Chưa cập nhật giá";
-        const hasPrice = displayPrice !== "Chưa cập nhật giá";
-
-        return hasPrice ? (
-          <Typography
-            noWrap
-            sx={{ color: "#2563EB", fontSize: "13px", fontWeight: 700 }}
-          >
-            {displayPrice}
-          </Typography>
-        ) : (
-          <Typography
-            sx={{ color: "#94A3B8", fontSize: "12px", fontStyle: "italic" }}
-          >
-            Chưa cập nhật giá
-          </Typography>
-        );
-      },
-    },
-    {
       field: "googleMapsUrl",
       headerName: "Google Map",
-      width: 130,
+      width: 150,
       sortable: false,
       filterable: false,
       align: "center",
@@ -381,7 +353,7 @@ export const AdminHomestayPage: React.FC = () => {
     {
       field: "actions",
       headerName: "Hành Động",
-      width: 140,
+      width: 160,
       sortable: false,
       filterable: false,
       disableColumnMenu: true,
