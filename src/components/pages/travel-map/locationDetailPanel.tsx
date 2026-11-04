@@ -40,7 +40,7 @@ interface LocationDetailPanelProps {
   open: boolean;
   onClose: () => void;
   onEdit: (location: ILocationWithDetails) => void;
-  onDelete: (id: string, name: string) => void;
+  onDelete: (id: number, name: string) => void;
   isMobile?: boolean;
   variant?: "side" | "inline";
 }
@@ -88,7 +88,7 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
   }
 
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const prevPropLocationIdRef = useRef<string | null>(propLocation?.id || null);
+  const prevPropLocationIdRef = useRef<number | null>(propLocation?.id ?? null);
 
   // Mobile Bottom Sheet DOM refs for direct transform updates (avoids re-rendering during drag)
   const mobileSheetRef = useRef<HTMLDivElement | null>(null);
@@ -450,12 +450,34 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
           alt={location.name}
           onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
             e.currentTarget.src = DEFAULT_NO_IMAGE;
+            e.currentTarget.style.objectFit = "contain";
+            e.currentTarget.style.padding = "24px";
+            e.currentTarget.style.backgroundColor = "#0F172A";
+            e.currentTarget.style.opacity = "0.75";
           }}
           sx={{
-            height: { xs: 160, sm: 200 },
-            objectFit: "cover",
+            height: !location.coverImage || location.coverImage === DEFAULT_NO_IMAGE
+              ? { xs: 130, sm: 150 }
+              : { xs: 160, sm: 200 },
+            objectFit:
+              !location.coverImage || location.coverImage === DEFAULT_NO_IMAGE
+                ? "contain"
+                : "cover",
             width: "100%",
             display: "block",
+            p: !location.coverImage || location.coverImage === DEFAULT_NO_IMAGE
+              ? { xs: 2, sm: 3 }
+              : 0,
+            bgcolor:
+              !location.coverImage || location.coverImage === DEFAULT_NO_IMAGE
+                ? "#0F172A"
+                : "transparent",
+            boxSizing: "border-box",
+            opacity:
+              !location.coverImage || location.coverImage === DEFAULT_NO_IMAGE
+                ? 0.75
+                : 1,
+            transition: "all 0.2s ease",
           }}
         />
 
@@ -903,11 +925,23 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
                       alt={mem.title}
                       onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                         e.currentTarget.src = DEFAULT_NO_IMAGE;
+                        e.currentTarget.style.objectFit = "contain";
+                        e.currentTarget.style.padding = "8px";
+                        e.currentTarget.style.backgroundColor = "#F8FAFC";
                       }}
                       sx={{
                         width: 90,
                         minHeight: 85,
-                        objectFit: "cover",
+                        objectFit:
+                          !mem.coverImage || mem.coverImage === DEFAULT_NO_IMAGE
+                            ? "contain"
+                            : "cover",
+                        p:
+                          !mem.coverImage || mem.coverImage === DEFAULT_NO_IMAGE
+                            ? 1
+                            : 0,
+                        bgcolor: "#F8FAFC",
+                        boxSizing: "border-box",
                         flexShrink: 0,
                       }}
                     />

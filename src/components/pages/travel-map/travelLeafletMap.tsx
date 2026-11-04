@@ -15,8 +15,8 @@ import {
 
 interface TravelLeafletMapProps {
   locations: ILocationWithDetails[];
-  selectedLocationId: string | null;
-  onSelectLocation: (id: string) => void;
+  selectedLocationId: number | null;
+  onSelectLocation: (id: number) => void;
   onSwitchToList: () => void;
   panelOpen: boolean;
 }

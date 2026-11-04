@@ -1,10 +1,13 @@
-import {
-  MOCK_LOCATIONS,
-  LOCATION_MEMORY_RELATIONS,
-  LOCATION_ITINERARY_RELATIONS,
-  type ILocationMemoryRelation,
-  type ILocationItineraryRelation,
-} from "@/constants/travelMap";
+export interface ILocationMemoryRelation {
+  locationId: number;
+  memoryId: string;
+}
+
+export interface ILocationItineraryRelation {
+  locationId: number;
+  itineraryId: string;
+}
+
 import type {
   ILocation,
   ILocationFormData,
@@ -43,7 +46,7 @@ let locationStore: ILocation[] = (() => {
       // Fallback
     }
   }
-  return [...MOCK_LOCATIONS];
+  return [];
 })();
 
 let memoryRelationsStore: ILocationMemoryRelation[] = (() => {
@@ -57,7 +60,7 @@ let memoryRelationsStore: ILocationMemoryRelation[] = (() => {
       // Fallback
     }
   }
-  return [...LOCATION_MEMORY_RELATIONS];
+  return [];
 })();
 
 const itineraryRelationsStore: ILocationItineraryRelation[] = (() => {
@@ -71,7 +74,7 @@ const itineraryRelationsStore: ILocationItineraryRelation[] = (() => {
       // Fallback
     }
   }
-  return [...LOCATION_ITINERARY_RELATIONS];
+  return [];
 })();
 
 const listeners = new Set<() => void>();
@@ -115,19 +118,23 @@ export function getLocations(): ILocation[] {
   return [...locationStore];
 }
 
-export function getLocationById(id: string): ILocation | undefined {
-  return locationStore.find((loc) => loc.id === id);
+export function getLocationById(id: number | string): ILocation | undefined {
+  const numId = typeof id === "number" ? id : Number(id);
+  return locationStore.find((loc) => loc.id === numId || loc.id === (id as unknown as number));
 }
 
 /**
  * Get all Travel Memories linked to a Location by ID.
  * Deduplicates memories and sorts descending by start date (latest trip first).
  */
-export function getMemoriesByLocationId(locationId: string): ITravelMemory[] {
+export function getMemoriesByLocationId(
+  locationId: number | string,
+): ITravelMemory[] {
+  const numId = typeof locationId === "number" ? locationId : Number(locationId);
   const allMemories = getTravelMemories();
   const linkedIds = new Set(
     memoryRelationsStore
-      .filter((rel) => rel.locationId === locationId)
+      .filter((rel) => rel.locationId === numId)
       .map((rel) => rel.memoryId),
   );
 
@@ -143,10 +150,11 @@ export function getMemoriesByLocationId(locationId: string): ITravelMemory[] {
  * Get all Itineraries linked to a Location by ID.
  */
 export function getItinerariesByLocationId(
-  locationId: string,
+  locationId: number | string,
 ): ITravelItinerary[] {
+  const numId = typeof locationId === "number" ? locationId : Number(locationId);
   const linkedIds = itineraryRelationsStore
-    .filter((rel) => rel.locationId === locationId)
+    .filter((rel) => rel.locationId === numId)
     .map((rel) => rel.itineraryId);
 
   const seen = new Set<string>();
@@ -169,14 +177,16 @@ export function getItinerariesByLocationId(
  * Count of completed visits for a Location.
  * Based purely on completed Travel Memories. Itineraries do NOT count as visits.
  */
-export function getVisitCountByLocationId(locationId: string): number {
+export function getVisitCountByLocationId(locationId: number | string): number {
   return getMemoriesByLocationId(locationId).length;
 }
 
 /**
  * Latest visit date for a Location (ISO string or null).
  */
-export function getLatestVisitByLocationId(locationId: string): string | null {
+export function getLatestVisitByLocationId(
+  locationId: number | string,
+): string | null {
   const memories = getMemoriesByLocationId(locationId);
   return memories.length > 0 ? memories[0].startDate : null;
 }
@@ -184,7 +194,9 @@ export function getLatestVisitByLocationId(locationId: string): string | null {
 /**
  * Total photos across all memories linked to a Location.
  */
-export function getPhotoCountByLocationId(locationId: string): number {
+export function getPhotoCountByLocationId(
+  locationId: number | string,
+): number {
   const memories = getMemoriesByLocationId(locationId);
   return memories.reduce((acc, m) => acc + countTotalPhotos(m.days), 0);
 }
@@ -290,6 +302,7 @@ export function getLocationWithDetails(
   return {
     ...location,
     visitCount: getVisitCountByLocationId(location.id),
+    itineraryCount: getItinerariesByLocationId(location.id).length,
     latestVisitDate: getLatestVisitByLocationId(location.id),
     totalPhotos: getPhotoCountByLocationId(location.id),
     memories: getMemoriesByLocationId(location.id),
@@ -331,7 +344,7 @@ export function createLocation(input: ILocationFormData): ILocation {
       : Number(input.longitude);
 
   const newLocation: ILocation = {
-    id: `loc-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    id: Date.now(),
     countryCode: targetCountry?.iso2 || input.countryCode,
     countryName: targetCountry?.name || input.countryName,
     stateCode: targetState?.stateCode || input.stateCode,
@@ -364,10 +377,13 @@ export function createLocation(input: ILocationFormData): ILocation {
  * Update an existing Location (mock state).
  */
 export function updateLocation(
-  id: string,
+  id: number | string,
   input: ILocationFormData,
 ): ILocation | null {
-  const index = locationStore.findIndex((loc) => loc.id === id);
+  const numId = typeof id === "number" ? id : Number(id);
+  const index = locationStore.findIndex(
+    (loc) => loc.id === numId || loc.id === (id as unknown as number),
+  );
   if (index === -1) return null;
 
   const existing = locationStore[index];
@@ -434,12 +450,15 @@ export function updateLocation(
 /**
  * Delete a Location (mock state). Preserves the original memories and itineraries.
  */
-export function deleteLocation(id: string): boolean {
+export function deleteLocation(id: number | string): boolean {
+  const numId = typeof id === "number" ? id : Number(id);
   const initialLength = locationStore.length;
-  locationStore = locationStore.filter((loc) => loc.id !== id);
+  locationStore = locationStore.filter(
+    (loc) => loc.id !== numId && loc.id !== (id as unknown as number),
+  );
   // Also clean relations for this location without deleting the memories/itineraries themselves
   memoryRelationsStore = memoryRelationsStore.filter(
-    (rel) => rel.locationId !== id,
+    (rel) => rel.locationId !== numId && rel.locationId !== (id as unknown as number),
   );
   persistStore();
   return locationStore.length < initialLength;

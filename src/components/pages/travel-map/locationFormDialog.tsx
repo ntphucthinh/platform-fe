@@ -32,7 +32,6 @@ import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
-import { getLocations } from "@/services/travelMapService";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type {
@@ -341,6 +340,7 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
 interface LocationFormDialogProps {
   open: boolean;
   initialData?: ILocation | null;
+  existingLocations?: ILocation[];
   onClose: () => void;
   onSubmit: (formData: ILocationFormData) => void;
 }
@@ -396,12 +396,14 @@ function getInitialFormData(
 
 interface FormInnerProps {
   initialData?: ILocation | null;
+  existingLocations?: ILocation[];
   onClose: () => void;
   onSubmit: (formData: ILocationFormData) => void;
 }
 
 const LocationFormInner: React.FC<FormInnerProps> = ({
   initialData,
+  existingLocations: propExistingLocations,
   onClose,
   onSubmit,
 }) => {
@@ -442,7 +444,10 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
   );
 
   // Danh sách địa điểm hiện có trên bản đồ để kiểm tra trùng lặp
-  const existingLocations = useMemo(() => getLocations(), []);
+  const existingLocations = useMemo(
+    () => propExistingLocations ?? [],
+    [propExistingLocations],
+  );
 
   // Kiểm tra một tỉnh/bang đã được thêm vào bản đồ hay chưa (ngoại trừ địa điểm đang sửa)
   const isStateAlreadyAdded = useCallback(
@@ -1160,15 +1165,34 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
               >
                 <Box
                   component="img"
-                  src={formData.coverImage}
+                  src={formData.coverImage || DEFAULT_NO_IMAGE}
                   alt="Ảnh đại diện điểm đến"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = DEFAULT_NO_IMAGE;
+                    const img = e.target as HTMLImageElement;
+                    img.src = DEFAULT_NO_IMAGE;
+                    img.style.objectFit = "contain";
+                    img.style.padding = "16px";
+                    img.style.backgroundColor = "#F8FAFC";
                   }}
                   sx={{
                     width: "100%",
                     height: "100%",
-                    objectFit: "cover",
+                    objectFit:
+                      !formData.coverImage ||
+                      formData.coverImage === DEFAULT_NO_IMAGE
+                        ? "contain"
+                        : "cover",
+                    p:
+                      !formData.coverImage ||
+                      formData.coverImage === DEFAULT_NO_IMAGE
+                        ? 2
+                        : 0,
+                    bgcolor:
+                      !formData.coverImage ||
+                      formData.coverImage === DEFAULT_NO_IMAGE
+                        ? "#F8FAFC"
+                        : "transparent",
+                    boxSizing: "border-box",
                   }}
                 />
                 <Button
@@ -1323,6 +1347,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
 export const LocationFormDialog: React.FC<LocationFormDialogProps> = ({
   open,
   initialData,
+  existingLocations,
   onClose,
   onSubmit,
 }) => {
@@ -1346,6 +1371,7 @@ export const LocationFormDialog: React.FC<LocationFormDialogProps> = ({
         <LocationFormInner
           key={initialData?.id || "new"}
           initialData={initialData}
+          existingLocations={existingLocations}
           onClose={onClose}
           onSubmit={onSubmit}
         />

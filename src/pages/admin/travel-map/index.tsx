@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Box, Snackbar, Alert, useTheme, useMediaQuery } from "@mui/material";
+import { Box, Snackbar, Alert, useTheme, useMediaQuery, CircularProgress } from "@mui/material";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { TravelMapHeader } from "@/components/pages/travel-map/travelMapHeader";
 import { TravelMapFilters } from "@/components/pages/travel-map/travelMapFilters";
@@ -8,18 +8,18 @@ import { TravelMapListView } from "@/components/pages/travel-map/travelMapListVi
 import { LocationDetailPanel } from "@/components/pages/travel-map/locationDetailPanel";
 import { LocationFormDialog } from "@/components/pages/travel-map/locationFormDialog";
 import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
+import { useTravelLocationList } from "@/hooks/travel-map/useTravelLocationList";
+import { useTravelLocationDetail } from "@/hooks/travel-map/useTravelLocationDetail";
 import {
-  getLocations,
-  subscribeTravelMap,
-  getTravelMapSummary,
   getAvailableVisitYears,
   filterLocations,
-  getLocationWithDetails,
+} from "@/utils/travelMapUtils";
+import { MOCK_TRAVEL_MAP_SUMMARY } from "@/constants/travelMap";
+import {
   createLocation,
   updateLocation,
   deleteLocation,
 } from "@/services/travelMapService";
-import { subscribeTravelMemories } from "@/services/travelMemoryService";
 import { useSearchParams } from "react-router-dom";
 import type {
   ILocation,
@@ -45,12 +45,25 @@ export function TravelMapPage() {
   const initialYear: number | "ALL" =
     rawYear && !Number.isNaN(Number(rawYear)) ? Number(rawYear) : "ALL";
 
-  // 1. Data Store States
-  const [locations, setLocations] = useState<ILocation[]>(getLocations());
+  // 1. Data Hooks: Fetch locations list
+  const {
+    data: locations,
+    isLoading: isLoadingLocations,
+    error: locationsError,
+    refetch: refetchLocations,
+  } = useTravelLocationList();
+
   const [viewMode, setViewMode] = useState<"map" | "list">(initialViewMode);
-  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(
-    searchParams.get("selected") || null,
+
+  const rawSelected = searchParams.get("selected");
+  const initialSelectedId =
+    rawSelected && !isNaN(Number(rawSelected)) ? Number(rawSelected) : null;
+  const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
+    initialSelectedId,
   );
+
+  // Hook for single location detail
+  const { data: detailData } = useTravelLocationDetail(selectedLocationId);
 
   // 2. Filters State
   const [filters, setFilters] = useState<ILocationFilterState>({
@@ -66,20 +79,18 @@ export function TravelMapPage() {
     if (filters.search) params.set("q", filters.search);
     if (filters.status !== "ALL") params.set("status", filters.status);
     if (filters.year !== "ALL") params.set("year", String(filters.year));
-    if (selectedLocationId) params.set("selected", selectedLocationId);
+    if (selectedLocationId !== null) params.set("selected", String(selectedLocationId));
 
     setSearchParams(params, { replace: true });
   }, [viewMode, filters, selectedLocationId, setSearchParams]);
 
   // 3. Dialog & Notification States
   const [formDialogOpen, setFormDialogOpen] = useState(false);
-  const [editingLocation, setEditingLocation] = useState<ILocation | null>(
-    null,
-  );
+  const [editingLocation, setEditingLocation] = useState<ILocation | null>(null);
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [locationToDelete, setLocationToDelete] = useState<{
-    id: string;
+    id: number;
     name: string;
   } | null>(null);
 
@@ -93,27 +104,12 @@ export function TravelMapPage() {
     severity: "success",
   });
 
-  // 4. Subscriptions to Travel Map & Travel Memories
-  useEffect(() => {
-    const unsubMap = subscribeTravelMap(() => {
-      setLocations(getLocations());
-    });
-    const unsubMemories = subscribeTravelMemories(() => {
-      setLocations(getLocations());
-    });
-
-    return () => {
-      unsubMap();
-      unsubMemories();
-    };
-  }, []);
-
-  // 5. Computed Derived Data
-  const summary = useMemo(() => getTravelMapSummary(locations), [locations]);
-  const availableYears = useMemo(
-    () => getAvailableVisitYears(locations),
-    [locations],
-  );
+  // 4. Computed Derived Data: Giữ data mock cho 4 card thống kê theo yêu cầu (chờ API riêng sau này)
+  const summary = MOCK_TRAVEL_MAP_SUMMARY;
+  const availableYears = useMemo(() => {
+    const years = getAvailableVisitYears(locations);
+    return years.length > 0 ? years : [2026, 2025, 2024, 2023, 2022];
+  }, [locations]);
 
   // Filtered locations
   const filteredLocations = useMemo(
@@ -121,21 +117,19 @@ export function TravelMapPage() {
     [locations, filters],
   );
 
-  // Filtered locations with details (stats, memories, itineraries)
-  const locationsWithDetails = useMemo<ILocationWithDetails[]>(() => {
-    return filteredLocations.map((loc) => getLocationWithDetails(loc));
-  }, [filteredLocations]);
-
-  // Selected Location with details
+  // Selected Location with details: prefer fetchedDetail, fallback to list item
   const selectedLocationDetails = useMemo<ILocationWithDetails | null>(() => {
-    if (!selectedLocationId) return null;
+    if (selectedLocationId === null) return null;
+    if (detailData && detailData.id === selectedLocationId) {
+      return detailData;
+    }
     const target = locations.find((l) => l.id === selectedLocationId);
-    return target ? getLocationWithDetails(target) : null;
-  }, [selectedLocationId, locations]);
+    return target ?? null;
+  }, [selectedLocationId, detailData, locations]);
 
   // Handle location selection
-  const handleSelectLocation = useCallback((id: string) => {
-    setSelectedLocationId((prev) => (prev === id ? id : id));
+  const handleSelectLocation = useCallback((id: number) => {
+    setSelectedLocationId(id);
   }, []);
 
   const handleCloseDetailPanel = useCallback(() => {
@@ -153,10 +147,11 @@ export function TravelMapPage() {
     setFormDialogOpen(true);
   };
 
-  const handleFormSubmit = (formData: ILocationFormData) => {
+  const handleFormSubmit = async (formData: ILocationFormData) => {
     if (editingLocation) {
       const updated = updateLocation(editingLocation.id, formData);
       if (updated) {
+        await refetchLocations();
         setSnackbar({
           open: true,
           message: `Đã cập nhật địa điểm "${updated.name}" thành công!`,
@@ -166,6 +161,7 @@ export function TravelMapPage() {
     } else {
       const created = createLocation(formData);
       setSelectedLocationId(created.id);
+      await refetchLocations();
       setSnackbar({
         open: true,
         message: `Đã thêm địa điểm "${created.name}" vào bản đồ!`,
@@ -175,17 +171,18 @@ export function TravelMapPage() {
   };
 
   // Handlers for Delete
-  const handleRequestDelete = (id: string, name: string) => {
+  const handleRequestDelete = (id: number, name: string) => {
     setLocationToDelete({ id, name });
     setDeleteConfirmOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (locationToDelete) {
       deleteLocation(locationToDelete.id);
       if (selectedLocationId === locationToDelete.id) {
         setSelectedLocationId(null);
       }
+      await refetchLocations();
       setSnackbar({
         open: true,
         message: `Đã xóa địa điểm "${locationToDelete.name}" thành công!`,
@@ -234,8 +231,30 @@ export function TravelMapPage() {
         onResetFilters={handleResetFilters}
       />
 
-      {/* 3. Main Workspace Area: Map or List View */}
-      {viewMode === "map" ? (
+      {/* Error state if fetch failed */}
+      {locationsError && (
+        <Alert severity="error" sx={{ borderRadius: "10px" }}>
+          Lỗi khi tải danh sách địa điểm: {locationsError}
+        </Alert>
+      )}
+
+      {/* Loading state indicator */}
+      {isLoadingLocations && locations.length === 0 ? (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: 400,
+            bgcolor: "#FFFFFF",
+            borderRadius: "16px",
+            border: "1px solid #E2E8F0",
+          }}
+        >
+          <CircularProgress size={36} />
+        </Box>
+      ) : viewMode === "map" ? (
+        /* 3. Main Workspace Area: Map or List View */
         <Box
           sx={{
             display: "flex",
@@ -263,7 +282,7 @@ export function TravelMapPage() {
             }}
           >
             <TravelLeafletMap
-              locations={locationsWithDetails}
+              locations={filteredLocations}
               selectedLocationId={selectedLocationId}
               onSelectLocation={handleSelectLocation}
               onSwitchToList={() => setViewMode("list")}
@@ -289,7 +308,7 @@ export function TravelMapPage() {
             minHeight: { xs: 520, sm: 640, md: 720 },
           }}
         >
-          {/* List View: kept mounted so currentGroup and filters are fully preserved */}
+          {/* List View */}
           <Box
             sx={{
               pointerEvents:
@@ -298,7 +317,7 @@ export function TravelMapPage() {
             aria-hidden={Boolean(selectedLocationDetails) && !isMobile}
           >
             <TravelMapListView
-              locations={locationsWithDetails}
+              locations={filteredLocations}
               selectedLocationId={selectedLocationId}
               onSelectLocation={handleSelectLocation}
               onResetFilters={handleResetFilters}
@@ -306,7 +325,7 @@ export function TravelMapPage() {
             />
           </Box>
 
-          {/* Detail Panel in list view (inline mobile-style bottom sheet for desktop, portal bottom sheet for mobile) */}
+          {/* Detail Panel in list view */}
           <LocationDetailPanel
             location={selectedLocationDetails}
             open={Boolean(selectedLocationDetails)}
@@ -323,6 +342,7 @@ export function TravelMapPage() {
       <LocationFormDialog
         open={formDialogOpen}
         initialData={editingLocation}
+        existingLocations={locations}
         onClose={() => {
           setFormDialogOpen(false);
           setEditingLocation(null);

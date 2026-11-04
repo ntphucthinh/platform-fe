@@ -3,8 +3,28 @@ import type { ITravelItinerary } from "@/types/pages/itineraries/itinerary";
 
 export type LocationStatus = "Visited" | "Wishlist";
 
+export interface ApiTravelLocation {
+  id: number;
+  name: string;
+  address: string;
+  countryCode?: string;
+  countryName?: string;
+  stateCode?: string;
+  latitude: number | null;
+  longitude: number | null;
+  imagePath?: string;
+  status: "visited" | "wishlist" | string;
+  description?: string;
+  notes?: string;
+  googleMapsUrl?: string;
+  visitCount?: number;
+  itineraryCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface ILocation {
-  id: string;
+  id: number;
   countryCode?: string;
   countryName?: string;
   stateCode?: string;
@@ -53,6 +73,7 @@ export interface ITravelMapSummary {
 
 export interface ILocationWithDetails extends ILocation {
   visitCount: number;
+  itineraryCount: number;
   latestVisitDate: string | null;
   totalPhotos: number;
   memories: ITravelMemory[];

@@ -16,6 +16,13 @@ import type {
 
 type QueryParamValue = string | number | boolean | null | undefined;
 
+function resolveResourceUrl(resource: string, id: string | number): string {
+  if (resource.includes(":id")) {
+    return resource.replace(":id", String(id));
+  }
+  return `${resource}/${id}`;
+}
+
 export const dataProvider: DataProvider = {
   getApiUrl: () => env.apiUrl,
 
@@ -105,7 +112,7 @@ export const dataProvider: DataProvider = {
   },
 
   getOne: async ({ resource, id }) => {
-    const response = await fetcher(`${resource}/${id}`);
+    const response = await fetcher(resolveResourceUrl(resource, id));
 
     if (response.status < 200 || response.status > 299) {
       throw await normalizeFetchErrorResponse(response);
@@ -146,7 +153,7 @@ export const dataProvider: DataProvider = {
   },
 
   update: async ({ resource, id, variables, meta }) => {
-    const response = await fetcher(`${resource}/${id}`, {
+    const response = await fetcher(resolveResourceUrl(resource, id), {
       method: meta?.method ?? "PUT",
       body: JSON.stringify(variables),
     });
@@ -174,7 +181,7 @@ export const dataProvider: DataProvider = {
     resource,
     id,
   }: DeleteOneParams<TVariables>) => {
-    const response = await fetcher(`${resource}/${id}`, {
+    const response = await fetcher(resolveResourceUrl(resource, id), {
       method: "DELETE",
     });
 

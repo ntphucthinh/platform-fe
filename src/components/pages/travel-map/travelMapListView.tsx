@@ -27,8 +27,8 @@ import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 
 interface TravelMapListViewProps {
   locations: ILocationWithDetails[];
-  selectedLocationId: string | null;
-  onSelectLocation: (id: string) => void;
+  selectedLocationId: number | null;
+  onSelectLocation: (id: number) => void;
   onResetFilters: () => void;
   filters?: ILocationFilterState;
 }
@@ -352,7 +352,15 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
               }}
             >
               {/* Cover Image & Status Badge */}
-              <Box sx={{ position: "relative" }}>
+              <Box
+                sx={{
+                  position: "relative",
+                  bgcolor:
+                    !loc.coverImage || loc.coverImage === DEFAULT_NO_IMAGE
+                      ? "#F8FAFC"
+                      : "transparent",
+                }}
+              >
                 <CardMedia
                   component="img"
                   height="160"
@@ -360,8 +368,21 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                   alt={loc.name}
                   onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                     e.currentTarget.src = DEFAULT_NO_IMAGE;
+                    e.currentTarget.style.objectFit = "contain";
+                    e.currentTarget.style.padding = "24px";
+                    e.currentTarget.style.backgroundColor = "#F8FAFC";
                   }}
-                  sx={{ objectFit: "cover" }}
+                  sx={{
+                    objectFit:
+                      !loc.coverImage || loc.coverImage === DEFAULT_NO_IMAGE
+                        ? "contain"
+                        : "cover",
+                    p:
+                      !loc.coverImage || loc.coverImage === DEFAULT_NO_IMAGE
+                        ? 2.5
+                        : 0,
+                    boxSizing: "border-box",
+                  }}
                 />
                 <Chip
                   label={isVisited ? "Đã ghé thăm" : "Muốn đến"}

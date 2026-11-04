@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -9,6 +9,7 @@ import {
   Chip,
   Snackbar,
   Alert,
+  CircularProgress,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -24,13 +25,8 @@ import LocationOffOutlinedIcon from "@mui/icons-material/LocationOffOutlined";
 import AddIcon from "@mui/icons-material/Add";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
-import {
-  getLocationById,
-  getLocationWithDetails,
-  updateLocation,
-  subscribeTravelMap,
-} from "@/services/travelMapService";
-import { subscribeTravelMemories } from "@/services/travelMemoryService";
+import { updateLocation } from "@/services/travelMapService";
+import { useTravelLocationDetail } from "@/hooks/travel-map/useTravelLocationDetail";
 import {
   formatDateRangeVietnamese,
   calculateCalendarDuration,
@@ -38,11 +34,7 @@ import {
 } from "@/utils/travelMemoryUtils";
 import { LocationFormDialog } from "@/components/pages/travel-map/locationFormDialog";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
-import type {
-  ILocation,
-  ILocationFormData,
-  ILocationWithDetails,
-} from "@/types/pages/travel-map/travelMap";
+import type { ILocationFormData } from "@/types/pages/travel-map/travelMap";
 
 export const TravelMapDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -64,14 +56,12 @@ export const TravelMapDetailPage: React.FC = () => {
     }
   };
 
-  const [location, setLocation] = useState<ILocation | undefined>(() =>
-    id ? getLocationById(id) : undefined,
-  );
-  const [prevId, setPrevId] = useState(id);
-  if (prevId !== id) {
-    setPrevId(id);
-    setLocation(id ? getLocationById(id) : undefined);
-  }
+  const numericId = id && !isNaN(Number(id)) ? Number(id) : null;
+  const {
+    data: details,
+    isLoading,
+    refetch,
+  } = useTravelLocationDetail(numericId);
 
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState<{
@@ -84,34 +74,12 @@ export const TravelMapDetailPage: React.FC = () => {
     severity: "success",
   });
 
-  useEffect(() => {
-    const unsubMap = subscribeTravelMap(() => {
-      if (id) {
-        setLocation(getLocationById(id));
-      }
-    });
-    const unsubMemories = subscribeTravelMemories(() => {
-      if (id) {
-        setLocation(getLocationById(id));
-      }
-    });
-    return () => {
-      unsubMap();
-      unsubMemories();
-    };
-  }, [id]);
-
-  // Derived details
-  const details: ILocationWithDetails | null = useMemo(() => {
-    return location ? getLocationWithDetails(location) : null;
-  }, [location]);
-
   // Handle Edit Submit
-  const handleEditSubmit = (formData: ILocationFormData) => {
-    if (!id) return;
-    const updated = updateLocation(id, formData);
+  const handleEditSubmit = async (formData: ILocationFormData) => {
+    if (!numericId) return;
+    const updated = updateLocation(numericId, formData);
     if (updated) {
-      setLocation(updated);
+      await refetch();
       setSnackbar({
         open: true,
         message: `Đã cập nhật thông tin địa điểm "${updated.name}" thành công!`,
@@ -120,8 +88,25 @@ export const TravelMapDetailPage: React.FC = () => {
     }
   };
 
-  // 1. Not Found State
-  if (!location || !details) {
+  // 1. Loading State
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          py: 12,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          width: "100%",
+        }}
+      >
+        <CircularProgress size={40} />
+      </Box>
+    );
+  }
+
+  // 2. Not Found State
+  if (!details) {
     return (
       <Box
         sx={{
@@ -285,7 +270,11 @@ export const TravelMapDetailPage: React.FC = () => {
           sx={{
             position: "relative",
             width: "100%",
-            height: { xs: 220, sm: 300, md: 340 },
+            height:
+              !details.coverImage || details.coverImage === DEFAULT_NO_IMAGE
+                ? { xs: 180, sm: 220, md: 240 }
+                : { xs: 220, sm: 300, md: 340 },
+            bgcolor: "#0F172A",
           }}
         >
           <CardMedia
@@ -294,8 +283,28 @@ export const TravelMapDetailPage: React.FC = () => {
             alt={details.name}
             onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
               e.currentTarget.src = DEFAULT_NO_IMAGE;
+              e.currentTarget.style.objectFit = "contain";
+              e.currentTarget.style.padding = "32px";
+              e.currentTarget.style.backgroundColor = "#0F172A";
+              e.currentTarget.style.opacity = "0.75";
             }}
-            sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+            sx={{
+              width: "100%",
+              height: "100%",
+              objectFit:
+                !details.coverImage || details.coverImage === DEFAULT_NO_IMAGE
+                  ? "contain"
+                  : "cover",
+              p:
+                !details.coverImage || details.coverImage === DEFAULT_NO_IMAGE
+                  ? { xs: 2.5, sm: 4 }
+                  : 0,
+              boxSizing: "border-box",
+              opacity:
+                !details.coverImage || details.coverImage === DEFAULT_NO_IMAGE
+                  ? 0.75
+                  : 1,
+            }}
           />
           <Box
             sx={{
@@ -784,12 +793,24 @@ export const TravelMapDetailPage: React.FC = () => {
                     alt={mem.title}
                     onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                       e.currentTarget.src = DEFAULT_NO_IMAGE;
+                      e.currentTarget.style.objectFit = "contain";
+                      e.currentTarget.style.padding = "16px";
+                      e.currentTarget.style.backgroundColor = "#F8FAFC";
                     }}
                     sx={{
                       width: { xs: "100%", sm: 220, md: 260 },
                       height: { xs: 180, sm: "auto" },
                       minHeight: { sm: 160 },
-                      objectFit: "cover",
+                      objectFit:
+                        !mem.coverImage || mem.coverImage === DEFAULT_NO_IMAGE
+                          ? "contain"
+                          : "cover",
+                      p:
+                        !mem.coverImage || mem.coverImage === DEFAULT_NO_IMAGE
+                          ? 2.5
+                          : 0,
+                      bgcolor: "#F8FAFC",
+                      boxSizing: "border-box",
                       flexShrink: 0,
                     }}
                   />
