@@ -6,6 +6,8 @@ export interface IGlobalCountry {
   iso2: string; // Mã ISO alpha-2 (VN, US, JP,...)
   vietnameseName: string; // Tên tiếng Việt ("Việt Nam" hoặc tên tiếng Anh)
   flagUrl: string; // URL cờ SVG
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export interface IGlobalState {
@@ -23,11 +25,15 @@ const GLOBAL_COUNTRIES: IGlobalCountry[] = Country.getAllCountries()
   .map((c) => {
     const code = c.isoCode.toUpperCase();
     const isVN = code === "VN";
+    const lat = c.latitude ? Number(c.latitude) : isVN ? 16.0544 : null;
+    const lng = c.longitude ? Number(c.longitude) : isVN ? 107.5 : null;
     return {
       name: c.name,
       iso2: code,
       vietnameseName: isVN ? "Việt Nam" : c.name,
       flagUrl: `https://flagcdn.com/${code.toLowerCase()}.svg`,
+      latitude: lat,
+      longitude: lng,
     };
   })
   .sort((a, b) => {

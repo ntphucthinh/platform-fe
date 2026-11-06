@@ -25,8 +25,8 @@ import LocationOffOutlinedIcon from "@mui/icons-material/LocationOffOutlined";
 import AddIcon from "@mui/icons-material/Add";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
-import { updateLocation } from "@/services/travelMapService";
 import { useTravelLocationDetail } from "@/hooks/travel-map/useTravelLocationDetail";
+import { useUpdateTravelLocation } from "@/hooks/travel-map/useUpdateTravelLocation";
 import {
   formatDateRangeVietnamese,
   calculateCalendarDuration,
@@ -62,6 +62,7 @@ export const TravelMapDetailPage: React.FC = () => {
     isLoading,
     refetch,
   } = useTravelLocationDetail(numericId);
+  const { updateLocation } = useUpdateTravelLocation();
 
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState<{
@@ -76,16 +77,26 @@ export const TravelMapDetailPage: React.FC = () => {
 
   // Handle Edit Submit
   const handleEditSubmit = async (formData: ILocationFormData) => {
-    if (!numericId) return;
-    const updated = updateLocation(numericId, formData);
+    if (!numericId) return { success: false, error: "ID không hợp lệ" };
+    const { data: updated, error } = await updateLocation(numericId, formData);
+    if (error) {
+      setSnackbar({
+        open: true,
+        message: error,
+        severity: "error",
+      });
+      return { success: false, error };
+    }
     if (updated) {
       await refetch();
       setSnackbar({
         open: true,
-        message: `Đã cập nhật thông tin địa điểm "${updated.name}" thành công!`,
+        message: `Đã cập nhật thông tin địa điểm "${updated.locationName}" thành công!`,
         severity: "success",
       });
+      return { success: true };
     }
+    return { success: false, error: "Không thể cập nhật địa điểm" };
   };
 
   // 1. Loading State
@@ -179,7 +190,7 @@ export const TravelMapDetailPage: React.FC = () => {
         pb: 8,
       }}
     >
-      <HeaderTitle>{`Chi tiết: ${details.name}`}</HeaderTitle>
+      <HeaderTitle>{`Chi tiết: ${details.locationName || details.name}`}</HeaderTitle>
 
       {/* 1. Breadcrumbs & Quick Back Navigation */}
       <Box
@@ -214,7 +225,7 @@ export const TravelMapDetailPage: React.FC = () => {
           <Typography
             sx={{ fontWeight: 600, color: "#0F172A", fontSize: "0.95rem" }}
           >
-            {details.name}
+            {details.locationName || details.name}
           </Typography>
         </Box>
 
@@ -280,7 +291,7 @@ export const TravelMapDetailPage: React.FC = () => {
           <CardMedia
             component="img"
             image={details.coverImage || DEFAULT_NO_IMAGE}
-            alt={details.name}
+            alt={details.locationName || details.name}
             onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
               e.currentTarget.src = DEFAULT_NO_IMAGE;
               e.currentTarget.style.objectFit = "contain";
@@ -395,7 +406,7 @@ export const TravelMapDetailPage: React.FC = () => {
                   textShadow: "0 2px 10px rgba(0,0,0,0.4)",
                 }}
               >
-                {details.name}
+                {details.locationName || details.name}
               </Typography>
             </Box>
 
@@ -1173,7 +1184,7 @@ export const TravelMapDetailPage: React.FC = () => {
         open={snackbar.open}
         autoHideDuration={4000}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
         <Alert
           severity={snackbar.severity}

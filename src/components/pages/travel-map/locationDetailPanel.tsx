@@ -154,41 +154,44 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
     [effectiveIsMobile],
   );
 
-  const handleDragMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    const state = dragStateRef.current;
-    if (!state.isDragging) return;
+  const handleDragMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const state = dragStateRef.current;
+      if (!state.isDragging) return;
 
-    state.currentY = e.clientY;
-    const now = performance.now();
-    const dt = now - state.lastTime;
-    if (dt > 10) {
-      state.velocity = (e.clientY - state.lastY) / dt;
-      state.lastY = e.clientY;
-      state.lastTime = now;
-    }
-
-    const rawDeltaY = e.clientY - state.startY;
-    // Clamping upward movement at 0 per requirement: "Kéo lên: không đóng popup; giữ sheet tại vị trí mở ban đầu"
-    const deltaY = Math.max(0, rawDeltaY);
-
-    if (rafDragRef.current) {
-      cancelAnimationFrame(rafDragRef.current);
-    }
-
-    rafDragRef.current = requestAnimationFrame(() => {
-      if (!mobileSheetRef.current) return;
-      mobileSheetRef.current.style.transform = `translateY(${deltaY}px)`;
-
-      if (backdropRef.current) {
-        const sheetHeight =
-          mobileSheetRef.current.offsetHeight || window.innerHeight;
-        const progress = Math.min(1, deltaY / (sheetHeight * 0.6));
-        backdropRef.current.style.opacity = String(
-          Math.max(0, 1 - progress * 0.75),
-        );
+      state.currentY = e.clientY;
+      const now = performance.now();
+      const dt = now - state.lastTime;
+      if (dt > 10) {
+        state.velocity = (e.clientY - state.lastY) / dt;
+        state.lastY = e.clientY;
+        state.lastTime = now;
       }
-    });
-  }, []);
+
+      const rawDeltaY = e.clientY - state.startY;
+      // Clamping upward movement at 0 per requirement: "Kéo lên: không đóng popup; giữ sheet tại vị trí mở ban đầu"
+      const deltaY = Math.max(0, rawDeltaY);
+
+      if (rafDragRef.current) {
+        cancelAnimationFrame(rafDragRef.current);
+      }
+
+      rafDragRef.current = requestAnimationFrame(() => {
+        if (!mobileSheetRef.current) return;
+        mobileSheetRef.current.style.transform = `translateY(${deltaY}px)`;
+
+        if (backdropRef.current) {
+          const sheetHeight =
+            mobileSheetRef.current.offsetHeight || window.innerHeight;
+          const progress = Math.min(1, deltaY / (sheetHeight * 0.6));
+          backdropRef.current.style.opacity = String(
+            Math.max(0, 1 - progress * 0.75),
+          );
+        }
+      });
+    },
+    [],
+  );
 
   const handleDragEnd = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
@@ -447,7 +450,7 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
         <CardMedia
           component="img"
           image={location.coverImage || DEFAULT_NO_IMAGE}
-          alt={location.name}
+          alt={location.locationName || location.name}
           onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
             e.currentTarget.src = DEFAULT_NO_IMAGE;
             e.currentTarget.style.objectFit = "contain";
@@ -456,18 +459,20 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
             e.currentTarget.style.opacity = "0.75";
           }}
           sx={{
-            height: !location.coverImage || location.coverImage === DEFAULT_NO_IMAGE
-              ? { xs: 130, sm: 150 }
-              : { xs: 160, sm: 200 },
+            height:
+              !location.coverImage || location.coverImage === DEFAULT_NO_IMAGE
+                ? { xs: 130, sm: 150 }
+                : { xs: 160, sm: 200 },
             objectFit:
               !location.coverImage || location.coverImage === DEFAULT_NO_IMAGE
                 ? "contain"
                 : "cover",
             width: "100%",
             display: "block",
-            p: !location.coverImage || location.coverImage === DEFAULT_NO_IMAGE
-              ? { xs: 2, sm: 3 }
-              : 0,
+            p:
+              !location.coverImage || location.coverImage === DEFAULT_NO_IMAGE
+                ? { xs: 2, sm: 3 }
+                : 0,
             bgcolor:
               !location.coverImage || location.coverImage === DEFAULT_NO_IMAGE
                 ? "#0F172A"
@@ -528,7 +533,12 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
             <Tooltip title="Xóa địa điểm">
               <IconButton
                 size="small"
-                onClick={() => onDelete(location.id, location.name)}
+                onClick={() =>
+                  onDelete(
+                    location.id,
+                    location.locationName || location.name || "",
+                  )
+                }
                 sx={{
                   bgcolor: "rgba(255,255,255,0.9)",
                   color: "#EF4444",
@@ -611,7 +621,7 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
                 fontSize: "1.35rem",
               }}
             >
-              {location.name}
+              {location.locationName || location.name}
             </Typography>
           </Box>
 
@@ -650,7 +660,9 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
               sx={{ color: "#64748B", fontFamily: "monospace" }}
             >
               {location.latitude !== null && location.longitude !== null
-                ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
+                ? `${location.latitude.toFixed(
+                    4,
+                  )}, ${location.longitude.toFixed(4)}`
                 : "Chưa có tọa độ"}
             </Typography>
 
@@ -724,7 +736,12 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
             </Typography>
           </Box>
 
-          <Box sx={{ borderLeft: "1px solid #E2E8F0", borderRight: "1px solid #E2E8F0" }}>
+          <Box
+            sx={{
+              borderLeft: "1px solid #E2E8F0",
+              borderRight: "1px solid #E2E8F0",
+            }}
+          >
             <Typography
               variant="h6"
               sx={{ fontWeight: 800, color: "#059669", lineHeight: 1.2 }}
@@ -795,7 +812,12 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
                 }}
               >
                 <NotesOutlinedIcon
-                  sx={{ fontSize: 18, color: "#D97706", mt: 0.25, flexShrink: 0 }}
+                  sx={{
+                    fontSize: 18,
+                    color: "#D97706",
+                    mt: 0.25,
+                    flexShrink: 0,
+                  }}
                 />
                 <Box>
                   <Typography
@@ -809,7 +831,10 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
                   >
                     Ghi chú cá nhân
                   </Typography>
-                  <Typography variant="body2" sx={{ color: "#78350F", fontSize: "0.85rem" }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "#78350F", fontSize: "0.85rem" }}
+                  >
                     {location.notes}
                   </Typography>
                 </Box>
@@ -863,14 +888,19 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
                 bgcolor: "#F8FAFC",
               }}
             >
-              <FlightTakeoffRoundedIcon sx={{ fontSize: 32, color: "#94A3B8", mb: 1 }} />
+              <FlightTakeoffRoundedIcon
+                sx={{ fontSize: 32, color: "#94A3B8", mb: 1 }}
+              />
               <Typography
                 variant="body2"
                 sx={{ color: "#64748B", fontWeight: 600, mb: 1 }}
               >
                 Chưa có chuyến đi nào được lưu
               </Typography>
-              <Typography variant="caption" sx={{ color: "#94A3B8", display: "block", mb: 1.5 }}>
+              <Typography
+                variant="caption"
+                sx={{ color: "#94A3B8", display: "block", mb: 1.5 }}
+              >
                 {isVisited
                   ? "Bạn đã ghé thăm nơi này nhưng chưa nhập kỷ niệm hoặc album ảnh."
                   : "Địa điểm này đang nằm trong danh sách muốn đến trong tương lai."}
@@ -1068,7 +1098,9 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
                     },
                   }}
                 >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
+                  <Box
+                    sx={{ display: "flex", alignItems: "center", gap: 1.25 }}
+                  >
                     <MapOutlinedIcon sx={{ color: "#1976D2", fontSize: 20 }} />
                     <Box>
                       <Typography
@@ -1125,7 +1157,9 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
           ref={mobileSheetRef}
           role="dialog"
           aria-modal="true"
-          aria-label={`Chi tiết địa điểm ${location.name}`}
+          aria-label={`Chi tiết địa điểm ${
+            location.locationName || location.name
+          }`}
           sx={{
             position: "fixed",
             bottom: 0,

@@ -43,7 +43,9 @@ export function useTravelLocationList(
         ...(options?.year && options.year !== "ALL"
           ? { year: options.year }
           : {}),
-        ...(options?.countryCode ? { countryCode: options.countryCode } : {}),
+        ...(options?.countryCode
+          ? { countryCode: options.countryCode.trim().toUpperCase() }
+          : {}),
       },
     },
   });

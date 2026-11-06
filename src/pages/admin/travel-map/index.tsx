@@ -1,5 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Box, Snackbar, Alert, useTheme, useMediaQuery, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Snackbar,
+  Alert,
+  useTheme,
+  useMediaQuery,
+  CircularProgress,
+} from "@mui/material";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { TravelMapHeader } from "@/components/pages/travel-map/travelMapHeader";
 import { TravelMapFilters } from "@/components/pages/travel-map/travelMapFilters";
@@ -10,16 +17,14 @@ import { LocationFormDialog } from "@/components/pages/travel-map/locationFormDi
 import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
 import { useTravelLocationList } from "@/hooks/travel-map/useTravelLocationList";
 import { useTravelLocationDetail } from "@/hooks/travel-map/useTravelLocationDetail";
+import { useCreateTravelLocation } from "@/hooks/travel-map/useCreateTravelLocation";
+import { useUpdateTravelLocation } from "@/hooks/travel-map/useUpdateTravelLocation";
+import { useDeleteTravelLocation } from "@/hooks/travel-map/useDeleteTravelLocation";
 import {
   getAvailableVisitYears,
   filterLocations,
 } from "@/utils/travelMapUtils";
 import { MOCK_TRAVEL_MAP_SUMMARY } from "@/constants/travelMap";
-import {
-  createLocation,
-  updateLocation,
-  deleteLocation,
-} from "@/services/travelMapService";
 import { useSearchParams } from "react-router-dom";
 import type {
   ILocation,
@@ -44,14 +49,27 @@ export function TravelMapPage() {
   const rawYear = searchParams.get("year");
   const initialYear: number | "ALL" =
     rawYear && !Number.isNaN(Number(rawYear)) ? Number(rawYear) : "ALL";
+  const rawCountry = searchParams.get("country");
+  const initialCountry = rawCountry ? rawCountry.toUpperCase() : null;
 
-  // 1. Data Hooks: Fetch locations list
+  // State chọn quốc gia để nhảy tới, highlight & lọc dữ liệu theo query param API
+  const [selectedCountryCode, setSelectedCountryCode] = useState<string | null>(
+    initialCountry,
+  );
+
+  // 1. Data Hooks: Fetch locations list (hỗ trợ lọc countryCode từ backend)
   const {
     data: locations,
     isLoading: isLoadingLocations,
     error: locationsError,
     refetch: refetchLocations,
-  } = useTravelLocationList();
+  } = useTravelLocationList({
+    countryCode: selectedCountryCode || undefined,
+  });
+
+  const { createLocation } = useCreateTravelLocation();
+  const { updateLocation } = useUpdateTravelLocation();
+  const { deleteLocation } = useDeleteTravelLocation();
 
   const [viewMode, setViewMode] = useState<"map" | "list">(initialViewMode);
 
@@ -79,19 +97,23 @@ export function TravelMapPage() {
     if (filters.search) params.set("q", filters.search);
     if (filters.status !== "ALL") params.set("status", filters.status);
     if (filters.year !== "ALL") params.set("year", String(filters.year));
-    if (selectedLocationId !== null) params.set("selected", String(selectedLocationId));
+    if (selectedCountryCode) params.set("country", selectedCountryCode);
+    if (selectedLocationId !== null)
+      params.set("selected", String(selectedLocationId));
 
     setSearchParams(params, { replace: true });
-  }, [viewMode, filters, selectedLocationId, setSearchParams]);
+  }, [viewMode, filters, selectedCountryCode, selectedLocationId, setSearchParams]);
 
   // 3. Dialog & Notification States
   const [formDialogOpen, setFormDialogOpen] = useState(false);
-  const [editingLocation, setEditingLocation] = useState<ILocation | null>(null);
+  const [editingLocation, setEditingLocation] = useState<ILocation | null>(
+    null,
+  );
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [locationToDelete, setLocationToDelete] = useState<{
     id: number;
-    name: string;
+    name?: string;
   } | null>(null);
 
   const [snackbar, setSnackbar] = useState<{
@@ -149,45 +171,82 @@ export function TravelMapPage() {
 
   const handleFormSubmit = async (formData: ILocationFormData) => {
     if (editingLocation) {
-      const updated = updateLocation(editingLocation.id, formData);
+      const { data: updated, error } = await updateLocation(
+        editingLocation.id,
+        formData,
+      );
+      if (error) {
+        setSnackbar({
+          open: true,
+          message: error,
+          severity: "error",
+        });
+        return { success: false, error };
+      }
       if (updated) {
         await refetchLocations();
         setSnackbar({
           open: true,
-          message: `Đã cập nhật địa điểm "${updated.name}" thành công!`,
+          message: `Đã cập nhật địa điểm thành công!`,
           severity: "success",
         });
+        return { success: true };
       }
+      return { success: false, error: "Không thể cập nhật địa điểm" };
     } else {
-      const created = createLocation(formData);
-      setSelectedLocationId(created.id);
-      await refetchLocations();
-      setSnackbar({
-        open: true,
-        message: `Đã thêm địa điểm "${created.name}" vào bản đồ!`,
-        severity: "success",
-      });
+      const { data: created, error } = await createLocation(formData);
+      if (error) {
+        setSnackbar({
+          open: true,
+          message: error,
+          severity: "error",
+        });
+        return { success: false, error };
+      }
+      if (created) {
+        setSelectedLocationId(created.id);
+        await refetchLocations();
+        setSnackbar({
+          open: true,
+          message: `Đã thêm địa điểm vào bản đồ!`,
+          severity: "success",
+        });
+        return { success: true };
+      }
+      return { success: false, error: "Không thể tạo mới địa điểm" };
     }
   };
 
   // Handlers for Delete
-  const handleRequestDelete = (id: number, name: string) => {
-    setLocationToDelete({ id, name });
+  const handleRequestDelete = (id: number, name?: string) => {
+    const loc = locations.find((l) => l.id === id);
+    setLocationToDelete({
+      id,
+      name: name || loc?.locationName || loc?.name || "",
+    });
     setDeleteConfirmOpen(true);
   };
 
   const handleConfirmDelete = async () => {
     if (locationToDelete) {
-      deleteLocation(locationToDelete.id);
-      if (selectedLocationId === locationToDelete.id) {
-        setSelectedLocationId(null);
+      const { success, error } = await deleteLocation(locationToDelete.id);
+      if (error) {
+        setSnackbar({
+          open: true,
+          message: error,
+          severity: "error",
+        });
+      } else if (success) {
+        if (selectedLocationId === locationToDelete.id) {
+          setSelectedLocationId(null);
+        }
+        await refetchLocations();
+        setSnackbar({
+          open: true,
+          message: `Đã xóa địa điểm thành công!`,
+          severity: "success",
+        });
       }
-      await refetchLocations();
-      setSnackbar({
-        open: true,
-        message: `Đã xóa địa điểm "${locationToDelete.name}" thành công!`,
-        severity: "success",
-      });
     }
     setDeleteConfirmOpen(false);
     setLocationToDelete(null);
@@ -199,6 +258,7 @@ export function TravelMapPage() {
       status: "ALL",
       year: "ALL",
     });
+    setSelectedCountryCode(null);
   };
 
   return (
@@ -227,7 +287,9 @@ export function TravelMapPage() {
         availableYears={availableYears}
         totalLocations={locations.length}
         filteredCount={filteredLocations.length}
+        selectedCountryCode={selectedCountryCode}
         onFilterChange={setFilters}
+        onSelectCountry={setSelectedCountryCode}
         onResetFilters={handleResetFilters}
       />
 
@@ -287,6 +349,7 @@ export function TravelMapPage() {
               onSelectLocation={handleSelectLocation}
               onSwitchToList={() => setViewMode("list")}
               panelOpen={Boolean(selectedLocationDetails)}
+              selectedCountryCode={selectedCountryCode}
             />
           </Box>
 
@@ -369,7 +432,7 @@ export function TravelMapPage() {
         open={snackbar.open}
         autoHideDuration={4000}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
         <Alert
           severity={snackbar.severity}

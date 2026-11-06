@@ -7,11 +7,17 @@ import FormatListBulletedOutlinedIcon from "@mui/icons-material/FormatListBullet
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
+import type { Feature } from "geojson";
 import type { ILocationWithDetails } from "@/types/pages/travel-map/travelMap";
 import {
   VIETNAM_DEFAULT_CENTER,
   VIETNAM_DEFAULT_ZOOM,
 } from "@/constants/travelMap";
+import {
+  getCountryBoundary,
+  getCountryCenterAndZoom,
+  type CountryGeometry,
+} from "@/utils/travelMapUtils";
 
 interface TravelLeafletMapProps {
   locations: ILocationWithDetails[];
@@ -19,6 +25,7 @@ interface TravelLeafletMapProps {
   onSelectLocation: (id: number) => void;
   onSwitchToList: () => void;
   panelOpen: boolean;
+  selectedCountryCode?: string | null;
 }
 
 export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
@@ -27,10 +34,13 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
   onSelectLocation,
   onSwitchToList,
   panelOpen,
+  selectedCountryCode,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
+  const highlightLayerRef = useRef<L.GeoJSON | null>(null);
+  const prevCountryCodeRef = useRef<string | undefined>(undefined);
   const [tileError, setTileError] = useState(false);
 
   // 1. Initialize Leaflet map
@@ -182,7 +192,7 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
                 ? `<img src="https://flagcdn.com/${loc.countryCode.toLowerCase()}.svg" width="14" height="10" style="border-radius: 1px; object-fit: cover;" onerror="this.style.display='none'" />`
                 : ""
             }
-            <span>${loc.name}</span>
+            <span>${loc.locationName || loc.name}</span>
           </div>
         </div>
       `;
@@ -231,6 +241,87 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
       });
     }
   }, [selectedLocationId, locations]);
+
+  // 5. Highlight quốc gia và bay camera tới quốc gia được chọn
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    let isCancelled = false;
+
+    if (!selectedCountryCode || selectedCountryCode === "ALL") {
+      prevCountryCodeRef.current = undefined;
+      if (highlightLayerRef.current) {
+        map.removeLayer(highlightLayerRef.current);
+        highlightLayerRef.current = null;
+      }
+      return;
+    }
+
+    if (prevCountryCodeRef.current === selectedCountryCode) {
+      return;
+    }
+    prevCountryCodeRef.current = selectedCountryCode;
+
+    getCountryBoundary(selectedCountryCode).then(
+      (geometry: CountryGeometry | null) => {
+        if (isCancelled || !mapInstanceRef.current) return;
+
+        // Xóa layer highlight cũ khi dữ liệu layer mới đã sẵn sàng
+        if (highlightLayerRef.current) {
+          map.removeLayer(highlightLayerRef.current);
+          highlightLayerRef.current = null;
+        }
+
+        if (geometry) {
+          try {
+            const feature: Feature = {
+              type: "Feature",
+              properties: {},
+              geometry,
+            };
+            const geoJsonLayer = L.geoJSON(feature, {
+              style: {
+                color: "#2563EB",
+                weight: 2,
+                opacity: 0.85,
+                fillColor: "#60A5FA",
+                fillOpacity: 0.04,
+                dashArray: "6, 6",
+              },
+              interactive: false,
+            }).addTo(map);
+
+            highlightLayerRef.current = geoJsonLayer;
+
+            const bounds = geoJsonLayer.getBounds();
+            if (bounds.isValid()) {
+              map.flyToBounds(bounds, {
+                padding: [30, 30],
+                maxZoom: selectedCountryCode.toUpperCase() === "SG" ? 11 : 8,
+                duration: 1.5,
+                easeLinearity: 0.25,
+              });
+              return;
+            }
+          } catch (err) {
+            console.warn("Lỗi khi hiển thị highlight quốc gia trên bản đồ chính:", err);
+          }
+        }
+
+        // Fallback flyTo nếu không có bounds GeoJSON
+        const { center, zoom } = getCountryCenterAndZoom(selectedCountryCode);
+        map.flyTo(center, zoom, {
+          duration: 1.5,
+          easeLinearity: 0.25,
+        });
+      },
+    );
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedCountryCode]);
 
   const handleZoomIn = () => {
     mapInstanceRef.current?.zoomIn();

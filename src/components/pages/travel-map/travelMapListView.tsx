@@ -365,7 +365,7 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                   component="img"
                   height="160"
                   image={loc.coverImage || DEFAULT_NO_IMAGE}
-                  alt={loc.name}
+                  alt={loc.locationName || loc.name}
                   onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                     e.currentTarget.src = DEFAULT_NO_IMAGE;
                     e.currentTarget.style.objectFit = "contain";
@@ -448,7 +448,7 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                         lineHeight: 1.3,
                       }}
                     >
-                      {loc.name}
+                      {loc.locationName || loc.name}
                     </Typography>
                   </Box>
 

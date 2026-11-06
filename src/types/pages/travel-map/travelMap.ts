@@ -5,18 +5,16 @@ export type LocationStatus = "Visited" | "Wishlist";
 
 export interface ApiTravelLocation {
   id: number;
-  name: string;
-  address: string;
-  countryCode?: string;
-  countryName?: string;
-  stateCode?: string;
+  countryCode: string;
+  countryName: string;
+  locationName: string;
   latitude: number | null;
   longitude: number | null;
-  imagePath?: string;
-  status: "visited" | "wishlist" | string;
-  description?: string;
-  notes?: string;
-  googleMapsUrl?: string;
+  imagePath?: string | null;
+  status: "visited" | "wishlist";
+  description?: string | null;
+  notes?: string | null;
+  googleMapsUrl?: string | null;
   visitCount?: number;
   itineraryCount?: number;
   createdAt?: string;
@@ -27,13 +25,13 @@ export interface ILocation {
   id: number;
   countryCode?: string;
   countryName?: string;
-  stateCode?: string;
-  provinceCode?: string;
-  name: string;
+  locationName: string;
+  name?: string;
   address: string;
   latitude: number | null;
   longitude: number | null;
   coverImage: string;
+  imagePath?: string;
   status: LocationStatus;
   description?: string;
   notes?: string;
@@ -42,17 +40,29 @@ export interface ILocation {
   updatedAt: string;
 }
 
+export interface ApiTravelLocationPayload {
+  countryCode: string;
+  countryName: string;
+  locationName: string;
+  latitude: number | null;
+  longitude: number | null;
+  imagePath?: string;
+  status: "visited" | "wishlist";
+  description?: string;
+  notes?: string;
+  googleMapsUrl?: string;
+}
+
 export interface ILocationFormData {
   countryCode?: string;
   countryName?: string;
-  stateCode?: string;
-  provinceCode?: string;
-  name: string;
-  address: string;
+  locationName: string;
   latitude: number | "" | null;
   longitude: number | "" | null;
   coverImage: string;
-  status: LocationStatus;
+  imageFile?: File | null;
+  imagePath?: string;
+  status: LocationStatus | null;
   description?: string;
   notes?: string;
   googleMapsUrl?: string;

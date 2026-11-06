@@ -14,15 +14,12 @@ import {
   Typography,
   TextField,
   Button,
-  FormControl,
-  InputLabel,
-  Select,
   MenuItem,
   IconButton,
   Tooltip,
   InputAdornment,
   Autocomplete,
-  Chip,
+  CircularProgress,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
@@ -34,51 +31,55 @@ import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import type { Feature } from "geojson";
 import type {
   ILocation,
   ILocationFormData,
   LocationStatus,
 } from "@/types/pages/travel-map/travelMap";
 import {
-  VIETNAM_DEFAULT_CENTER,
-  VIETNAM_DEFAULT_ZOOM,
-} from "@/constants/travelMap";
+  extractRelativeImagePath,
+  getGoogleMapsUrl,
+  loadCountryBoundaries,
+  getCountryBoundary,
+  getCountryCenterAndZoom,
+  isPointInCountry,
+  type CountryGeometry,
+} from "@/utils/travelMapUtils";
 import {
   useCountries,
-  useStatesByCountry,
   useGlobalGeo,
   type IGlobalCountry,
-  type IGlobalState,
 } from "@/hooks/common/useGlobalGeo";
 
 /**
- * Icon ghim tĩnh trên bản đồ xem trước (không cho phép kéo/thả)
+ * Icon ghim trên bản đồ xem trước (hỗ trợ kéo thả ghim)
  */
-const createStaticPinIcon = () =>
+const createMapPinIcon = () =>
   L.divIcon({
-    className: "location-preview-static-pin",
-    iconSize: [32, 38],
-    iconAnchor: [16, 38],
-    popupAnchor: [0, -38],
+    className: "location-preview-custom-pin",
+    iconSize: [34, 40],
+    iconAnchor: [17, 40],
+    popupAnchor: [0, -40],
     html: `
       <div style="
         position: relative;
         display: flex;
         flex-direction: column;
         align-items: center;
-        cursor: default;
+        cursor: grab;
       ">
         <div style="
-          width: 32px;
-          height: 32px;
-          background: linear-gradient(135deg, #1976D2 0%, #0D47A1 100%);
+          width: 34px;
+          height: 34px;
+          background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
           border: 2.5px solid #FFFFFF;
           border-radius: 50% 50% 50% 0;
           transform: rotate(-45deg);
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 4px 12px rgba(13, 71, 161, 0.4);
+          box-shadow: 0 4px 14px rgba(29, 78, 216, 0.45);
         ">
           <div style="
             width: 10px;
@@ -88,7 +89,7 @@ const createStaticPinIcon = () =>
           "></div>
         </div>
         <div style="
-          width: 14px;
+          width: 16px;
           height: 4px;
           background: rgba(0,0,0,0.25);
           border-radius: 50%;
@@ -101,36 +102,148 @@ const createStaticPinIcon = () =>
 
 interface DestinationMapPreviewProps {
   country: IGlobalCountry | null;
-  state: IGlobalState | null;
+  latitude: number | "" | null;
+  longitude: number | "" | null;
+  error?: string | null;
+  onLocationSelect: (lat: number, lng: number) => void;
+  onLocationError?: (msg: string) => void;
 }
 
 /**
- * Component bản đồ xem trước vị trí:
- * - TUYỆT ĐỐI KHÔNG cho phép click để chọn tọa độ
- * - TUYỆT ĐỐI KHÔNG cho phép kéo marker
- * - Khi chưa chọn hoặc điểm đến thiếu tọa độ: không ghim tọa độ giả
- * - Khi đã chọn và có tọa độ: tự động bay đến vị trí đại diện của tỉnh/bang
+ * Component bản đồ tương tác:
+ * - Highlight ranh giới quốc gia được chọn với viền và màu nền mờ
+ * - Cho phép nhấp trực tiếp vào bản đồ để chọn tọa độ (chỉ trong phạm vi quốc gia)
+ * - Cho phép kéo ghim marker để tinh chỉnh vị trí (nếu kéo ra ngoài sẽ bị từ chối)
+ * - Tự động di chuyển tới ranh giới quốc gia khi chọn từ dropdown
  */
 const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
   country,
-  state,
+  latitude,
+  longitude,
+  error,
+  onLocationSelect,
+  onLocationError,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
+  const highlightLayerRef = useRef<L.GeoJSON | null>(null);
+  const countryGeometryRef = useRef<CountryGeometry | null>(null);
+  const countryRef = useRef<IGlobalCountry | null>(country);
+  const onLocationSelectRef = useRef(onLocationSelect);
+  const onLocationErrorRef = useRef(onLocationError);
+  const coordsRef = useRef<{
+    lat: number | "" | null;
+    lng: number | "" | null;
+  }>({
+    lat: latitude,
+    lng: longitude,
+  });
+  const prevCountryIso2Ref = useRef<string | undefined>(country?.iso2);
+  const hasInitialCoordsRef = useRef<boolean>(
+    latitude !== null &&
+      latitude !== "" &&
+      latitude !== undefined &&
+      longitude !== null &&
+      longitude !== "" &&
+      longitude !== undefined,
+  );
 
-  const hasCoords =
-    state !== null && state.latitude !== null && state.longitude !== null;
+  useEffect(() => {
+    countryRef.current = country;
+  }, [country]);
+
+  useEffect(() => {
+    onLocationSelectRef.current = onLocationSelect;
+  }, [onLocationSelect]);
+
+  useEffect(() => {
+    onLocationErrorRef.current = onLocationError;
+  }, [onLocationError]);
+
+  useEffect(() => {
+    coordsRef.current = { lat: latitude, lng: longitude };
+  }, [latitude, longitude]);
+
+  const hasValidCoords =
+    latitude !== null &&
+    latitude !== "" &&
+    latitude !== undefined &&
+    longitude !== null &&
+    longitude !== "" &&
+    longitude !== undefined;
+
+  // Tạo draggable marker với validation vị trí kéo thả
+  const createDraggableMarker = useCallback(
+    (lat: number, lng: number): L.Marker => {
+      const marker = L.marker([lat, lng], {
+        draggable: true,
+        icon: createMapPinIcon(),
+      });
+
+      marker.on("dragend", async () => {
+        const currentCountry = countryRef.current;
+        const pos = marker.getLatLng();
+        const newLat = Number(pos.lat.toFixed(7));
+        const newLng = Number(pos.lng.toFixed(7));
+
+        if (!currentCountry) {
+          onLocationErrorRef.current?.(
+            "Vui lòng chọn quốc gia trước khi chọn vị trí trên bản đồ.",
+          );
+          return;
+        }
+
+        let geometry = countryGeometryRef.current;
+        if (!geometry && currentCountry.iso2) {
+          geometry = await getCountryBoundary(currentCountry.iso2);
+          countryGeometryRef.current = geometry;
+        }
+
+        const isValid = isPointInCountry(
+          newLat,
+          newLng,
+          geometry,
+          currentCountry.iso2,
+        );
+        if (!isValid) {
+          onLocationErrorRef.current?.(
+            `Vị trí đã chọn không thuộc lãnh thổ ${currentCountry.name}. Vui lòng chỉ chọn vị trí trong vùng quốc gia được đánh dấu.`,
+          );
+          if (
+            typeof coordsRef.current.lat === "number" &&
+            typeof coordsRef.current.lng === "number"
+          ) {
+            marker.setLatLng([coordsRef.current.lat, coordsRef.current.lng]);
+          }
+          return;
+        }
+
+        onLocationSelectRef.current(newLat, newLng);
+      });
+
+      return marker;
+    },
+    [],
+  );
 
   // Khởi tạo Leaflet map một lần duy nhất
   useEffect(() => {
     if (!mapContainerRef.current) return;
     if (mapInstanceRef.current) return;
 
-    const initialCenter: [number, number] = hasCoords
-      ? [state.latitude as number, state.longitude as number]
-      : VIETNAM_DEFAULT_CENTER;
-    const initialZoom = hasCoords ? 9 : VIETNAM_DEFAULT_ZOOM;
+    const hasInitialCoords =
+      hasValidCoords &&
+      typeof latitude === "number" &&
+      typeof longitude === "number";
+
+    const initialCenter: [number, number] = hasInitialCoords
+      ? [latitude, longitude]
+      : getCountryCenterAndZoom(country?.iso2).center;
+
+    const initialZoom = hasInitialCoords
+      ? 10
+      : getCountryCenterAndZoom(country?.iso2).zoom;
 
     const map = L.map(mapContainerRef.current, {
       center: initialCenter,
@@ -151,14 +264,43 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
       subdomains: ["a", "b", "c"],
     }).addTo(map);
 
-    if (hasCoords) {
-      const marker = L.marker(
-        [state.latitude as number, state.longitude as number],
-        {
-          draggable: false,
-          icon: createStaticPinIcon(),
-        },
-      ).addTo(map);
+    // Cho phép click chọn vị trí trên bản đồ với validation lãnh thổ quốc gia
+    map.on("click", async (e: L.LeafletMouseEvent) => {
+      const currentCountry = countryRef.current;
+      if (!currentCountry) {
+        onLocationErrorRef.current?.(
+          "Vui lòng chọn quốc gia trước khi chọn vị trí trên bản đồ.",
+        );
+        return;
+      }
+
+      const newLat = Number(e.latlng.lat.toFixed(7));
+      const newLng = Number(e.latlng.lng.toFixed(7));
+
+      let geometry = countryGeometryRef.current;
+      if (!geometry && currentCountry.iso2) {
+        geometry = await getCountryBoundary(currentCountry.iso2);
+        countryGeometryRef.current = geometry;
+      }
+
+      const isValid = isPointInCountry(
+        newLat,
+        newLng,
+        geometry,
+        currentCountry.iso2,
+      );
+      if (!isValid) {
+        onLocationErrorRef.current?.(
+          `Vị trí đã chọn không thuộc lãnh thổ ${currentCountry.name}. Vui lòng chỉ chọn vị trí trong vùng quốc gia được đánh dấu.`,
+        );
+        return;
+      }
+
+      onLocationSelectRef.current(newLat, newLng);
+    });
+
+    if (hasInitialCoords) {
+      const marker = createDraggableMarker(latitude, longitude).addTo(map);
       markerRef.current = marker;
     }
 
@@ -182,27 +324,107 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Cập nhật vị trí hiển thị khi điểm đến thay đổi
+  // Hiển thị highlight quốc gia và di chuyển camera tới ranh giới quốc gia
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    if (hasCoords) {
-      const targetPos: [number, number] = [
-        state.latitude as number,
-        state.longitude as number,
-      ];
-      map.flyTo(targetPos, 9, {
-        duration: 1.1,
-      });
+    let isCancelled = false;
+
+    if (!country) {
+      prevCountryIso2Ref.current = undefined;
+      countryGeometryRef.current = null;
+      if (highlightLayerRef.current) {
+        map.removeLayer(highlightLayerRef.current);
+        highlightLayerRef.current = null;
+      }
+      return;
+    }
+
+    const isCountryChanged = prevCountryIso2Ref.current !== country.iso2;
+    prevCountryIso2Ref.current = country.iso2;
+
+    getCountryBoundary(country.iso2).then(
+      (geometry: CountryGeometry | null) => {
+        if (isCancelled) return;
+        countryGeometryRef.current = geometry;
+
+        // Xóa layer highlight cũ khi dữ liệu layer mới đã sẵn sàng
+        if (highlightLayerRef.current) {
+          map.removeLayer(highlightLayerRef.current);
+          highlightLayerRef.current = null;
+        }
+
+        if (geometry) {
+          try {
+            const feature: Feature = {
+              type: "Feature",
+              properties: {},
+              geometry,
+            };
+            const geoJsonLayer = L.geoJSON(feature, {
+              style: {
+                color: "#2563EB",
+                weight: 2,
+                opacity: 0.85,
+                fillColor: "#60A5FA",
+                fillOpacity: 0.04,
+                dashArray: "6, 6",
+              },
+              interactive: false,
+            }).addTo(map);
+
+            highlightLayerRef.current = geoJsonLayer;
+
+            // Di chuyển camera bay mượt mà (flyToBounds) tới ranh giới quốc gia vừa chọn
+            if (isCountryChanged || !hasInitialCoordsRef.current) {
+              const bounds = geoJsonLayer.getBounds();
+              if (bounds.isValid()) {
+                map.flyToBounds(bounds, {
+                  padding: [24, 24],
+                  maxZoom: country.iso2 === "SG" ? 11 : 8,
+                  duration: 1.5,
+                  easeLinearity: 0.25,
+                });
+                hasInitialCoordsRef.current = false;
+                return;
+              }
+            }
+          } catch (err) {
+            console.warn("Lỗi khi hiển thị highlight quốc gia:", err);
+          }
+        }
+
+        // Fallback flyTo nếu không có GeoJSON geometry hoặc bounds không hợp lệ
+        if (isCountryChanged || !hasInitialCoordsRef.current) {
+          const { center, zoom } = getCountryCenterAndZoom(country.iso2);
+          map.flyTo(center, zoom, {
+            duration: 1.5,
+            easeLinearity: 0.25,
+          });
+          hasInitialCoordsRef.current = false;
+        }
+      },
+    );
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [country]);
+
+  // Đồng bộ vị trí ghim marker khi tọa độ thay đổi
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (hasValidCoords) {
+      const lat = Number(latitude);
+      const lng = Number(longitude);
 
       if (markerRef.current) {
-        markerRef.current.setLatLng(targetPos);
+        markerRef.current.setLatLng([lat, lng]);
       } else {
-        const marker = L.marker(targetPos, {
-          draggable: false,
-          icon: createStaticPinIcon(),
-        }).addTo(map);
+        const marker = createDraggableMarker(lat, lng).addTo(map);
         markerRef.current = marker;
       }
     } else {
@@ -210,13 +432,8 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
         markerRef.current.remove();
         markerRef.current = null;
       }
-      if (!state) {
-        map.flyTo(VIETNAM_DEFAULT_CENTER, VIETNAM_DEFAULT_ZOOM, {
-          duration: 1,
-        });
-      }
     }
-  }, [state, hasCoords]);
+  }, [latitude, longitude, hasValidCoords, createDraggableMarker]);
 
   return (
     <Box
@@ -252,14 +469,22 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
         <Typography
           sx={{
             fontSize: "12px",
-            color: "#64748B",
-            bgcolor: "#F1F5F9",
+            color: "#1E40AF",
+            bgcolor: "#EFF6FF",
+            border: "1px solid #DBEAFE",
             px: 1.25,
             py: 0.35,
             borderRadius: "6px",
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            fontWeight: 500,
           }}
         >
-          Xem trước tự động • Không chỉnh sửa thủ công
+          <span>📍</span>{" "}
+          {country
+            ? `Nhấp vào bản đồ trong phạm vi ${country.name}`
+            : "Chọn quốc gia trước khi chọn vị trí"}
         </Typography>
       </Box>
 
@@ -268,8 +493,15 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
         ref={mapContainerRef}
         sx={{
           width: "100%",
-          height: 280,
+          height: { xs: 340, sm: 420, md: 450 },
           bgcolor: "#E2E8F0",
+          cursor: "crosshair !important",
+          "& .leaflet-container": {
+            cursor: "crosshair !important",
+          },
+          "& .leaflet-grab": {
+            cursor: "crosshair !important",
+          },
         }}
       />
 
@@ -287,49 +519,71 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
           gap: 1,
         }}
       >
-        {state && country ? (
-          hasCoords ? (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Typography
-                sx={{
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  color: "#1E40AF",
-                  bgcolor: "#EFF6FF",
-                  px: 1.25,
-                  py: 0.35,
-                  borderRadius: "6px",
-                  border: "1px solid #DBEAFE",
-                }}
-              >
-                📍 {state.name}, {country.vietnameseName} ({state.latitude},{" "}
-                {state.longitude})
-              </Typography>
-              <Typography sx={{ fontSize: "11.5px", color: "#64748B" }}>
-                Tọa độ đại diện từ dữ liệu địa lý quốc tế
-              </Typography>
-            </Box>
-          ) : (
+        {error ? (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              bgcolor: "#FEF2F2",
+              color: "#DC2626",
+              border: "1px solid #FECACA",
+              borderRadius: "6px",
+              px: 1.25,
+              py: 0.6,
+              width: "100%",
+            }}
+          >
+            <Typography
+              sx={{ fontSize: "12px", fontWeight: 600, color: "#DC2626" }}
+            >
+              ⚠️ {error}
+            </Typography>
+          </Box>
+        ) : hasValidCoords ? (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              flexWrap: "wrap",
+            }}
+          >
             <Typography
               sx={{
                 fontSize: "12px",
-                color: "#B45309",
-                bgcolor: "#FEF3C7",
-                px: 1,
-                py: 0.3,
-                borderRadius: "4px",
+                fontWeight: 600,
+                color: "#1E40AF",
+                bgcolor: "#EFF6FF",
+                px: 1.25,
+                py: 0.35,
+                borderRadius: "6px",
+                border: "1px solid #DBEAFE",
               }}
             >
-              ⚠️ Điểm đến này chưa có tọa độ trong cơ sở dữ liệu (không tạo tọa
-              độ giả)
+              📍 Tọa độ:{" "}
+              {typeof latitude === "number" ? latitude.toFixed(6) : latitude},{" "}
+              {typeof longitude === "number" ? longitude.toFixed(6) : longitude}
             </Typography>
-          )
+            <Typography sx={{ fontSize: "11.5px", color: "#64748B" }}>
+              (Nhấp vào bản đồ hoặc kéo thả ghim trong vùng được đánh dấu)
+            </Typography>
+          </Box>
         ) : (
           <Typography
-            sx={{ fontSize: "12px", color: "#94A3B8", fontStyle: "italic" }}
+            sx={{
+              fontSize: "12px",
+              color: "#64748B",
+              fontStyle: "italic",
+              display: "flex",
+              alignItems: "center",
+              gap: 0.5,
+            }}
           >
-            💡 Vui lòng chọn quốc gia và tỉnh/bang/vùng ở trên để hiển thị vị
-            trí trên bản đồ
+            <span>💡</span>{" "}
+            {country
+              ? `Vui lòng nhấp vào bản đồ trong phạm vi ${country.name} để chọn vị trí điểm đến`
+              : "Vui lòng chọn quốc gia ở trên trước để hiển thị vùng bản đồ tương ứng"}
           </Typography>
         )}
       </Box>
@@ -337,40 +591,45 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
   );
 };
 
+export type LocationFormSubmitResult =
+  | { success: boolean; error?: string | null }
+  | boolean
+  | void;
+
 interface LocationFormDialogProps {
   open: boolean;
   initialData?: ILocation | null;
   existingLocations?: ILocation[];
   onClose: () => void;
-  onSubmit: (formData: ILocationFormData) => void;
+  onSubmit: (
+    formData: ILocationFormData,
+  ) => Promise<LocationFormSubmitResult> | LocationFormSubmitResult;
 }
 
 function getInitialFormData(
   initialData?: ILocation | null,
   initialCountry?: IGlobalCountry | null,
-  initialState?: IGlobalState | null,
 ): ILocationFormData {
   if (initialData) {
+    const locName = initialData.locationName || initialData.name || "";
     return {
       countryCode: initialData.countryCode || initialCountry?.iso2,
       countryName: initialData.countryName || initialCountry?.name,
-      stateCode: initialData.stateCode || initialState?.stateCode,
-      provinceCode: initialData.provinceCode || initialState?.stateCode,
-      name: initialState ? initialState.name : initialData.name,
-      address:
-        initialState && initialCountry
-          ? `${initialState.name}, ${initialCountry.vietnameseName}`
-          : initialData.address,
+      locationName: locName,
       latitude:
-        initialState !== undefined && initialState !== null
-          ? initialState.latitude
-          : initialData.latitude,
+        initialData.latitude !== undefined && initialData.latitude !== null
+          ? initialData.latitude
+          : "",
       longitude:
-        initialState !== undefined && initialState !== null
-          ? initialState.longitude
-          : initialData.longitude,
+        initialData.longitude !== undefined && initialData.longitude !== null
+          ? initialData.longitude
+          : "",
       coverImage: initialData.coverImage || "",
-      status: initialData.status || "Visited",
+      imageFile: null,
+      imagePath:
+        initialData.imagePath ||
+        extractRelativeImagePath(initialData.coverImage),
+      status: initialData.status ?? null,
       description: initialData.description || "",
       notes: initialData.notes || "",
       googleMapsUrl: initialData.googleMapsUrl || "",
@@ -380,14 +639,13 @@ function getInitialFormData(
   return {
     countryCode: undefined,
     countryName: undefined,
-    stateCode: undefined,
-    provinceCode: undefined,
-    name: "",
-    address: "",
+    locationName: "",
     latitude: "",
     longitude: "",
     coverImage: "",
-    status: "Visited",
+    imageFile: null,
+    imagePath: undefined,
+    status: null,
     description: "",
     notes: "",
     googleMapsUrl: "",
@@ -398,90 +656,57 @@ interface FormInnerProps {
   initialData?: ILocation | null;
   existingLocations?: ILocation[];
   onClose: () => void;
-  onSubmit: (formData: ILocationFormData) => void;
+  onSubmit: (
+    formData: ILocationFormData,
+  ) => Promise<LocationFormSubmitResult> | LocationFormSubmitResult;
 }
 
 const LocationFormInner: React.FC<FormInnerProps> = ({
   initialData,
-  existingLocations: propExistingLocations,
   onClose,
   onSubmit,
 }) => {
   const isEdit = Boolean(initialData);
-  const { findCountry, findState, findLegacyDestination } = useGlobalGeo();
+  const { findCountry, findLegacyDestination } = useGlobalGeo();
 
-  // Xác định cặp Quốc gia & Tỉnh/Bang ban đầu khi mở form (tương thích dữ liệu mới lẫn lịch sử)
+  // Xác định Quốc gia ban đầu khi mở form
   const initialResolved = useMemo<{
     country: IGlobalCountry | null;
-    state: IGlobalState | null;
   }>(() => {
-    if (!initialData) return { country: null, state: null };
+    if (!initialData) return { country: null };
 
     if (initialData.countryCode) {
       const c = findCountry(initialData.countryCode) || null;
-      const s = c
-        ? findState(c.iso2, initialData.stateCode || initialData.name) || null
-        : null;
-      if (c) return { country: c, state: s };
+      if (c) return { country: c };
     }
 
     const legacy = findLegacyDestination(
-      initialData.name || initialData.address,
+      initialData.locationName || initialData.name || initialData.address,
     );
     if (legacy) {
-      return { country: legacy.country, state: legacy.state };
+      return { country: legacy.country };
     }
 
-    return { country: null, state: null };
-  }, [initialData, findCountry, findState, findLegacyDestination]);
+    return { country: null };
+  }, [initialData, findCountry, findLegacyDestination]);
 
   const [selectedCountry, setSelectedCountry] = useState<IGlobalCountry | null>(
     initialResolved.country,
   );
 
-  const [selectedState, setSelectedState] = useState<IGlobalState | null>(
-    initialResolved.state,
-  );
-
-  // Danh sách địa điểm hiện có trên bản đồ để kiểm tra trùng lặp
-  const existingLocations = useMemo(
-    () => propExistingLocations ?? [],
-    [propExistingLocations],
-  );
-
-  // Kiểm tra một tỉnh/bang đã được thêm vào bản đồ hay chưa (ngoại trừ địa điểm đang sửa)
-  const isStateAlreadyAdded = useCallback(
-    (state: IGlobalState | null): boolean => {
-      if (!state || !selectedCountry) return false;
-      const currentEditingId = initialData?.id;
-      return existingLocations.some((loc) => {
-        if (currentEditingId && loc.id === currentEditingId) return false;
-        const sameCountry =
-          loc.countryCode?.toUpperCase() === selectedCountry.iso2.toUpperCase();
-        const sameState =
-          (loc.stateCode &&
-            loc.stateCode.toUpperCase() === state.stateCode.toUpperCase()) ||
-          loc.name.trim().toLowerCase() === state.name.trim().toLowerCase();
-        return Boolean(sameCountry && sameState);
-      });
-    },
-    [selectedCountry, existingLocations, initialData?.id],
-  );
-
-  // Danh sách các bang/tỉnh tương ứng của quốc gia đã chọn
-  const availableStates = useStatesByCountry(selectedCountry?.iso2);
-
   const allCountries = useCountries();
 
   const [formData, setFormData] = useState<ILocationFormData>(() =>
-    getInitialFormData(
-      initialData,
-      initialResolved.country,
-      initialResolved.state,
-    ),
+    getInitialFormData(initialData, initialResolved.country),
   );
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Tải trước dữ liệu GeoJSON ranh giới các quốc gia
+  useEffect(() => {
+    loadCountryBoundaries();
+  }, []);
 
   // File upload & Drag-and-drop cho ảnh đại diện
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -506,6 +731,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
         setFormData((prev) => ({
           ...prev,
           coverImage: reader.result as string,
+          imageFile: file,
         }));
       }
     };
@@ -545,7 +771,12 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
   };
 
   const handleRemoveImage = () => {
-    setFormData((prev) => ({ ...prev, coverImage: "" }));
+    setFormData((prev) => ({
+      ...prev,
+      coverImage: "",
+      imageFile: null,
+      imagePath: "",
+    }));
     setImageError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -555,82 +786,43 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
   // Xử lý khi thay đổi Quốc gia
   const handleCountryChange = (newCountry: IGlobalCountry | null) => {
     setSelectedCountry(newCountry);
-    // Khi đổi quốc gia: xóa lựa chọn tỉnh/bang cũ và xóa tọa độ preview
-    setSelectedState(null);
 
     setFormData((prev) => ({
       ...prev,
       countryCode: newCountry?.iso2,
       countryName: newCountry?.name,
-      stateCode: undefined,
-      provinceCode: undefined,
-      name: "",
-      address: "",
       latitude: "",
       longitude: "",
-      // Xóa Google Maps URL tự sinh từ tọa độ cũ nếu có
-      googleMapsUrl: prev.googleMapsUrl?.startsWith(
-        "https://www.google.com/maps?q=",
-      )
-        ? ""
-        : prev.googleMapsUrl,
+      googleMapsUrl: "",
     }));
 
     setErrors((prev) => {
       const next = { ...prev };
       delete next.country;
-      delete next.state;
-      delete next.latitude;
-      delete next.longitude;
+      delete next.coordinates;
       return next;
     });
   };
 
-  // Xử lý khi thay đổi Tỉnh / Bang / Vùng
-  const handleStateChange = (newState: IGlobalState | null) => {
-    setSelectedState(newState);
-
-    if (newState && selectedCountry) {
-      const isDuplicate = isStateAlreadyAdded(newState);
-      const autoMapUrl =
-        newState.latitude !== null && newState.longitude !== null
-          ? `https://www.google.com/maps?q=${newState.latitude},${newState.longitude}`
-          : "";
-
-      setFormData((prev) => ({
-        ...prev,
-        stateCode: newState.stateCode,
-        provinceCode: newState.stateCode,
-        name: newState.name,
-        address: `${newState.name}, ${selectedCountry.vietnameseName}`,
-        latitude: newState.latitude,
-        longitude: newState.longitude,
-        googleMapsUrl: prev.googleMapsUrl || autoMapUrl,
-      }));
-
-      setErrors((prev) => {
-        const next = { ...prev };
-        if (isDuplicate) {
-          next.state = "Địa điểm này đã có trong bản đồ hành trình của bạn";
-        } else {
-          delete next.state;
-        }
-        delete next.latitude;
-        delete next.longitude;
-        return next;
-      });
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        stateCode: undefined,
-        provinceCode: undefined,
-        name: "",
-        address: "",
-        latitude: "",
-        longitude: "",
-      }));
-    }
-  };
+  // Xử lý khi người dùng click hoặc kéo ghim trên bản đồ để chọn tọa độ
+  const handleLocationSelect = useCallback((lat: number, lng: number) => {
+    const autoMapUrl = getGoogleMapsUrl(lat, lng) || "";
+    setFormData((prev) => ({
+      ...prev,
+      latitude: lat,
+      longitude: lng,
+      googleMapsUrl:
+        !prev.googleMapsUrl ||
+        prev.googleMapsUrl.startsWith("https://www.google.com/maps?q=")
+          ? autoMapUrl
+          : prev.googleMapsUrl,
+    }));
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.coordinates;
+      return next;
+    });
+  }, []);
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -639,12 +831,12 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
       newErrors.country = "Vui lòng chọn quốc gia";
     }
 
-    if (selectedCountry && availableStates.length > 0) {
-      if (!selectedState) {
-        newErrors.state = "Vui lòng chọn tỉnh/bang/vùng";
-      } else if (isStateAlreadyAdded(selectedState)) {
-        newErrors.state = "Địa điểm này đã có trong bản đồ hành trình của bạn";
-      }
+    if (!formData.locationName || !formData.locationName.trim()) {
+      newErrors.locationName = "Vui lòng nhập tên điểm đến";
+    }
+
+    if (!formData.status) {
+      newErrors.status = "Vui lòng chọn trạng thái";
     }
 
     if (formData.googleMapsUrl && formData.googleMapsUrl.trim()) {
@@ -655,14 +847,51 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
       }
     }
 
+    const hasLat =
+      formData.latitude !== "" &&
+      formData.latitude !== null &&
+      formData.latitude !== undefined;
+    const hasLng =
+      formData.longitude !== "" &&
+      formData.longitude !== null &&
+      formData.longitude !== undefined;
+
+    if (hasLat !== hasLng) {
+      newErrors.coordinates =
+        "Vĩ độ và kinh độ phải cùng có giá trị hoặc cùng để trống";
+    } else if (hasLat && hasLng) {
+      const latNum = Number(formData.latitude);
+      const lngNum = Number(formData.longitude);
+      if (isNaN(latNum) || latNum < -90 || latNum > 90) {
+        newErrors.coordinates = "Vĩ độ phải nằm trong khoảng từ -90 đến 90";
+      } else if (isNaN(lngNum) || lngNum < -180 || lngNum > 180) {
+        newErrors.coordinates = "Kinh độ phải nằm trong khoảng từ -180 đến 180";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
-    if (validate()) {
-      onSubmit(formData);
-      onClose();
+  const handleSave = async () => {
+    if (!validate()) return;
+    setIsSubmitting(true);
+    try {
+      const result = await onSubmit(formData);
+      if (typeof result === "object" && result !== null) {
+        if (!result.success) {
+          return;
+        }
+        onClose();
+      } else if (result === false) {
+        return;
+      } else {
+        onClose();
+      }
+    } catch {
+      // Toast notification tại trang cha sẽ hiển thị thông báo lỗi
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -709,20 +938,25 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
               sx={{ color: "#64748B", fontSize: "0.825rem" }}
             >
               {isEdit
-                ? "Cập nhật thông tin điểm đến theo Quốc gia và Tỉnh/Bang trên bản đồ"
-                : "Quản lý điểm đến theo 2 cấp: Quốc gia và Tỉnh/Bang/Vùng"}
+                ? "Cập nhật thông tin điểm đến và vị trí trên bản đồ"
+                : "Thêm điểm đến và chọn vị trí trực tiếp trên bản đồ"}
             </Typography>
           </Box>
         </Box>
 
-        <IconButton size="small" onClick={onClose} sx={{ color: "#64748B" }}>
+        <IconButton
+          size="small"
+          onClick={onClose}
+          disabled={isSubmitting}
+          sx={{ color: "#64748B" }}
+        >
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
 
       <DialogContent sx={{ px: 3, pt: "14px !important", pb: 2.5 }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {/* BỘ CHỌN 2 SELECTBOX CÙNG HÀNG: QUỐC GIA & TỈNH/BANG/VÙNG */}
+          {/* BỘ CHỌN 2 TRƯỜNG CÙNG HÀNG: QUỐC GIA & TÊN ĐIỂM ĐẾN */}
           <Box
             sx={{
               display: "grid",
@@ -730,7 +964,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
               gap: 2,
             }}
           >
-            {/* SELECTBOX 1: QUỐC GIA */}
+            {/* SELECTBOX: QUỐC GIA */}
             <Autocomplete<IGlobalCountry, false, false, false>
               sx={{ width: "100%" }}
               options={allCountries}
@@ -871,120 +1105,56 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
               )}
             />
 
-            {/* SELECTBOX 2: TỈNH / BANG / VÙNG */}
-            <Autocomplete<IGlobalState, false, false, false>
-              sx={{ width: "100%" }}
-              disabled={!selectedCountry}
-              options={availableStates}
-              getOptionLabel={(option) => option.name}
-              value={selectedState}
-              isOptionEqualToValue={(option, value) =>
-                option.id === value.id || option.stateCode === value.stateCode
-              }
-              getOptionDisabled={(option) => isStateAlreadyAdded(option)}
-              onChange={(_, newValue) => handleStateChange(newValue)}
-              renderOption={(props, option) => {
-                const { key, ...rest } = props;
-                const isAdded = isStateAlreadyAdded(option);
-                return (
-                  <Box
-                    component="li"
-                    key={key}
-                    {...rest}
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      width: "100%",
-                      py: 0.75,
-                      opacity: isAdded ? 0.55 : 1,
-                      cursor: isAdded ? "not-allowed !important" : "pointer",
-                    }}
-                  >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Typography
-                        sx={{
-                          fontWeight: 600,
-                          fontSize: "13.5px",
-                          color: isAdded ? "#94A3B8" : "#0F172A",
-                        }}
-                      >
-                        {option.name}
-                      </Typography>
-                      {isAdded && (
-                        <Chip
-                          label="Đã thêm"
-                          size="small"
-                          sx={{
-                            height: 19,
-                            fontSize: "10.5px",
-                            fontWeight: 600,
-                            bgcolor: "#F1F5F9",
-                            color: "#64748B",
-                            border: "1px solid #E2E8F0",
-                          }}
-                        />
-                      )}
-                    </Box>
-                    {option.stateCode && (
-                      <Typography
-                        sx={{
-                          fontSize: "11px",
-                          color: "#64748B",
-                          fontFamily: "monospace",
-                          bgcolor: "#F1F5F9",
-                          px: 0.75,
-                          py: 0.2,
-                          borderRadius: "4px",
-                        }}
-                      >
-                        {option.stateCode}
-                      </Typography>
-                    )}
-                  </Box>
-                );
+            {/* TEXT INPUT: TÊN ĐIỂM ĐẾN */}
+            <TextField
+              label="Tên điểm đến *"
+              placeholder="Ví dụ: Đà Lạt, Hà Nội, Tokyo, Manchester..."
+              value={formData.locationName}
+              onChange={(e) => {
+                const val = e.target.value;
+                setFormData((prev) => ({
+                  ...prev,
+                  locationName: val,
+                  name: val,
+                }));
+                if (errors.locationName) {
+                  setErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.locationName;
+                    return next;
+                  });
+                }
               }}
-              noOptionsText={
-                selectedCountry
-                  ? availableStates.length === 0
-                    ? "Quốc gia này không có dữ liệu cấp tỉnh/bang trong dataset"
-                    : "Không tìm thấy tỉnh/bang phù hợp"
-                  : "Vui lòng chọn quốc gia trước"
+              error={Boolean(errors.locationName)}
+              helperText={
+                errors.locationName ||
+                "Nhập tên điểm đến bạn muốn lưu (thành phố, địa danh...)"
               }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Tỉnh / Bang / Vùng *"
-                  placeholder={
-                    selectedCountry
-                      ? availableStates.length === 0
-                        ? "Không có dữ liệu tỉnh/bang"
-                        : "Chọn tỉnh/bang/vùng..."
-                      : "Chọn quốc gia trước"
-                  }
-                  size="small"
-                  error={Boolean(errors.state)}
-                  helperText={
-                    errors.state ||
-                    (selectedCountry
-                      ? availableStates.length > 0
-                        ? `${availableStates.length} đơn vị hành chính khả dụng`
-                        : "Không có dữ liệu cấp tỉnh/bang"
-                      : "Cần chọn Quốc gia trước")
-                  }
-                />
-              )}
+              fullWidth
+              size="small"
             />
           </Box>
 
-          {/* BẢN ĐỒ PREVIEW (1 hàng riêng, chỉ hiển thị vị trí, không cho click/kéo chọn tọa độ) */}
+          {/* BẢN ĐỒ TƯƠNG TÁC (Cho phép click chọn vị trí hoặc kéo ghim) */}
           <DestinationMapPreview
             country={selectedCountry}
-            state={selectedState}
+            latitude={formData.latitude}
+            longitude={formData.longitude}
+            error={errors.coordinates}
+            onLocationSelect={handleLocationSelect}
+            onLocationError={(msg) =>
+              setErrors((prev) => ({ ...prev, coordinates: msg }))
+            }
           />
 
-          {/* VĨ ĐỘ & KINH ĐỘ (Cùng 1 hàng 2 cột, READ-ONLY, tự động theo đơn vị hành chính đã chọn) */}
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+          {/* VĨ ĐỘ & KINH ĐỘ (READ-ONLY, tự động theo vị trí chọn từ bản đồ) */}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 2,
+            }}
+          >
             <TextField
               label="Vĩ độ (Latitude)"
               value={
@@ -995,10 +1165,10 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
               fullWidth
               size="small"
               helperText={
-                selectedState && selectedState.latitude === null
-                  ? "Đơn vị này chưa có tọa độ trong cơ sở dữ liệu."
-                  : "Tự động xác định theo đơn vị hành chính đã chọn"
+                errors.coordinates ||
+                "Chọn từ bản đồ (Không chỉnh sửa thủ công)"
               }
+              error={Boolean(errors.coordinates)}
               slotProps={{
                 input: {
                   readOnly: true,
@@ -1019,11 +1189,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
               }
               fullWidth
               size="small"
-              helperText={
-                selectedState && selectedState.longitude === null
-                  ? "Đơn vị này chưa có tọa độ trong cơ sở dữ liệu."
-                  : "Tự động xác định theo đơn vị hành chính đã chọn"
-              }
+              helperText="Chọn từ bản đồ (Không chỉnh sửa thủ công)"
               slotProps={{
                 input: {
                   readOnly: true,
@@ -1037,32 +1203,65 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
             />
           </Box>
 
-          {/* Trạng thái (1 hàng riêng) */}
-          <FormControl fullWidth size="small">
-            <InputLabel id="form-location-status-label">
-              Trạng thái *
-            </InputLabel>
-            <Select
-              labelId="form-location-status-label"
-              label="Trạng thái *"
-              value={formData.status}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  status: e.target.value as LocationStatus,
-                }))
+          {/* Trạng thái (1 hàng riêng, mặc định null khi tạo mới, không chọn sẵn) */}
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label="Trạng thái *"
+            value={formData.status || ""}
+            error={Boolean(errors.status)}
+            helperText={errors.status}
+            onChange={(e) => {
+              const val = e.target.value as LocationStatus;
+              setFormData((prev) => ({
+                ...prev,
+                status: val || null,
+              }));
+              if (errors.status) {
+                setErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.status;
+                  return next;
+                });
               }
-            >
-              <MenuItem value="Visited">Đã ghé thăm (Visited)</MenuItem>
-              <MenuItem value="Wishlist">Muốn đến (Wishlist)</MenuItem>
-            </Select>
-          </FormControl>
+            }}
+            slotProps={{
+              inputLabel: {
+                shrink: true,
+              },
+              select: {
+                displayEmpty: true,
+                renderValue: (selected) => {
+                  if (!selected) {
+                    return (
+                      <Typography
+                        component="span"
+                        sx={{ color: "#94A3B8", fontSize: "14px" }}
+                      >
+                        -- Chọn trạng thái --
+                      </Typography>
+                    );
+                  }
+                  return selected === "Visited"
+                    ? "Đã ghé thăm (Visited)"
+                    : "Muốn đến (Wishlist)";
+                },
+              },
+            }}
+          >
+            <MenuItem value="" disabled sx={{ color: "#94A3B8" }}>
+              <em>-- Chọn trạng thái --</em>
+            </MenuItem>
+            <MenuItem value="Visited">Đã ghé thăm (Visited)</MenuItem>
+            <MenuItem value="Wishlist">Muốn đến (Wishlist)</MenuItem>
+          </TextField>
 
           {/* Đường dẫn Google Maps (1 hàng riêng, tùy chọn) */}
           <TextField
             label="Đường dẫn Google Maps (Tùy chọn)"
             placeholder="https://www.google.com/maps?q=..."
-            value={formData.googleMapsUrl}
+            value={formData.googleMapsUrl || ""}
             onChange={(e) => {
               setFormData((prev) => ({
                 ...prev,
@@ -1074,7 +1273,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
             error={Boolean(errors.googleMapsUrl)}
             helperText={
               errors.googleMapsUrl ||
-              "Tùy chọn liên kết xem trên Google Maps (tự động tạo theo tọa độ đại diện nếu có)."
+              "Tùy chọn liên kết xem trên Google Maps (tự động tạo theo tọa độ nếu có)."
             }
             fullWidth
             size="small"
@@ -1277,7 +1476,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
             )}
           </Box>
 
-          {/* Giới thiệu điểm đến (1 hàng riêng) */}
+          {/* Giới thiệu điểm đến (Textarea) */}
           <TextField
             label="Giới thiệu điểm đến"
             placeholder="Đặc điểm nổi bật, cảnh quan, khí hậu vùng miền..."
@@ -1286,12 +1485,16 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
               setFormData((prev) => ({ ...prev, description: e.target.value }))
             }
             multiline
-            rows={2}
+            minRows={3}
             fullWidth
-            size="small"
+            sx={{
+              "& textarea": {
+                resize: "vertical",
+              },
+            }}
           />
 
-          {/* Ghi chú cá nhân / Kinh nghiệm (1 hàng riêng) */}
+          {/* Ghi chú cá nhân / Kinh nghiệm (Textarea) */}
           <TextField
             label="Ghi chú cá nhân / Kinh nghiệm"
             placeholder="Lưu ý thời gian đi, mùa đẹp nhất, đặc sản nên thử..."
@@ -1300,9 +1503,13 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
               setFormData((prev) => ({ ...prev, notes: e.target.value }))
             }
             multiline
-            rows={2}
+            minRows={3}
             fullWidth
-            size="small"
+            sx={{
+              "& textarea": {
+                resize: "vertical",
+              },
+            }}
           />
         </Box>
       </DialogContent>
@@ -1311,6 +1518,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
         <Button
           variant="outlined"
           onClick={onClose}
+          disabled={isSubmitting}
           sx={{
             borderRadius: "8px",
             textTransform: "none",
@@ -1326,9 +1534,10 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
           variant="contained"
           color="primary"
           onClick={handleSave}
-          disabled={Boolean(
-            selectedState && isStateAlreadyAdded(selectedState),
-          )}
+          disabled={isSubmitting}
+          startIcon={
+            isSubmitting ? <CircularProgress size={16} color="inherit" /> : null
+          }
           sx={{
             borderRadius: "8px",
             textTransform: "none",
@@ -1337,7 +1546,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
             boxShadow: "none",
           }}
         >
-          {isEdit ? "Cập nhật" : "Lưu điểm đến"}
+          {isSubmitting ? "Đang lưu..." : isEdit ? "Cập nhật" : "Lưu điểm đến"}
         </Button>
       </DialogActions>
     </>
