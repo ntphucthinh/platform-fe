@@ -88,6 +88,21 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
     return map;
   });
 
+  // Descriptions per day: key = ISO date, value = text
+  const [descriptionsByDate, setDescriptionsByDate] = useState<
+    Record<string, string>
+  >(() => {
+    const map: Record<string, string> = {};
+    if (initialData?.days) {
+      initialData.days.forEach((day) => {
+        if (day.description) {
+          map[day.date] = day.description;
+        }
+      });
+    }
+    return map;
+  });
+
   // Track created blob object URLs to safely revoke them on unmount / replacement
   const createdObjectUrlsRef = useRef<Set<string>>(new Set());
 
@@ -301,6 +316,16 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
       return updated;
     });
 
+    setDescriptionsByDate((prev) => {
+      const updated: Record<string, string> = {};
+      Object.entries(prev).forEach(([date, text]) => {
+        if (newDateSet.has(date)) {
+          updated[date] = text;
+        }
+      });
+      return updated;
+    });
+
     setStartDate(newStartDate);
     setEndDate(newEndDate);
     setPendingDateChange(null);
@@ -426,6 +451,7 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
     // Construct daily collections ordered chronologically
     const days: ITravelMemoryDay[] = activeDates.map((date) => ({
       date,
+      description: descriptionsByDate[date]?.trim() || undefined,
       photos: photosByDate[date] || [],
     }));
 
@@ -1188,6 +1214,40 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                         </Typography>
                       </Box>
                     )}
+
+                    {/* Day Description Textarea */}
+                    <Box sx={{ px: 2, pt: 2 }}>
+                      <TextField
+                        fullWidth
+                        multiline
+                        minRows={2}
+                        maxRows={4}
+                        size="small"
+                        label={`Ghi chú / Nhật ký Ngày ${dayNumber}`}
+                        placeholder="Nhập cảm xúc, trải nghiệm hoặc tóm tắt các hoạt động nổi bật trong ngày..."
+                        value={descriptionsByDate[date] || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setDescriptionsByDate((prev) => ({
+                            ...prev,
+                            [date]: val,
+                          }));
+                        }}
+                        slotProps={{
+                          inputLabel: { shrink: true },
+                        }}
+                        sx={{
+                          bgcolor: "#FFFFFF",
+                          borderRadius: "8px",
+                          "& .MuiOutlinedInput-root": {
+                            borderRadius: "8px",
+                          },
+                          "& textarea": {
+                            resize: "vertical",
+                          },
+                        }}
+                      />
+                    </Box>
 
                     {/* Day Photos Grid */}
                     <CardContent sx={{ p: 2 }}>

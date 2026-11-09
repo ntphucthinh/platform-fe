@@ -9,6 +9,7 @@ export interface ITravelMemoryPhoto {
 
 export interface ITravelMemoryDay {
   date: string; // ISO date string 'YYYY-MM-DD'
+  description?: string;
   photos: ITravelMemoryPhoto[];
 }
 

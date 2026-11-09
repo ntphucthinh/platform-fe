@@ -6,6 +6,8 @@ import {
   CardContent,
   Button,
   Chip,
+  Collapse,
+  IconButton,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -14,6 +16,7 @@ import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined
 import PhotoCameraBackOutlinedIcon from "@mui/icons-material/PhotoCameraBackOutlined";
 import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import CollectionsBookmarkOutlinedIcon from "@mui/icons-material/CollectionsBookmarkOutlined";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useParams, useNavigate } from "react-router-dom";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { getTravelMemoryById } from "@/services/travelMemoryService";
@@ -45,6 +48,15 @@ export const TravelMemoryDetailPage: React.FC = () => {
     photos: [],
     currentIndex: 0,
   });
+
+  // Collapse state per day: key = ISO date, value = boolean (true: collapsed, false: expanded)
+  const [collapsedDays, setCollapsedDays] = useState<Record<string, boolean>>(
+    {},
+  );
+
+  const toggleDayCollapse = (date: string) => {
+    setCollapsedDays((prev) => ({ ...prev, [date]: !prev[date] }));
+  };
 
   if (!memory) {
     return (
@@ -78,6 +90,18 @@ export const TravelMemoryDetailPage: React.FC = () => {
     memory.startDate,
     memory.endDate,
   );
+
+  const allCollapsed =
+    memory.days.length > 0 &&
+    memory.days.every((day) => collapsedDays[day.date] === true);
+
+  const toggleAllDays = () => {
+    const nextState: Record<string, boolean> = {};
+    memory.days.forEach((day) => {
+      nextState[day.date] = !allCollapsed;
+    });
+    setCollapsedDays(nextState);
+  };
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3, pb: 6 }}>
@@ -190,7 +214,10 @@ export const TravelMemoryDetailPage: React.FC = () => {
               <Chip
                 icon={
                   <AccessTimeOutlinedIcon
-                    sx={{ fontSize: "15px !important", color: "#FFFFFF !important" }}
+                    sx={{
+                      fontSize: "15px !important",
+                      color: "#FFFFFF !important",
+                    }}
                   />
                 }
                 label={duration.label}
@@ -207,7 +234,10 @@ export const TravelMemoryDetailPage: React.FC = () => {
               <Chip
                 icon={
                   <PhotoCameraBackOutlinedIcon
-                    sx={{ fontSize: "15px !important", color: "#FFFFFF !important" }}
+                    sx={{
+                      fontSize: "15px !important",
+                      color: "#FFFFFF !important",
+                    }}
                   />
                 }
                 label={`${totalPhotos} hình ảnh`}
@@ -298,23 +328,47 @@ export const TravelMemoryDetailPage: React.FC = () => {
 
       {/* 7.2 Daily Photo Albums */}
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-        <Box>
-          <Typography
-            variant="h5"
-            sx={{ fontWeight: 700, color: "#172033" }}
-          >
-            Album ảnh theo từng ngày
-          </Typography>
-          <Typography variant="body2" sx={{ color: "#64748B", mt: 0.5 }}>
-            Bấm vào bất kỳ hình ảnh nào để phóng to và duyệt ảnh bằng bàn phím
-            hoặc nút điều hướng.
-          </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: { xs: "flex-start", sm: "center" },
+            flexDirection: { xs: "column", sm: "row" },
+            gap: 1.5,
+          }}
+        >
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: "#172033" }}>
+              Album ảnh theo từng ngày
+            </Typography>
+            <Typography variant="body2" sx={{ color: "#64748B", mt: 0.5 }}>
+              Bấm vào tiêu đề ngày để đóng/mở danh sách ảnh hoặc bấm vào ảnh để
+              phóng to.
+            </Typography>
+          </Box>
+
+          {memory.days.length > 1 && (
+            <Button
+              size="small"
+              variant="text"
+              onClick={toggleAllDays}
+              sx={{
+                textTransform: "none",
+                fontWeight: 600,
+                color: "#2563EB",
+                "&:hover": { bgcolor: "#EFF6FF" },
+              }}
+            >
+              {allCollapsed ? "Mở rộng tất cả" : "Thu gọn tất cả"}
+            </Button>
+          )}
         </Box>
 
         {memory.days.map((day, index) => {
           const dayNumber = index + 1;
           const formattedDate = formatDateVietnamese(day.date);
           const photoCount = day.photos.length;
+          const isCollapsed = collapsedDays[day.date] === true;
 
           return (
             <Card
@@ -333,11 +387,18 @@ export const TravelMemoryDetailPage: React.FC = () => {
                   px: { xs: 2, sm: 3 },
                   py: 1.8,
                   bgcolor: "#F8FAFC",
-                  borderBottom: "1px solid #E2E8F0",
+                  borderBottom: isCollapsed ? "none" : "1px solid #E2E8F0",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
+                  cursor: "pointer",
+                  userSelect: "none",
+                  transition: "background-color 0.15s",
+                  "&:hover": {
+                    bgcolor: "#F1F5F9",
+                  },
                 }}
+                onClick={() => toggleDayCollapse(day.date)}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                   <Box
@@ -368,35 +429,90 @@ export const TravelMemoryDetailPage: React.FC = () => {
                   </Typography>
                 </Box>
 
-                <Chip
-                  label={`${photoCount} ảnh`}
-                  size="small"
-                  sx={{
-                    bgcolor: photoCount > 0 ? "#EFF6FF" : "#F1F5F9",
-                    color: photoCount > 0 ? "#1D4ED8" : "#64748B",
-                    fontWeight: 700,
-                    fontSize: "0.75rem",
-                    borderRadius: "6px",
-                  }}
-                />
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Chip
+                    label={`${photoCount} ảnh`}
+                    size="small"
+                    sx={{
+                      bgcolor: photoCount > 0 ? "#EFF6FF" : "#F1F5F9",
+                      color: photoCount > 0 ? "#1D4ED8" : "#64748B",
+                      fontWeight: 700,
+                      fontSize: "0.75rem",
+                      borderRadius: "6px",
+                    }}
+                  />
+                  <IconButton
+                    size="small"
+                    sx={{
+                      color: "#64748B",
+                      transform: isCollapsed
+                        ? "rotate(-90deg)"
+                        : "rotate(0deg)",
+                      transition: "transform 0.2s",
+                    }}
+                    tabIndex={-1}
+                    aria-label={isCollapsed ? "Mở rộng ngày" : "Thu gọn ngày"}
+                  >
+                    <KeyboardArrowDownIcon fontSize="small" />
+                  </IconButton>
+                </Box>
               </Box>
 
-              {/* Day Photos Grid */}
-              <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                <TravelMemoryPhotoGrid
-                  photos={day.photos}
-                  readOnly
-                  onPhotoClick={(photoIdx) => {
-                    setLightboxState({
-                      open: true,
-                      photos: day.photos,
-                      currentIndex: photoIdx,
-                      dateLabel: `Ngày ${dayNumber} · ${formattedDate}`,
-                    });
-                  }}
-                  emptyMessage="Ngày này chưa có hình ảnh kỷ niệm."
-                />
-              </CardContent>
+              {/* Collapsible Content */}
+              <Collapse in={!isCollapsed} timeout={200}>
+                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                  {day.description && (
+                    <Box
+                      sx={{
+                        mb: 2.5,
+                        p: 2,
+                        borderRadius: "10px",
+                        bgcolor: "#F8FAFC",
+                        border: "1px solid #E2E8F0",
+                        borderLeft: "4px solid #2563EB",
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          display: "block",
+                          fontWeight: 700,
+                          color: "#2563EB",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                          mb: 0.5,
+                        }}
+                      >
+                        Nhật ký ngày {dayNumber}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "#334155",
+                          lineHeight: 1.65,
+                          whiteSpace: "pre-line",
+                        }}
+                      >
+                        {day.description}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  <TravelMemoryPhotoGrid
+                    photos={day.photos}
+                    readOnly
+                    onPhotoClick={(photoIdx) => {
+                      setLightboxState({
+                        open: true,
+                        photos: day.photos,
+                        currentIndex: photoIdx,
+                        dateLabel: `Ngày ${dayNumber} · ${formattedDate}`,
+                      });
+                    }}
+                    emptyMessage="Ngày này chưa có hình ảnh kỷ niệm."
+                  />
+                </CardContent>
+              </Collapse>
             </Card>
           );
         })}

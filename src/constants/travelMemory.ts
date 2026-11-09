@@ -14,6 +14,8 @@ export const MOCK_TRAVEL_MEMORIES: ITravelMemory[] = [
     days: [
       {
         date: "2026-06-12",
+        description:
+          "Ngày đầu tiên đặt chân đến xứ sở ngàn hoa. Buổi sáng đón bình minh tĩnh lặng bên hồ Tuyền Lâm, chiều ghé quán cà phê nhỏ ngắm hoàng hôn buông xuống thung lũng mộng mơ.",
         photos: [
           {
             id: "dl-d1-1",
@@ -47,6 +49,8 @@ export const MOCK_TRAVEL_MEMORIES: ITravelMemory[] = [
       },
       {
         date: "2026-06-13",
+        description:
+          "Thức dậy từ 4h30 sáng để săn biển mây bồng bềnh tại đỉnh Langbiang. Không khí trong lành đến diệu kỳ. Buổi trưa dừng chân check-in cánh đồng cẩm tú cầu.",
         photos: [
           {
             id: "dl-d2-1",
