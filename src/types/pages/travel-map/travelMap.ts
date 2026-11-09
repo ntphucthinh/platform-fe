@@ -1,7 +1,8 @@
 import type { ITravelMemory } from "@/types/pages/travel-memories/travelMemory";
 import type { ITravelItinerary } from "@/types/pages/itineraries/itinerary";
+import { LocationStatus } from "@/constants/travelMap";
 
-export type LocationStatus = "Visited" | "Wishlist";
+export { LocationStatus };
 
 export interface ApiTravelLocation {
   id: number;
@@ -11,7 +12,7 @@ export interface ApiTravelLocation {
   latitude: number | null;
   longitude: number | null;
   imagePath?: string | null;
-  status: "visited" | "wishlist";
+  status: LocationStatus;
   description?: string | null;
   notes?: string | null;
   googleMapsUrl?: string | null;
@@ -47,7 +48,7 @@ export interface ApiTravelLocationPayload {
   latitude: number | null;
   longitude: number | null;
   imagePath?: string;
-  status: "visited" | "wishlist";
+  status: LocationStatus;
   description?: string;
   notes?: string;
   googleMapsUrl?: string;
@@ -70,8 +71,8 @@ export interface ILocationFormData {
 
 export interface ILocationFilterState {
   search: string;
-  status: "ALL" | LocationStatus;
-  year: "ALL" | number;
+  status?: LocationStatus;
+  year?: number;
 }
 
 export interface ITravelMapSummary {

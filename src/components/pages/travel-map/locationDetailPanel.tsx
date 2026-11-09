@@ -34,6 +34,7 @@ import {
   formatDateRangeVietnamese,
 } from "@/utils/travelMemoryUtils";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
+import { LocationStatus } from "@/constants/travelMap";
 
 interface LocationDetailPanelProps {
   location: ILocationWithDetails | null;
@@ -358,7 +359,7 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
   if (animStatus === "unmounted" || !location) return null;
 
   const isEntered = animStatus === "entered";
-  const isVisited = location.status === "Visited";
+  const isVisited = location.status === LocationStatus.Visited;
 
   const panelContent = (
     <Box

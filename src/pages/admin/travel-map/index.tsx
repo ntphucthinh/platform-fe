@@ -24,7 +24,7 @@ import {
   getAvailableVisitYears,
   filterLocations,
 } from "@/utils/travelMapUtils";
-import { MOCK_TRAVEL_MAP_SUMMARY } from "@/constants/travelMap";
+import { LocationStatus, MOCK_TRAVEL_MAP_SUMMARY } from "@/constants/travelMap";
 import { useSearchParams } from "react-router-dom";
 import type {
   ILocation,
@@ -44,11 +44,16 @@ export function TravelMapPage() {
   const initialViewMode = searchParams.get("view") === "list" ? "list" : "map";
   const initialSearch = searchParams.get("q") || "";
   const rawStatus = searchParams.get("status");
-  const initialStatus =
-    rawStatus === "Visited" || rawStatus === "Wishlist" ? rawStatus : "ALL";
+  const initialStatus: LocationStatus | undefined =
+    rawStatus === LocationStatus.Visited ||
+    rawStatus === LocationStatus.Wishlist ||
+    rawStatus?.toLowerCase() === LocationStatus.Visited ||
+    rawStatus?.toLowerCase() === LocationStatus.Wishlist
+      ? (rawStatus.toLowerCase() as LocationStatus)
+      : undefined;
   const rawYear = searchParams.get("year");
-  const initialYear: number | "ALL" =
-    rawYear && !Number.isNaN(Number(rawYear)) ? Number(rawYear) : "ALL";
+  const initialYear: number | undefined =
+    rawYear && !Number.isNaN(Number(rawYear)) ? Number(rawYear) : undefined;
   const rawCountry = searchParams.get("country");
   const initialCountry = rawCountry ? rawCountry.toUpperCase() : null;
 
@@ -57,13 +62,23 @@ export function TravelMapPage() {
     initialCountry,
   );
 
-  // 1. Data Hooks: Fetch locations list (hỗ trợ lọc countryCode từ backend)
+  // 1. Filters State
+  const [filters, setFilters] = useState<ILocationFilterState>({
+    search: initialSearch,
+    status: initialStatus,
+    year: initialYear,
+  });
+
+  // 2. Data Hooks: Fetch locations list (hỗ trợ lọc trực tiếp từ backend khi có filter)
   const {
     data: locations,
     isLoading: isLoadingLocations,
     error: locationsError,
     refetch: refetchLocations,
   } = useTravelLocationList({
+    search: filters.search.trim() || undefined,
+    status: filters.status,
+    year: filters.year,
     countryCode: selectedCountryCode || undefined,
   });
 
@@ -83,26 +98,26 @@ export function TravelMapPage() {
   // Hook for single location detail
   const { data: detailData } = useTravelLocationDetail(selectedLocationId);
 
-  // 2. Filters State
-  const [filters, setFilters] = useState<ILocationFilterState>({
-    search: initialSearch,
-    status: initialStatus,
-    year: initialYear,
-  });
-
   // Sync state to URL search parameters for history & back navigation retention
   useEffect(() => {
     const params = new URLSearchParams();
     if (viewMode !== "map") params.set("view", viewMode);
-    if (filters.search) params.set("q", filters.search);
-    if (filters.status !== "ALL") params.set("status", filters.status);
-    if (filters.year !== "ALL") params.set("year", String(filters.year));
+    if (filters.search.trim()) params.set("q", filters.search.trim());
+    if (filters.status) params.set("status", filters.status);
+    if (filters.year !== undefined && filters.year !== null)
+      params.set("year", String(filters.year));
     if (selectedCountryCode) params.set("country", selectedCountryCode);
     if (selectedLocationId !== null)
       params.set("selected", String(selectedLocationId));
 
     setSearchParams(params, { replace: true });
-  }, [viewMode, filters, selectedCountryCode, selectedLocationId, setSearchParams]);
+  }, [
+    viewMode,
+    filters,
+    selectedCountryCode,
+    selectedLocationId,
+    setSearchParams,
+  ]);
 
   // 3. Dialog & Notification States
   const [formDialogOpen, setFormDialogOpen] = useState(false);
@@ -255,8 +270,8 @@ export function TravelMapPage() {
   const handleResetFilters = () => {
     setFilters({
       search: "",
-      status: "ALL",
-      year: "ALL",
+      status: undefined,
+      year: undefined,
     });
     setSelectedCountryCode(null);
   };
@@ -286,7 +301,6 @@ export function TravelMapPage() {
         filters={filters}
         availableYears={availableYears}
         totalLocations={locations.length}
-        filteredCount={filteredLocations.length}
         selectedCountryCode={selectedCountryCode}
         onFilterChange={setFilters}
         onSelectCountry={setSelectedCountryCode}

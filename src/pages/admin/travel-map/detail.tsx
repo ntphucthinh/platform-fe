@@ -34,6 +34,7 @@ import {
 } from "@/utils/travelMemoryUtils";
 import { LocationFormDialog } from "@/components/pages/travel-map/locationFormDialog";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
+import { LocationStatus } from "@/constants/travelMap";
 import type { ILocationFormData } from "@/types/pages/travel-map/travelMap";
 
 export const TravelMapDetailPage: React.FC = () => {
@@ -178,7 +179,7 @@ export const TravelMapDetailPage: React.FC = () => {
     );
   }
 
-  const isVisited = details.status === "Visited";
+  const isVisited = details.status === LocationStatus.Visited;
 
   return (
     <Box

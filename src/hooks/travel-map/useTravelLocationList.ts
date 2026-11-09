@@ -5,12 +5,13 @@ import type {
   ApiTravelLocation,
   ILocationWithDetails,
 } from "@/types/pages/travel-map/travelMap";
+import { LocationStatus } from "@/constants/travelMap";
 import { mapApiLocationToItem } from "@/utils/travelMapUtils";
 
 export interface UseTravelLocationListOptions {
   search?: string;
-  status?: string;
-  year?: number | string;
+  status?: LocationStatus;
+  year?: number;
   countryCode?: string;
 }
 
@@ -36,14 +37,12 @@ export function useTravelLocationList(
     },
     meta: {
       queryParams: {
-        ...(options?.search ? { search: options.search } : {}),
-        ...(options?.status && options.status !== "ALL"
-          ? { status: options.status.toLowerCase() }
-          : {}),
-        ...(options?.year && options.year !== "ALL"
+        ...(options?.search?.trim() ? { search: options.search.trim() } : {}),
+        ...(options?.status ? { status: options.status } : {}),
+        ...(options?.year !== undefined && options?.year !== null
           ? { year: options.year }
           : {}),
-        ...(options?.countryCode
+        ...(options?.countryCode?.trim()
           ? { countryCode: options.countryCode.trim().toUpperCase() }
           : {}),
       },

@@ -10,6 +10,7 @@ import MyLocationIcon from "@mui/icons-material/MyLocation";
 import type { Feature } from "geojson";
 import type { ILocationWithDetails } from "@/types/pages/travel-map/travelMap";
 import {
+  LocationStatus,
   VIETNAM_DEFAULT_CENTER,
   VIETNAM_DEFAULT_ZOOM,
 } from "@/constants/travelMap";
@@ -156,7 +157,7 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
 
     locations.forEach((loc) => {
       const isSelected = loc.id === selectedLocationId;
-      const isVisited = loc.status === "Visited";
+      const isVisited = loc.status === LocationStatus.Visited;
 
       // SVG Icon Pin
       const pinColor = isVisited ? "#1976D2" : "#D97706";
@@ -284,7 +285,7 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
 
     let isCancelled = false;
 
-    if (!selectedCountryCode || selectedCountryCode === "ALL") {
+    if (!selectedCountryCode) {
       prevCountryCodeRef.current = undefined;
       if (highlightLayerRef.current) {
         map.removeLayer(highlightLayerRef.current);

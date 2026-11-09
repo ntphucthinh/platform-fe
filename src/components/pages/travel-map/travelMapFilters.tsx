@@ -15,19 +15,18 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import type {
-  ILocationFilterState,
-  LocationStatus,
-} from "@/types/pages/travel-map/travelMap";
+import type { ILocationFilterState } from "@/types/pages/travel-map/travelMap";
+import { LocationStatus } from "@/constants/travelMap";
 import { useCountries, type IGlobalCountry } from "@/hooks/common/useGlobalGeo";
 
 interface TravelMapFiltersProps {
   filters: ILocationFilterState;
   availableYears: number[];
   totalLocations: number;
-  filteredCount: number;
   selectedCountryCode?: string | null;
-  onFilterChange: (updater: (prev: ILocationFilterState) => ILocationFilterState) => void;
+  onFilterChange: (
+    updater: (prev: ILocationFilterState) => ILocationFilterState,
+  ) => void;
   onSelectCountry?: (code: string | null) => void;
   onResetFilters: () => void;
 }
@@ -36,7 +35,6 @@ export const TravelMapFilters: React.FC<TravelMapFiltersProps> = ({
   filters,
   availableYears,
   totalLocations,
-  filteredCount,
   selectedCountryCode,
   onFilterChange,
   onSelectCountry,
@@ -51,8 +49,8 @@ export const TravelMapFilters: React.FC<TravelMapFiltersProps> = ({
 
   const isFiltered =
     Boolean(filters.search.trim()) ||
-    filters.status !== "ALL" ||
-    filters.year !== "ALL" ||
+    Boolean(filters.status) ||
+    filters.year !== undefined ||
     Boolean(selectedCountryCode);
 
   return (
@@ -190,12 +188,12 @@ export const TravelMapFilters: React.FC<TravelMapFiltersProps> = ({
           <Select<LocationStatus | "">
             labelId="travel-map-status-label"
             label="Trạng thái"
-            value={filters.status === "ALL" ? "" : filters.status}
+            value={filters.status ?? ""}
             onChange={(e) => {
               const val = e.target.value;
               onFilterChange((prev) => ({
                 ...prev,
-                status: (val || "ALL") as "ALL" | LocationStatus,
+                status: val ? (val as LocationStatus) : undefined,
               }));
             }}
             sx={{ borderRadius: "10px", bgcolor: "#F8FAFC" }}
@@ -203,8 +201,10 @@ export const TravelMapFilters: React.FC<TravelMapFiltersProps> = ({
             <MenuItem value="">
               <em>Không chọn</em>
             </MenuItem>
-            <MenuItem value="Visited">Đã ghé thăm</MenuItem>
-            <MenuItem value="Wishlist">Muốn đến (Wishlist)</MenuItem>
+            <MenuItem value={LocationStatus.Visited}>Đã ghé thăm</MenuItem>
+            <MenuItem value={LocationStatus.Wishlist}>
+              Muốn đến (Wishlist)
+            </MenuItem>
           </Select>
         </FormControl>
 
@@ -220,12 +220,12 @@ export const TravelMapFilters: React.FC<TravelMapFiltersProps> = ({
           <Select<number | "">
             labelId="travel-map-year-label"
             label="Năm chuyến đi"
-            value={filters.year === "ALL" ? "" : filters.year}
+            value={filters.year ?? ""}
             onChange={(e) => {
               const val = e.target.value;
               onFilterChange((prev) => ({
                 ...prev,
-                year: val === "" ? "ALL" : Number(val),
+                year: val === "" ? undefined : Number(val),
               }));
             }}
             sx={{ borderRadius: "10px", bgcolor: "#F8FAFC" }}
@@ -255,20 +255,14 @@ export const TravelMapFilters: React.FC<TravelMapFiltersProps> = ({
         <Chip
           icon={<FilterListIcon sx={{ fontSize: 16 }} />}
           label={
-            isFiltered ? (
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                {filteredCount} / {totalLocations} địa điểm
-              </Typography>
-            ) : (
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                {totalLocations} địa điểm
-              </Typography>
-            )
+            <Typography variant="caption" sx={{ fontWeight: 600 }}>
+              {totalLocations} địa điểm
+            </Typography>
           }
           size="small"
           sx={{
-            bgcolor: isFiltered ? "#EFF6FF" : "#F1F5F9",
-            color: isFiltered ? "#1976D2" : "#475569",
+            bgcolor: "#EFF6FF",
+            color: "#1976D2",
             borderRadius: "8px",
             fontWeight: 600,
           }}

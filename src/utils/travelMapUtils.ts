@@ -5,12 +5,12 @@ import type {
   ILocationFormData,
   ILocationWithDetails,
   ITravelMapSummary,
-  LocationStatus,
 } from "@/types/pages/travel-map/travelMap";
 import { getPublicImageUrl } from "@/utils/homestayUtils";
 import { findCountryByCode } from "@/hooks/common/useGlobalGeo";
 import { Country } from "country-state-city";
 import {
+  LocationStatus,
   VIETNAM_DEFAULT_CENTER,
   VIETNAM_DEFAULT_ZOOM,
 } from "@/constants/travelMap";
@@ -44,7 +44,10 @@ export function mapApiLocationToItem(
   raw: ApiTravelLocation,
 ): ILocationWithDetails {
   const status: LocationStatus =
-    raw.status?.toLowerCase() === "visited" ? "Visited" : "Wishlist";
+    raw.status === LocationStatus.Wishlist ||
+    raw.status?.toLowerCase() === LocationStatus.Wishlist
+      ? LocationStatus.Wishlist
+      : LocationStatus.Visited;
   const locName = raw.locationName || "";
   const dynamicMapUrl = getGoogleMapsUrl(raw.latitude, raw.longitude);
 
@@ -99,12 +102,12 @@ export function filterLocations(
     }
 
     // 2. Status filter
-    if (filters.status !== "ALL" && loc.status !== filters.status) {
+    if (filters.status && loc.status !== filters.status) {
       return false;
     }
 
     // 3. Year filter
-    if (filters.year !== "ALL") {
+    if (filters.year !== undefined && filters.year !== null) {
       const yearNum = Number(filters.year);
       if (loc.latestVisitDate) {
         const visitYear = new Date(loc.latestVisitDate).getFullYear();
@@ -177,10 +180,10 @@ export function getTravelMapSummary(
 ): ITravelMapSummary {
   const totalLocations = locations.length;
   const visitedLocations = locations.filter(
-    (loc) => loc.status === "Visited",
+    (loc) => loc.status === LocationStatus.Visited,
   ).length;
   const wishlistLocations = locations.filter(
-    (loc) => loc.status === "Wishlist",
+    (loc) => loc.status === LocationStatus.Wishlist,
   ).length;
   const completedTripsCount = locations.reduce(
     (acc, loc) => acc + (loc.visitCount || 0),
@@ -298,8 +301,11 @@ export function buildTravelLocationPayload(
       ? Number(formData.longitude)
       : null;
 
-  const status: "visited" | "wishlist" =
-    formData.status?.toLowerCase() === "wishlist" ? "wishlist" : "visited";
+  const status: LocationStatus =
+    formData.status === LocationStatus.Wishlist ||
+    formData.status?.toLowerCase() === LocationStatus.Wishlist
+      ? LocationStatus.Wishlist
+      : LocationStatus.Visited;
 
   let rawPath: string | undefined = undefined;
 

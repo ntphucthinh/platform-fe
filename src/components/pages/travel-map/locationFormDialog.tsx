@@ -35,8 +35,8 @@ import type { Feature } from "geojson";
 import type {
   ILocation,
   ILocationFormData,
-  LocationStatus,
 } from "@/types/pages/travel-map/travelMap";
+import { LocationStatus } from "@/constants/travelMap";
 import {
   extractRelativeImagePath,
   getGoogleMapsUrl,
@@ -1282,7 +1282,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
                       </Typography>
                     );
                   }
-                  return selected === "Visited"
+                  return selected === LocationStatus.Visited
                     ? "Đã ghé thăm (Visited)"
                     : "Muốn đến (Wishlist)";
                 },
@@ -1292,8 +1292,8 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
             <MenuItem value="" disabled sx={{ color: "#94A3B8" }}>
               <em>-- Chọn trạng thái --</em>
             </MenuItem>
-            <MenuItem value="Visited">Đã ghé thăm (Visited)</MenuItem>
-            <MenuItem value="Wishlist">Muốn đến (Wishlist)</MenuItem>
+            <MenuItem value={LocationStatus.Visited}>Đã ghé thăm (Visited)</MenuItem>
+            <MenuItem value={LocationStatus.Wishlist}>Muốn đến (Wishlist)</MenuItem>
           </TextField>
 
           {/* Đường dẫn Google Maps (1 hàng riêng, tùy chọn) */}

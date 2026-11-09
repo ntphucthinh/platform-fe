@@ -24,6 +24,7 @@ import type {
   ILocationFilterState,
 } from "@/types/pages/travel-map/travelMap";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
+import { LocationStatus } from "@/constants/travelMap";
 
 interface TravelMapListViewProps {
   locations: ILocationWithDetails[];
@@ -323,7 +324,7 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
       >
         {visibleLocations.map((loc) => {
           const isSelected = loc.id === selectedLocationId;
-          const isVisited = loc.status === "Visited";
+          const isVisited = loc.status === LocationStatus.Visited;
 
           return (
             <Card
