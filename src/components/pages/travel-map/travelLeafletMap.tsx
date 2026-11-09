@@ -18,6 +18,7 @@ import {
   getCountryCenterAndZoom,
   type CountryGeometry,
 } from "@/utils/travelMapUtils";
+import { createVietnamSovereigntyLayer } from "@/utils/vietnamSovereigntyLayer";
 
 interface TravelLeafletMapProps {
   locations: ILocationWithDetails[];
@@ -90,9 +91,34 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
 
     const markersGroup = L.layerGroup().addTo(map);
     markersLayerRef.current = markersGroup;
+
+    // Khởi tạo Layer Chủ quyền Biển đảo Việt Nam (Hoàng Sa & Trường Sa)
+    const vnSovereignty = createVietnamSovereigntyLayer(map);
+    vnSovereignty.layerGroup.addTo(map);
+
+    // Cập nhật tỷ lệ kích thước marker động theo mức zoom bản đồ
+    const updateMarkerScale = () => {
+      if (!mapContainerRef.current) return;
+      const zoom = map.getZoom();
+      // Thu nhỏ mượt mà khi zoom out (zoom <= 5), mở rộng vừa vặn khi zoom in (zoom >= 7)
+      const scale = Math.min(1.25, Math.max(0.5, 1.0 + (zoom - 6) * 0.15));
+      mapContainerRef.current.style.setProperty(
+        "--travel-marker-scale",
+        scale.toFixed(2),
+      );
+      mapContainerRef.current.classList.toggle("map-zoom-low", zoom <= 3);
+    };
+
+    updateMarkerScale();
+    map.on("zoom", updateMarkerScale);
+    map.on("zoomend", updateMarkerScale);
+
     mapInstanceRef.current = map;
 
     return () => {
+      map.off("zoom", updateMarkerScale);
+      map.off("zoomend", updateMarkerScale);
+      vnSovereignty.cleanup();
       map.remove();
       mapInstanceRef.current = null;
     };
@@ -137,6 +163,11 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
       const badgeText =
         isVisited && loc.visitCount > 1 ? `${loc.visitCount}` : "";
 
+      const pinSize = isSelected ? "26px" : "20px";
+      const iconFontSize = isSelected ? "11px" : "9px";
+      const labelFontSize = isSelected ? "9.5px" : "9px";
+      const labelPadding = isSelected ? "1.5px 6px" : "1px 5px";
+
       const iconHtml = `
         <div class="travel-map-custom-marker ${isSelected ? "selected" : ""}" style="
           position: relative;
@@ -144,14 +175,15 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
           flex-direction: column;
           align-items: center;
           cursor: pointer;
-          transform: translate(-50%, -100%);
-          transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+          transform-origin: 50% 100%;
+          transform: translate(-50%, -100%) scale(var(--travel-marker-scale, 1));
+          transition: transform 0.15s ease-out;
         ">
-          <div style="
-            width: ${isSelected ? "38px" : "32px"};
-            height: ${isSelected ? "38px" : "32px"};
+          <div class="travel-marker-pin" style="
+            width: ${pinSize};
+            height: ${pinSize};
             background-color: ${pinColor};
-            border: 2.5px solid #FFFFFF;
+            border: ${isSelected ? "2px" : "1.8px"} solid #FFFFFF;
             border-radius: 50% 50% 50% 0;
             transform: rotate(-45deg);
             display: flex;
@@ -159,37 +191,40 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
             justify-content: center;
             box-shadow: ${
               isSelected
-                ? `0 0 0 5px rgba(25, 118, 210, 0.3), 0 8px 16px rgba(0,0,0,0.3)`
-                : `0 4px 10px rgba(0,0,0,0.2)`
+                ? `0 0 0 3px rgba(25, 118, 210, 0.3), 0 4px 10px rgba(0,0,0,0.25)`
+                : `0 2px 5px rgba(0,0,0,0.2)`
             };
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
           ">
             <span style="
               transform: rotate(45deg);
               color: #FFFFFF;
               font-weight: 700;
-              font-size: 13px;
+              font-size: ${iconFontSize};
               line-height: 1;
             ">${badgeText || (isVisited ? "✓" : "★")}</span>
           </div>
-          <div style="
-            margin-top: 4px;
-            background-color: rgba(15, 23, 42, 0.85);
+          <div class="travel-marker-label" style="
+            margin-top: 2px;
+            background-color: ${isSelected ? "rgba(15, 23, 42, 0.95)" : "rgba(15, 23, 42, 0.85)"};
             color: #FFFFFF;
-            font-size: 11px;
-            font-weight: 600;
-            padding: 2px 7px;
-            border-radius: 6px;
+            font-size: ${labelFontSize};
+            font-weight: ${isSelected ? "700" : "600"};
+            padding: ${labelPadding};
+            border-radius: 4px;
+            border: ${isSelected ? "1px solid rgba(255,255,255,0.4)" : "none"};
             white-space: nowrap;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            box-shadow: 0 1.5px 4px rgba(0,0,0,0.2);
             pointer-events: none;
             backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 3.5px;
+            line-height: 1.2;
           ">
             ${
               loc.countryCode
-                ? `<img src="https://flagcdn.com/${loc.countryCode.toLowerCase()}.svg" width="14" height="10" style="border-radius: 1px; object-fit: cover;" onerror="this.style.display='none'" />`
+                ? `<img src="https://flagcdn.com/${loc.countryCode.toLowerCase()}.svg" width="11" height="8" style="border-radius: 1px; object-fit: cover;" onerror="this.style.display='none'" />`
                 : ""
             }
             <span>${loc.locationName || loc.name}</span>
@@ -364,6 +399,18 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
           height: "100%",
           minHeight: "inherit",
           zIndex: 1,
+          "& .custom-div-icon": {
+            overflow: "visible",
+          },
+          "& .travel-map-custom-marker:hover": {
+            zIndex: 9999,
+            "& .travel-marker-pin": {
+              transform: "rotate(-45deg) scale(1.12)",
+            },
+          },
+          "&.map-zoom-low .travel-marker-label": {
+            display: "none !important",
+          },
         }}
       />
 

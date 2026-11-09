@@ -46,6 +46,7 @@ import {
   isPointInCountry,
   type CountryGeometry,
 } from "@/utils/travelMapUtils";
+import { createVietnamSovereigntyLayer } from "@/utils/vietnamSovereigntyLayer";
 import {
   useCountries,
   useGlobalGeo,
@@ -104,25 +105,25 @@ interface DestinationMapPreviewProps {
   country: IGlobalCountry | null;
   latitude: number | "" | null;
   longitude: number | "" | null;
-  error?: string | null;
+  warning?: string | null;
   onLocationSelect: (lat: number, lng: number) => void;
-  onLocationError?: (msg: string) => void;
+  onLocationWarning?: (msg: string | null) => void;
 }
 
 /**
  * Component bản đồ tương tác:
  * - Highlight ranh giới quốc gia được chọn với viền và màu nền mờ
- * - Cho phép nhấp trực tiếp vào bản đồ để chọn tọa độ (chỉ trong phạm vi quốc gia)
- * - Cho phép kéo ghim marker để tinh chỉnh vị trí (nếu kéo ra ngoài sẽ bị từ chối)
+ * - Cho phép nhấp trực tiếp vào bản đồ hoặc kéo thả ghim để chọn tọa độ
+ * - Cảnh báo màu vàng nếu tọa độ nằm ngoài ranh giới quốc gia (không chặn chọn tọa độ)
  * - Tự động di chuyển tới ranh giới quốc gia khi chọn từ dropdown
  */
 const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
   country,
   latitude,
   longitude,
-  error,
+  warning,
   onLocationSelect,
-  onLocationError,
+  onLocationWarning,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -131,7 +132,7 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
   const countryGeometryRef = useRef<CountryGeometry | null>(null);
   const countryRef = useRef<IGlobalCountry | null>(country);
   const onLocationSelectRef = useRef(onLocationSelect);
-  const onLocationErrorRef = useRef(onLocationError);
+  const onLocationWarningRef = useRef(onLocationWarning);
   const coordsRef = useRef<{
     lat: number | "" | null;
     lng: number | "" | null;
@@ -158,8 +159,8 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
   }, [onLocationSelect]);
 
   useEffect(() => {
-    onLocationErrorRef.current = onLocationError;
-  }, [onLocationError]);
+    onLocationWarningRef.current = onLocationWarning;
+  }, [onLocationWarning]);
 
   useEffect(() => {
     coordsRef.current = { lat: latitude, lng: longitude };
@@ -173,7 +174,7 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
     longitude !== "" &&
     longitude !== undefined;
 
-  // Tạo draggable marker với validation vị trí kéo thả
+  // Tạo draggable marker với cảnh báo vị trí kéo thả
   const createDraggableMarker = useCallback(
     (lat: number, lng: number): L.Marker => {
       const marker = L.marker([lat, lng], {
@@ -188,9 +189,8 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
         const newLng = Number(pos.lng.toFixed(7));
 
         if (!currentCountry) {
-          onLocationErrorRef.current?.(
-            "Vui lòng chọn quốc gia trước khi chọn vị trí trên bản đồ.",
-          );
+          onLocationWarningRef.current?.(null);
+          onLocationSelectRef.current(newLat, newLng);
           return;
         }
 
@@ -207,18 +207,14 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
           currentCountry.iso2,
         );
         if (!isValid) {
-          onLocationErrorRef.current?.(
-            `Vị trí đã chọn không thuộc lãnh thổ ${currentCountry.name}. Vui lòng chỉ chọn vị trí trong vùng quốc gia được đánh dấu.`,
+          onLocationWarningRef.current?.(
+            `Vị trí đã chọn không thuộc lãnh thổ ${currentCountry.name}.`,
           );
-          if (
-            typeof coordsRef.current.lat === "number" &&
-            typeof coordsRef.current.lng === "number"
-          ) {
-            marker.setLatLng([coordsRef.current.lat, coordsRef.current.lng]);
-          }
-          return;
+        } else {
+          onLocationWarningRef.current?.(null);
         }
 
+        // Vẫn cho phép chọn tọa độ bình thường, không chặn lại
         onLocationSelectRef.current(newLat, newLng);
       });
 
@@ -264,18 +260,24 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
       subdomains: ["a", "b", "c"],
     }).addTo(map);
 
-    // Cho phép click chọn vị trí trên bản đồ với validation lãnh thổ quốc gia
+    // Cho phép click chọn vị trí trên bản đồ với cảnh báo lãnh thổ quốc gia
     map.on("click", async (e: L.LeafletMouseEvent) => {
       const currentCountry = countryRef.current;
-      if (!currentCountry) {
-        onLocationErrorRef.current?.(
-          "Vui lòng chọn quốc gia trước khi chọn vị trí trên bản đồ.",
-        );
-        return;
-      }
-
       const newLat = Number(e.latlng.lat.toFixed(7));
       const newLng = Number(e.latlng.lng.toFixed(7));
+
+      if (markerRef.current) {
+        markerRef.current.setLatLng([newLat, newLng]);
+      } else {
+        const marker = createDraggableMarker(newLat, newLng).addTo(map);
+        markerRef.current = marker;
+      }
+
+      if (!currentCountry) {
+        onLocationWarningRef.current?.(null);
+        onLocationSelectRef.current(newLat, newLng);
+        return;
+      }
 
       let geometry = countryGeometryRef.current;
       if (!geometry && currentCountry.iso2) {
@@ -290,12 +292,14 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
         currentCountry.iso2,
       );
       if (!isValid) {
-        onLocationErrorRef.current?.(
-          `Vị trí đã chọn không thuộc lãnh thổ ${currentCountry.name}. Vui lòng chỉ chọn vị trí trong vùng quốc gia được đánh dấu.`,
+        onLocationWarningRef.current?.(
+          `Vị trí đã chọn không thuộc lãnh thổ ${currentCountry.name}.`,
         );
-        return;
+      } else {
+        onLocationWarningRef.current?.(null);
       }
 
+      // Vẫn cho phép chọn tọa độ bình thường, không chặn lại
       onLocationSelectRef.current(newLat, newLng);
     });
 
@@ -303,6 +307,10 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
       const marker = createDraggableMarker(latitude, longitude).addTo(map);
       markerRef.current = marker;
     }
+
+    // Khởi tạo Layer Chủ quyền Biển đảo Việt Nam (Hoàng Sa & Trường Sa)
+    const vnSovereignty = createVietnamSovereigntyLayer(map);
+    vnSovereignty.layerGroup.addTo(map);
 
     mapInstanceRef.current = map;
 
@@ -318,6 +326,7 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
     return () => {
       clearTimeout(timer);
       observer.disconnect();
+      vnSovereignty.cleanup();
       map.remove();
       mapInstanceRef.current = null;
       markerRef.current = null;
@@ -334,6 +343,7 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
     if (!country) {
       prevCountryIso2Ref.current = undefined;
       countryGeometryRef.current = null;
+      onLocationWarningRef.current?.(null);
       if (highlightLayerRef.current) {
         map.removeLayer(highlightLayerRef.current);
         highlightLayerRef.current = null;
@@ -403,6 +413,28 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
             easeLinearity: 0.25,
           });
           hasInitialCoordsRef.current = false;
+        }
+
+        // Cập nhật cảnh báo nếu vị trí hiện tại không thuộc quốc gia
+        if (
+          typeof coordsRef.current.lat === "number" &&
+          typeof coordsRef.current.lng === "number"
+        ) {
+          const isValid = isPointInCountry(
+            coordsRef.current.lat,
+            coordsRef.current.lng,
+            geometry,
+            country.iso2,
+          );
+          if (!isValid) {
+            onLocationWarningRef.current?.(
+              `Vị trí đã chọn không thuộc lãnh thổ ${country.name}.`,
+            );
+          } else {
+            onLocationWarningRef.current?.(null);
+          }
+        } else {
+          onLocationWarningRef.current?.(null);
         }
       },
     );
@@ -483,7 +515,7 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
         >
           <span>📍</span>{" "}
           {country
-            ? `Nhấp vào bản đồ trong phạm vi ${country.name}`
+            ? `Nhấp vào bản đồ để chọn vị trí (${country.name})`
             : "Chọn quốc gia trước khi chọn vị trí"}
         </Typography>
       </Box>
@@ -509,65 +541,70 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
       <Box
         sx={{
           px: 2,
-          py: 1,
-          bgcolor: "#FFFFFF",
-          borderTop: "1px solid #E2E8F0",
+          py: 1.25,
+          bgcolor: warning ? "#FFFDF5" : "#FFFFFF",
+          borderTop: `1px solid ${warning ? "#FDE68A" : "#E2E8F0"}`,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           flexWrap: "wrap",
-          gap: 1,
+          gap: 1.25,
+          minHeight: 48,
+          transition: "background-color 0.2s ease, border-color 0.2s ease",
         }}
       >
-        {error ? (
+        {hasValidCoords ? (
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
-              gap: 1,
-              bgcolor: "#FEF2F2",
-              color: "#DC2626",
-              border: "1px solid #FECACA",
-              borderRadius: "6px",
-              px: 1.25,
-              py: 0.6,
-              width: "100%",
-            }}
-          >
-            <Typography
-              sx={{ fontSize: "12px", fontWeight: 600, color: "#DC2626" }}
-            >
-              ⚠️ {error}
-            </Typography>
-          </Box>
-        ) : hasValidCoords ? (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
+              gap: 1.25,
               flexWrap: "wrap",
             }}
           >
-            <Typography
+            {/* Tọa độ badge */}
+            <Box
               sx={{
                 fontSize: "12px",
                 fontWeight: 600,
-                color: "#1E40AF",
-                bgcolor: "#EFF6FF",
+                color: warning ? "#92400E" : "#1E40AF",
+                bgcolor: warning ? "#FEF3C7" : "#EFF6FF",
+                border: `1px solid ${warning ? "#FCD34D" : "#DBEAFE"}`,
                 px: 1.25,
                 py: 0.35,
                 borderRadius: "6px",
-                border: "1px solid #DBEAFE",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 0.5,
               }}
             >
-              📍 Tọa độ:{" "}
-              {typeof latitude === "number" ? latitude.toFixed(6) : latitude},{" "}
-              {typeof longitude === "number" ? longitude.toFixed(6) : longitude}
-            </Typography>
-            <Typography sx={{ fontSize: "11.5px", color: "#64748B" }}>
-              (Nhấp vào bản đồ hoặc kéo thả ghim trong vùng được đánh dấu)
-            </Typography>
+              <span>📍</span>
+              <span>
+                {typeof latitude === "number" ? latitude.toFixed(6) : latitude},{" "}
+                {typeof longitude === "number" ? longitude.toFixed(6) : longitude}
+              </span>
+            </Box>
+
+            {/* Cảnh báo hiển thị thẳng hàng cùng dòng với tọa độ */}
+            {warning ? (
+              <Box
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                  color: "#B45309",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                }}
+              >
+                <span>⚠️</span>
+                <span>{warning}</span>
+              </Box>
+            ) : (
+              <Typography sx={{ fontSize: "11.5px", color: "#64748B" }}>
+                (Nhấp vào bản đồ hoặc kéo ghim để đổi vị trí)
+              </Typography>
+            )}
           </Box>
         ) : (
           <Typography
@@ -582,8 +619,14 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
           >
             <span>💡</span>{" "}
             {country
-              ? `Vui lòng nhấp vào bản đồ trong phạm vi ${country.name} để chọn vị trí điểm đến`
+              ? `Nhấp vào bản đồ để chọn vị trí điểm đến (${country.name})`
               : "Vui lòng chọn quốc gia ở trên trước để hiển thị vùng bản đồ tương ứng"}
+          </Typography>
+        )}
+
+        {hasValidCoords && warning && (
+          <Typography sx={{ fontSize: "11.5px", color: "#94A3B8" }}>
+            (Nhấp hoặc kéo ghim để chỉnh lại)
           </Typography>
         )}
       </Box>
@@ -701,6 +744,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
   );
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [locationWarning, setLocationWarning] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Tải trước dữ liệu GeoJSON ranh giới các quốc gia
@@ -786,6 +830,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
   // Xử lý khi thay đổi Quốc gia
   const handleCountryChange = (newCountry: IGlobalCountry | null) => {
     setSelectedCountry(newCountry);
+    setLocationWarning(null);
 
     setFormData((prev) => ({
       ...prev,
@@ -1140,11 +1185,9 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
             country={selectedCountry}
             latitude={formData.latitude}
             longitude={formData.longitude}
-            error={errors.coordinates}
+            warning={locationWarning}
             onLocationSelect={handleLocationSelect}
-            onLocationError={(msg) =>
-              setErrors((prev) => ({ ...prev, coordinates: msg }))
-            }
+            onLocationWarning={setLocationWarning}
           />
 
           {/* VĨ ĐỘ & KINH ĐỘ (READ-ONLY, tự động theo vị trí chọn từ bản đồ) */}
@@ -1164,11 +1207,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
               }
               fullWidth
               size="small"
-              helperText={
-                errors.coordinates ||
-                "Chọn từ bản đồ (Không chỉnh sửa thủ công)"
-              }
-              error={Boolean(errors.coordinates)}
+              helperText="Chọn từ bản đồ (Không chỉnh sửa thủ công)"
               slotProps={{
                 input: {
                   readOnly: true,
