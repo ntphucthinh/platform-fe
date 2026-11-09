@@ -26,6 +26,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { useTravelLocationDetail } from "@/hooks/travel-map/useTravelLocationDetail";
+import { useTravelLocationList } from "@/hooks/travel-map/useTravelLocationList";
 import { useUpdateTravelLocation } from "@/hooks/travel-map/useUpdateTravelLocation";
 import {
   formatDateRangeVietnamese,
@@ -63,6 +64,7 @@ export const TravelMapDetailPage: React.FC = () => {
     isLoading,
     refetch,
   } = useTravelLocationDetail(numericId);
+  const { data: allLocations } = useTravelLocationList();
   const { updateLocation } = useUpdateTravelLocation();
 
   const [formDialogOpen, setFormDialogOpen] = useState(false);
@@ -1176,6 +1178,7 @@ export const TravelMapDetailPage: React.FC = () => {
       <LocationFormDialog
         open={formDialogOpen}
         initialData={details}
+        existingLocations={allLocations}
         onClose={() => setFormDialogOpen(false)}
         onSubmit={handleEditSubmit}
       />
