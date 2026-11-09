@@ -144,13 +144,13 @@ export const TravelMemoryListPage: React.FC = () => {
     sortOrder !== "NEWEST";
 
   // Responsive Carousel Grouping
-  // Desktop (lg+): 4 cols x 2 rows = 8 items
+  // Desktop (lg+): 5 cols x 2 rows = 10 items
   // Tablet (sm-md): 2 cols x 2 rows = 4 items
   // Mobile (xs): 1 col x 2 rows = 2 items
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "lg"));
-  const itemsPerGroup = isMobile ? 2 : isTablet ? 4 : 8;
+  const itemsPerGroup = isMobile ? 2 : isTablet ? 4 : 10;
   const prefersReducedMotion = useMediaQuery(
     "@media (prefers-reduced-motion: reduce)",
   );
@@ -695,9 +695,9 @@ export const TravelMemoryListPage: React.FC = () => {
             gridTemplateColumns: {
               xs: "1fr",
               sm: "repeat(2, 1fr)",
-              lg: "repeat(4, 1fr)",
+              lg: "repeat(5, 1fr)",
             },
-            gap: 2.5,
+            gap: 2,
             animation: prefersReducedMotion
               ? "none"
               : `${slideDirection === "next" ? "slideNext" : "slidePrev"} 240ms cubic-bezier(0.22, 1, 0.36, 1)`,
