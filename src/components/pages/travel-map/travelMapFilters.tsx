@@ -15,6 +15,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 import type { ILocationFilterState } from "@/types/pages/travel-map/travelMap";
 import { LocationStatus } from "@/constants/travelMap";
 import { useCountries, type IGlobalCountry } from "@/hooks/common/useGlobalGeo";
@@ -125,6 +126,53 @@ export const TravelMapFilters: React.FC<TravelMapFiltersProps> = ({
               label="Quốc gia"
               placeholder="Chọn quốc gia..."
               size="small"
+              slotProps={{
+                ...params.slotProps,
+                input: {
+                  ...params.slotProps?.input,
+                  startAdornment: selectedCountry ? (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        pl: 0.5,
+                        pr: 0.5,
+                      }}
+                    >
+                      <Box
+                        component="img"
+                        width="22"
+                        height="15"
+                        src={selectedCountry.flagUrl}
+                        alt={selectedCountry.iso2}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                        sx={{
+                          borderRadius: "2px",
+                          objectFit: "cover",
+                          border: "1px solid #CBD5E1",
+                          flexShrink: 0,
+                        }}
+                      />
+                      {params.slotProps?.input?.startAdornment}
+                    </Box>
+                  ) : (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        pl: 0.5,
+                        pr: 0.5,
+                        color: "#94A3B8",
+                      }}
+                    >
+                      <PublicOutlinedIcon sx={{ fontSize: 18, mr: 0.5 }} />
+                      {params.slotProps?.input?.startAdornment}
+                    </Box>
+                  ),
+                },
+              }}
               sx={{
                 "& .MuiOutlinedInput-root": {
                   borderRadius: "10px",
@@ -147,26 +195,55 @@ export const TravelMapFilters: React.FC<TravelMapFiltersProps> = ({
                   py: 0.75,
                 }}
               >
-                <img
-                  src={option.flagUrl}
-                  alt={option.name}
-                  width={20}
-                  height={14}
-                  style={{
-                    objectFit: "cover",
-                    borderRadius: "2px",
-                    boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
-                  }}
+                <Box
+                  component="img"
                   loading="lazy"
+                  width="22"
+                  height="15"
+                  src={option.flagUrl}
+                  alt={option.iso2}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                  sx={{
+                    borderRadius: "2px",
+                    objectFit: "cover",
+                    border: "1px solid #CBD5E1",
+                    flexShrink: 0,
+                  }}
                 />
-                <Typography sx={{ fontSize: "13px", fontWeight: 500 }}>
-                  {option.vietnameseName}
-                </Typography>
-                {option.vietnameseName !== option.name && (
-                  <Typography sx={{ fontSize: "11.5px", color: "#64748B" }}>
-                    ({option.name})
+                <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                  <Typography
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: "13.5px",
+                      color: "#0F172A",
+                    }}
+                  >
+                    {option.vietnameseName}
                   </Typography>
-                )}
+                  {option.vietnameseName !== option.name && (
+                    <Typography
+                      sx={{ fontSize: "11.5px", color: "#64748B" }}
+                    >
+                      {option.name}
+                    </Typography>
+                  )}
+                </Box>
+                <Typography
+                  sx={{
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    color: "#64748B",
+                    fontFamily: "monospace",
+                    bgcolor: "#F1F5F9",
+                    px: 0.75,
+                    py: 0.25,
+                    borderRadius: "4px",
+                  }}
+                >
+                  {option.iso2}
+                </Typography>
               </Box>
             );
           }}
