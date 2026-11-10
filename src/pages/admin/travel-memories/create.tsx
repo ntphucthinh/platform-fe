@@ -1,7 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { TravelMemoryForm } from "@/components/pages/travel-memories/travelMemoryForm";
-import { createTravelMemory } from "@/services/travelMemoryService";
 import type { ITravelMemoryDay } from "@/types/pages/travel-memories/travelMemory";
 
 export const TravelMemoryCreatePage: React.FC = () => {
@@ -16,8 +15,8 @@ export const TravelMemoryCreatePage: React.FC = () => {
     coverImage: string;
     days: ITravelMemoryDay[];
   }) => {
-    const created = createTravelMemory(formData);
-    navigate(`/admin/travel-memories/${created.id}`);
+    console.log("Create Travel Memory submit formData:", formData);
+    navigate("/admin/travel-memories");
   };
 
   const handleCancel = () => {

@@ -26,8 +26,8 @@ import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 
 export interface TravelMemoryCardProps {
   memory: ITravelMemory;
-  onView: (id: string) => void;
-  onEdit: (id: string) => void;
+  onView: (id: number) => void;
+  onEdit: (id: number) => void;
   onDelete: (memory: ITravelMemory) => void;
 }
 

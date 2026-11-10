@@ -357,7 +357,7 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
       if (file.type.startsWith("image/")) {
         const previewUrl = registerObjectUrl(URL.createObjectURL(file));
         newPhotos.push({
-          id: `photo-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          id: Date.now() + Math.floor(Math.random() * 10000),
           imageUrl: previewUrl,
           fileName: file.name,
           fileSize: file.size,
@@ -396,7 +396,7 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
     processImageFiles(date, Array.from(e.dataTransfer.files));
   };
 
-  const handleRemovePhoto = (date: string, photoId: string) => {
+  const handleRemovePhoto = (date: string, photoId: number) => {
     setPhotosByDate((prev) => {
       const currentList = prev[date] || [];
       const photoToRemove = currentList.find((p) => p.id === photoId);

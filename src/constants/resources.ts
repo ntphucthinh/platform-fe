@@ -13,6 +13,10 @@ export enum AppResource {
   TravelLocation = "travel-locations",
   TravelLocationID = "travel-locations/:id",
 
+  // Travel memory
+  TravelMemory = "travel-memories",
+  TravelMemoryID = "travel-memories/:id",
+
   // Upload
   Upload = "uploads",
 }

@@ -9,7 +9,7 @@ import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 export interface TravelMemoryPhotoGridProps {
   photos: ITravelMemoryPhoto[];
   onPhotoClick?: (index: number) => void;
-  onRemovePhoto?: (photoId: string) => void;
+  onRemovePhoto?: (photoId: number) => void;
   readOnly?: boolean;
   emptyMessage?: string;
 }

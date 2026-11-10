@@ -1,29 +1,48 @@
+// ---------------------------------------------------------------------------
+// Travel Memory Domain & Form Interfaces (I-prefixed per project conventions)
+// ---------------------------------------------------------------------------
+
 export interface ITravelMemoryPhoto {
-  id: string;
-  imageUrl: string;
+  id: number;
+  memoryDayId?: number;
+  imagePath?: string;
+  imageUrl?: string;
   caption?: string;
   altText?: string;
   fileName?: string;
   fileSize?: number;
+  sortOrder?: number;
 }
 
 export interface ITravelMemoryDay {
+  id?: number;
+  memoryId?: number;
   date: string; // ISO date string 'YYYY-MM-DD'
-  description?: string;
+  description?: string | null;
   photos: ITravelMemoryPhoto[];
 }
 
+export interface ITravelMemoryLocation {
+  id?: number;
+  countryCode?: string;
+  countryName?: string;
+  locationName?: string;
+}
+
 export interface ITravelMemory {
-  id: string;
+  id: number;
+  locationId?: number;
+  locationName?: string;
+  location?: ITravelMemoryLocation;
   title: string;
   destination: string;
+  countryCode?: string;
   startDate: string; // ISO date string 'YYYY-MM-DD'
   endDate: string; // ISO date string 'YYYY-MM-DD'
-  description?: string;
+  description?: string | null;
+  coverImagePath?: string;
   coverImage: string;
   days: ITravelMemoryDay[];
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface ITravelMemoryFormData {

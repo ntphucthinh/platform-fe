@@ -8,6 +8,7 @@ import {
   Chip,
   Collapse,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -19,7 +20,7 @@ import CollectionsBookmarkOutlinedIcon from "@mui/icons-material/CollectionsBook
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useParams, useNavigate } from "react-router-dom";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
-import { getTravelMemoryById } from "@/services/travelMemoryService";
+import { useTravelMemoryDetail } from "@/hooks/travel-memories/useTravelMemoryDetail";
 import {
   calculateCalendarDuration,
   countTotalPhotos,
@@ -32,10 +33,13 @@ import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 import type { ITravelMemoryPhoto } from "@/types/pages/travel-memories/travelMemory";
 
 export const TravelMemoryDetailPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
+  const numericId = id ? Number(id) : null;
   const navigate = useNavigate();
 
-  const memory = id ? getTravelMemoryById(id) : undefined;
+  const { data: memory, isLoading, error, refetch } = useTravelMemoryDetail(
+    numericId && !isNaN(numericId) ? numericId : null,
+  );
 
   // Lightbox state
   const [lightboxState, setLightboxState] = useState<{
@@ -58,7 +62,28 @@ export const TravelMemoryDetailPage: React.FC = () => {
     setCollapsedDays((prev) => ({ ...prev, [date]: !prev[date] }));
   };
 
-  if (!memory) {
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          py: 10,
+          textAlign: "center",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 2,
+        }}
+      >
+        <HeaderTitle>Chi tiết chuyến đi</HeaderTitle>
+        <CircularProgress size={40} sx={{ color: "#2563EB" }} />
+        <Typography variant="body1" sx={{ color: "#64748B", fontWeight: 500 }}>
+          Đang tải thông tin chuyến đi...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (error || !memory) {
     return (
       <Box sx={{ py: 6, textAlign: "center" }}>
         <HeaderTitle>Không tìm thấy kỷ niệm</HeaderTitle>
@@ -66,20 +91,33 @@ export const TravelMemoryDetailPage: React.FC = () => {
           sx={{ fontSize: 48, color: "#94A3B8", mb: 2 }}
         />
         <Typography variant="h6" sx={{ fontWeight: 600, color: "#1E293B" }}>
-          Chuyến đi không tồn tại hoặc đã bị xóa
+          {error || "Chuyến đi không tồn tại hoặc đã bị xóa"}
         </Typography>
         <Typography variant="body2" sx={{ color: "#64748B", mt: 1, mb: 3 }}>
-          Không tìm thấy dữ liệu kỷ niệm chuyến đi phù hợp với mã định danh này.
+          {error
+            ? "Không thể tải dữ liệu từ máy chủ. Vui lòng thử lại hoặc quay lại danh sách."
+            : "Không tìm thấy dữ liệu kỷ niệm chuyến đi phù hợp với mã định danh này."}
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate("/admin/travel-memories")}
-          sx={{ borderRadius: "8px", textTransform: "none", fontWeight: 600 }}
-        >
-          Quay lại danh sách
-        </Button>
+        <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
+          <Button
+            variant="outlined"
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate("/admin/travel-memories")}
+            sx={{ borderRadius: "8px", textTransform: "none", fontWeight: 600 }}
+          >
+            Quay lại danh sách
+          </Button>
+          {error && (
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => void refetch()}
+              sx={{ borderRadius: "8px", textTransform: "none", fontWeight: 600 }}
+            >
+              Thử lại
+            </Button>
+          )}
+        </Box>
       </Box>
     );
   }

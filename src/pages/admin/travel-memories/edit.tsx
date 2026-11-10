@@ -1,23 +1,33 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography, Button, CircularProgress } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CollectionsBookmarkOutlinedIcon from "@mui/icons-material/CollectionsBookmarkOutlined";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { TravelMemoryForm } from "@/components/pages/travel-memories/travelMemoryForm";
-import {
-  getTravelMemoryById,
-  updateTravelMemory,
-} from "@/services/travelMemoryService";
+import { useTravelMemoryDetail } from "@/hooks/travel-memories/useTravelMemoryDetail";
 import type { ITravelMemoryDay } from "@/types/pages/travel-memories/travelMemory";
 
 export const TravelMemoryEditPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
+  const numericId = id ? Number(id) : null;
   const navigate = useNavigate();
 
-  const memory = id ? getTravelMemoryById(id) : undefined;
+  const {
+    data: memory,
+    isLoading,
+    error,
+  } = useTravelMemoryDetail(numericId && !isNaN(numericId) ? numericId : null);
 
-  if (!memory || !id) {
+  if (isLoading) {
+    return (
+      <Box sx={{ py: 10, textAlign: "center" }}>
+        <CircularProgress size={36} sx={{ color: "#2563EB" }} />
+      </Box>
+    );
+  }
+
+  if (!memory || !numericId || error) {
     return (
       <Box sx={{ py: 6, textAlign: "center" }}>
         <HeaderTitle>Không tìm thấy kỷ niệm</HeaderTitle>
@@ -52,12 +62,12 @@ export const TravelMemoryEditPage: React.FC = () => {
     coverImage: string;
     days: ITravelMemoryDay[];
   }) => {
-    updateTravelMemory(id, formData);
-    navigate(`/admin/travel-memories/${id}`);
+    console.log("Update Travel Memory ID:", numericId, "submit formData:", formData);
+    navigate(`/admin/travel-memories/${numericId}`);
   };
 
   const handleCancel = () => {
-    navigate(`/admin/travel-memories/${id}`);
+    navigate(`/admin/travel-memories/${numericId}`);
   };
 
   return (

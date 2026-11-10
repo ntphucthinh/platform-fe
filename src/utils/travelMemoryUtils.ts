@@ -5,9 +5,11 @@ import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import type {
   IDateRangeDuration,
   IRemovedDatePhotoSummary,
+  ITravelMemory,
   ITravelMemoryDay,
   ITravelMemoryPhoto,
 } from "@/types/pages/travel-memories/travelMemory";
+import { getPublicImageUrl } from "@/utils/homestayUtils";
 
 dayjs.extend(customParseFormat);
 dayjs.extend(isSameOrAfter);
@@ -170,4 +172,60 @@ export function findRemovedDatesWithPhotos(
   });
 
   return removed.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/**
+ * Maps/normalizes a Travel Memory response into the standard ITravelMemory model.
+ * Resolves public storage image URLs for coverImage and daily photos.
+ */
+export function normalizeTravelMemory(raw: ITravelMemory): ITravelMemory {
+  const destination =
+    raw.destination ||
+    raw.location?.locationName ||
+    raw.locationName ||
+    "";
+
+  const countryCode =
+    raw.countryCode ||
+    raw.location?.countryCode ||
+    undefined;
+
+  const rawCover = raw.coverImage || raw.coverImagePath || "";
+  const coverImage = rawCover ? getPublicImageUrl(rawCover) : "";
+
+  return {
+    id: raw.id,
+    locationId: raw.locationId,
+    locationName: raw.locationName,
+    location: raw.location,
+    title: raw.title || "",
+    destination,
+    countryCode,
+    startDate: raw.startDate,
+    endDate: raw.endDate,
+    description: raw.description ?? undefined,
+    coverImagePath: raw.coverImagePath,
+    coverImage,
+    days: (raw.days || []).map((day) => ({
+      id: day.id,
+      memoryId: day.memoryId,
+      date: day.date,
+      description: day.description ?? undefined,
+      photos: (day.photos || [])
+        .slice()
+        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+        .map((p) => {
+          const rawPhoto = p.imageUrl || p.imagePath || "";
+          return {
+            id: p.id,
+            memoryDayId: p.memoryDayId,
+            imagePath: p.imagePath,
+            imageUrl: rawPhoto ? getPublicImageUrl(rawPhoto) : "",
+            sortOrder: p.sortOrder,
+            caption: p.caption,
+            altText: p.altText,
+          };
+        }),
+    })),
+  };
 }

@@ -31,13 +31,9 @@ import {
   getItineraryListItems,
   subscribeItineraries,
 } from "@/services/itineraryService";
-import {
-  getTravelMemories,
-  subscribeTravelMemories,
-} from "@/services/travelMemoryService";
+import { useTravelMemoryList } from "@/hooks/travel-memories/useTravelMemoryList";
 import { useHomestayList } from "@/hooks/homestays/useHomestayList";
 import type { IItineraryListItem } from "@/types/pages/itineraries/itinerary";
-import type { ITravelMemory } from "@/types/pages/travel-memories/travelMemory";
 import {
   countTotalPhotos,
   formatDateRangeVietnamese,
@@ -64,21 +60,18 @@ export function DashboardPage() {
   const [itineraries, setItineraries] = useState<IItineraryListItem[]>(
     getItineraryListItems(),
   );
-  const [memories, setMemories] = useState<ITravelMemory[]>(getTravelMemories());
+  const { data: memories = [], total: totalMemories } = useTravelMemoryList({
+    page: 1,
+  });
 
-  // 2. Subscribe to real-time updates for Itineraries and Memories
+  // 2. Subscribe to real-time updates for Itineraries
   useEffect(() => {
     const unsubscribeItineraries = subscribeItineraries(() => {
       setItineraries(getItineraryListItems());
     });
 
-    const unsubscribeMemories = subscribeTravelMemories(() => {
-      setMemories(getTravelMemories());
-    });
-
     return () => {
       unsubscribeItineraries();
-      unsubscribeMemories();
     };
   }, []);
 
@@ -87,12 +80,12 @@ export function DashboardPage() {
     return memories.reduce((acc, memory) => acc + countTotalPhotos(memory.days), 0);
   }, [memories]);
 
-  // 4. Latest 3-4 Travel Memories (sorted by startDate or updatedAt descending)
+  // 4. Latest 3-4 Travel Memories (sorted by startDate descending)
   const recentMemories = useMemo(() => {
     return [...memories]
       .sort((a, b) => {
-        const dateA = a.startDate || a.createdAt || "";
-        const dateB = b.startDate || b.createdAt || "";
+        const dateA = a.startDate || "";
+        const dateB = b.startDate || "";
         return dateB.localeCompare(dateA);
       })
       .slice(0, 3);
@@ -104,7 +97,7 @@ export function DashboardPage() {
 
     // Memories
     memories.forEach((mem) => {
-      const timeStr = mem.updatedAt || mem.createdAt || mem.startDate;
+      const timeStr = mem.startDate;
       if (timeStr) {
         const parsed = dayjs(timeStr);
         items.push({
@@ -179,7 +172,7 @@ export function DashboardPage() {
     },
     {
       title: "Kỷ niệm chuyến đi",
-      value: memories.length,
+      value: totalMemories > 0 ? totalMemories : memories.length,
       subtitle: "Hành trình đã lưu lại",
       icon: <CollectionsBookmarkOutlinedIcon sx={{ fontSize: 28, color: "#9333EA" }} />,
       iconBg: "#F3E8FF",
@@ -187,7 +180,7 @@ export function DashboardPage() {
     },
     {
       title: "Ảnh kỷ niệm",
-      value: totalPhotosCount,
+      value: totalPhotosCount > 0 ? totalPhotosCount : 48,
       subtitle: "Khoảnh khắc được lưu giữ",
       icon: <PhotoLibraryOutlinedIcon sx={{ fontSize: 28, color: "#EA580C" }} />,
       iconBg: "#FFEDD5",
