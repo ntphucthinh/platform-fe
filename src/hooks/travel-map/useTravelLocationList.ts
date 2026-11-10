@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useList } from "@refinedev/core";
 import { AppResource } from "@/constants/resources";
 import type {
-  ApiTravelLocation,
+  ILocation,
   ILocationWithDetails,
 } from "@/types/pages/travel-map/travelMap";
 import { LocationStatus } from "@/constants/travelMap";
@@ -30,7 +30,7 @@ export interface UseTravelLocationListResult {
 export function useTravelLocationList(
   options?: UseTravelLocationListOptions,
 ): UseTravelLocationListResult {
-  const { query, result } = useList<ApiTravelLocation>({
+  const { query, result } = useList<ILocation>({
     resource: AppResource.TravelLocation,
     pagination: {
       mode: "off",

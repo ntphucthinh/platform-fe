@@ -1,6 +1,6 @@
 import type {
-  ApiTravelLocation,
-  ApiTravelLocationPayload,
+  ILocation,
+  ILocationPayload,
   ILocationFilterState,
   ILocationFormData,
   ILocationWithDetails,
@@ -37,11 +37,11 @@ export const getGoogleMapsUrl = (
 };
 
 /**
- * Maps raw backend ApiTravelLocation to frontend ILocationWithDetails.
+ * Maps/normalizes a travel location to frontend ILocationWithDetails.
  * Ensures id is preserved strictly as a number.
  */
 export function mapApiLocationToItem(
-  raw: ApiTravelLocation,
+  raw: ILocation,
 ): ILocationWithDetails {
   const status: LocationStatus =
     raw.status === LocationStatus.Wishlist ||
@@ -66,8 +66,6 @@ export function mapApiLocationToItem(
     description: raw.description || "",
     notes: raw.notes || "",
     googleMapsUrl: raw.googleMapsUrl || dynamicMapUrl || "",
-    createdAt: raw.createdAt || new Date().toISOString(),
-    updatedAt: raw.updatedAt || new Date().toISOString(),
     visitCount: raw.visitCount ?? 0,
     itineraryCount: raw.itineraryCount ?? 0,
     latestVisitDate: null,
@@ -92,7 +90,9 @@ export function filterLocations(
       const matchName = (loc.locationName || loc.name || "")
         .toLowerCase()
         .includes(searchLower);
-      const matchAddress = loc.address.toLowerCase().includes(searchLower);
+      const matchAddress = (loc.address || "")
+        .toLowerCase()
+        .includes(searchLower);
       const matchCountry = (loc.countryName || "")
         .toLowerCase()
         .includes(searchLower);
@@ -277,7 +277,7 @@ export function extractRelativeImagePath(
 export function buildTravelLocationPayload(
   formData: ILocationFormData,
   uploadedImagePath?: string,
-): ApiTravelLocationPayload {
+): ILocationPayload {
   const countryCode = (formData.countryCode || "VN").toUpperCase();
 
   // Auto-fill countryName from countryCode

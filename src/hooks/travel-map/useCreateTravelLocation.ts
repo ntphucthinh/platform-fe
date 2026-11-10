@@ -4,14 +4,14 @@ import { AppResource } from "@/constants/resources";
 import { useUploadFile } from "@/hooks/common/useUploadFile";
 import { buildTravelLocationPayload } from "@/utils/travelMapUtils";
 import type {
-  ApiTravelLocation,
+  ILocation,
   ILocationFormData,
 } from "@/types/pages/travel-map/travelMap";
 
 export interface UseCreateTravelLocationResult {
   createLocation: (
     formData: ILocationFormData,
-  ) => Promise<{ data: ApiTravelLocation | null; error: string | null }>;
+  ) => Promise<{ data: ILocation | null; error: string | null }>;
   isLoading: boolean;
   error: string | null;
 }
@@ -22,7 +22,7 @@ export interface UseCreateTravelLocationResult {
  */
 export function useCreateTravelLocation(): UseCreateTravelLocationResult {
   const { uploadFile } = useUploadFile();
-  const { mutateAsync: createMutate, mutation } = useCreate<ApiTravelLocation>();
+  const { mutateAsync: createMutate, mutation } = useCreate<ILocation>();
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
