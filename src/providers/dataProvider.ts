@@ -52,7 +52,10 @@ export const dataProvider: DataProvider = {
     if (filters && filters.length > 0) {
       for (const filter of filters) {
         if ("field" in filter && filter.operator === "eq") {
-          params.append(filter.field, String(filter.value));
+          const val = filter.value;
+          if (val !== undefined && val !== null && val !== "") {
+            params.append(filter.field, String(val));
+          }
         }
       }
     }
@@ -61,7 +64,10 @@ export const dataProvider: DataProvider = {
     for (const key of Object.keys(
       queryParams as Record<string, QueryParamValue>,
     )) {
-      params.append(key, queryParams[key]?.toString() ?? "");
+      const val = queryParams[key];
+      if (val !== undefined && val !== null && val !== "") {
+        params.append(key, String(val));
+      }
     }
 
     const queryString = params.toString();
@@ -73,7 +79,7 @@ export const dataProvider: DataProvider = {
     }
 
     const data = await response.json();
-    const list = Array.isArray(data) ? data : (data?.data ?? []);
+    const list = Array.isArray(data) ? data : data?.data ?? [];
     const total = Number(
       data?.paginatorInfo?.total ??
         data?.total ??
@@ -106,7 +112,7 @@ export const dataProvider: DataProvider = {
     }
 
     const data = await response.json();
-    const list = Array.isArray(data) ? data : (data?.data ?? []);
+    const list = Array.isArray(data) ? data : data?.data ?? [];
 
     return { data: list };
   },

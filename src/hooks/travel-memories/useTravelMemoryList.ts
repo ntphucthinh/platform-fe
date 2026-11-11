@@ -29,17 +29,30 @@ export function useTravelMemoryList(
 ): UseTravelMemoryListResult {
   const page = options?.page ?? 1;
 
+  const queryParams: Record<string, string> = {
+    page: page.toString(),
+  };
+
+  if (
+    options?.locationId !== undefined &&
+    options?.locationId !== null &&
+    !isNaN(Number(options.locationId))
+  ) {
+    queryParams.locationId = options.locationId.toString();
+  }
+
+  const country = options?.countryCode?.trim();
+  if (country) {
+    queryParams.countryCode = country;
+  }
+
   const { query, result } = useList<ITravelMemory>({
     resource: AppResource.TravelMemory,
     pagination: {
       mode: "off",
     },
     meta: {
-      queryParams: {
-        page: page.toString(),
-        ...(options?.locationId ? { locationId: options.locationId } : {}),
-        ...(options?.countryCode ? { countryCode: options.countryCode } : {}),
-      },
+      queryParams,
     },
   });
 

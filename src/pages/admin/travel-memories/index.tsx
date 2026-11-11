@@ -8,12 +8,10 @@ import {
   IconButton,
   Snackbar,
   Alert,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
   useMediaQuery,
   CircularProgress,
+  Autocomplete,
+  TextField,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CollectionsBookmarkOutlinedIcon from "@mui/icons-material/CollectionsBookmarkOutlined";
@@ -29,6 +27,8 @@ import type { ITravelMemory } from "@/types/pages/travel-memories/travelMemory";
 import { useTravelMemoryList } from "@/hooks/travel-memories/useTravelMemoryList";
 import { TravelMemoryCard } from "@/components/pages/travel-memories/travelMemoryCard";
 import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
+import { useCountries, type IGlobalCountry } from "@/hooks/common/useGlobalGeo";
+import useTravelLocationSelection from "@/hooks/selections/useTravelLocationSelection";
 
 export const TravelMemoryListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -39,13 +39,69 @@ export const TravelMemoryListPage: React.FC = () => {
   const page = !isNaN(pageParam) && pageParam > 0 ? pageParam : 1;
   const perPage = 10;
 
+  // Filter state
+  const [selectedYear, setSelectedYear] = useState<Dayjs | null>(null);
+
+  // Country & Location query parameters from URL
+  const countryParam = searchParams.get("country")?.trim() || "";
+  const locationParam = searchParams.get("locationId");
+  const locationFilter: number | "" =
+    locationParam && !isNaN(parseInt(locationParam, 10))
+      ? parseInt(locationParam, 10)
+      : "";
+
+  // Countries from global geo hook
+  const countries = useCountries();
+
+  // Travel locations selection hook filtered by country (nếu chưa chọn country thì gọi API gốc không có param)
+  const { travelLocationsSelections, data: locationData } =
+    useTravelLocationSelection({
+      countryCode: countryParam || undefined,
+    });
+
+  // Country filter: lấy từ URL param hoặc suy luận từ locationFilter nếu URL chưa có country
+  const countryFilter = useMemo(() => {
+    if (countryParam) return countryParam;
+    if (locationFilter !== "") {
+      const matched = locationData.find((l) => l.id === locationFilter);
+      if (matched?.countryCode) {
+        return matched.countryCode;
+      }
+    }
+    return "";
+  }, [countryParam, locationFilter, locationData]);
+
+  // Selected country object for Autocomplete
+  const selectedCountry = useMemo(() => {
+    if (!countryFilter) return null;
+    return countries.find((c) => c.iso2 === countryFilter) ?? null;
+  }, [countries, countryFilter]);
+
+  // Selected location object for Autocomplete
+  const selectedLocation = useMemo(() => {
+    if (locationFilter === "") return null;
+    const foundInOptions = travelLocationsSelections.find(
+      (loc) => Number(loc.value) === Number(locationFilter),
+    );
+    if (foundInOptions) return foundInOptions;
+    const foundInRaw = locationData.find((l) => l.id === locationFilter);
+    if (foundInRaw) {
+      return { label: foundInRaw.name, value: foundInRaw.id };
+    }
+    return null;
+  }, [travelLocationsSelections, locationData, locationFilter]);
+
   const {
     data: memories,
     total,
     isLoading,
     error,
     refetch,
-  } = useTravelMemoryList({ page });
+  } = useTravelMemoryList({
+    page,
+    countryCode: countryFilter || undefined,
+    locationId: typeof locationFilter === "number" ? locationFilter : undefined,
+  });
 
   const handlePageChange = (newPage: number) => {
     setSearchParams((prev) => {
@@ -55,9 +111,50 @@ export const TravelMemoryListPage: React.FC = () => {
     });
   };
 
-  // Filter state
-  const [selectedYear, setSelectedYear] = useState<Dayjs | null>(null);
-  const [destinationFilter, setDestinationFilter] = useState("ALL");
+  // Xử lý khi chọn quốc gia
+  const handleCountryChange = (newCountryCode: string) => {
+    const code = (newCountryCode || "").trim();
+
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("page", "1");
+      if (code) {
+        next.set("country", code);
+      } else {
+        next.delete("country");
+      }
+      next.delete("locationId");
+      return next;
+    });
+  };
+
+  // Xử lý khi chọn địa điểm
+  const handleLocationChange = (newLocationId: number | "") => {
+    let nextCountryCode = countryParam;
+
+    if (newLocationId !== "") {
+      const selectedLoc = locationData.find((l) => l.id === newLocationId);
+      if (selectedLoc?.countryCode) {
+        nextCountryCode = selectedLoc.countryCode;
+      }
+    }
+
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("page", "1");
+      if (nextCountryCode) {
+        next.set("country", nextCountryCode);
+      } else {
+        next.delete("country");
+      }
+      if (newLocationId !== "") {
+        next.set("locationId", newLocationId.toString());
+      } else {
+        next.delete("locationId");
+      }
+      return next;
+    });
+  };
 
   // Delete modal state
   const [itemToDelete, setItemToDelete] = useState<ITravelMemory | null>(null);
@@ -77,15 +174,6 @@ export const TravelMemoryListPage: React.FC = () => {
   const totalTrips = 12;
   const uniqueDestinationsCount = 8;
   const totalPhotosCount = 64;
-
-  // Unique Destinations for dropdown (lấy từ dữ liệu API memories)
-  const uniqueDestinations = useMemo(() => {
-    const set = new Set<string>();
-    memories.forEach((m) => {
-      if (m.destination) set.add(m.destination.trim());
-    });
-    return Array.from(set).sort();
-  }, [memories]);
 
   const prefersReducedMotion = useMediaQuery(
     "@media (prefers-reduced-motion: reduce)",
@@ -366,23 +454,133 @@ export const TravelMemoryListPage: React.FC = () => {
           }}
         />
 
-        {/* Destination Filter */}
-        <FormControl size="small" sx={{ width: 180 }}>
-          <InputLabel id="destination-filter-label">Địa điểm</InputLabel>
-          <Select
-            labelId="destination-filter-label"
-            value={destinationFilter}
-            label="Địa điểm"
-            onChange={(e) => setDestinationFilter(e.target.value)}
-          >
-            <MenuItem value="ALL">Tất cả địa điểm</MenuItem>
-            {uniqueDestinations.map((dest) => (
-              <MenuItem key={dest} value={dest}>
-                {dest}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        {/* Country Filter */}
+        <Autocomplete<IGlobalCountry, false, false, false>
+          size="small"
+          options={countries}
+          getOptionLabel={(option) =>
+            option.vietnameseName !== option.name
+              ? `${option.vietnameseName} (${option.name})`
+              : option.name
+          }
+          value={selectedCountry}
+          isOptionEqualToValue={(option, value) => option.iso2 === value.iso2}
+          onChange={(_, newValue) => {
+            handleCountryChange(newValue ? newValue.iso2 : "");
+          }}
+          sx={{ width: { xs: "100%", sm: 300 } }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Quốc gia"
+              placeholder="Tất cả quốc gia"
+              size="small"
+              slotProps={{
+                ...params.slotProps,
+                input: {
+                  ...params.slotProps?.input,
+                  startAdornment: selectedCountry ? (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        pl: 0.5,
+                        pr: 0.5,
+                      }}
+                    >
+                      <Box
+                        component="img"
+                        width="22"
+                        height="15"
+                        src={selectedCountry.flagUrl}
+                        alt={selectedCountry.iso2}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                        sx={{
+                          borderRadius: "2px",
+                          objectFit: "cover",
+                          border: "1px solid #CBD5E1",
+                          flexShrink: 0,
+                        }}
+                      />
+                      {params.slotProps?.input?.startAdornment}
+                    </Box>
+                  ) : (
+                    params.slotProps?.input?.startAdornment
+                  ),
+                },
+              }}
+            />
+          )}
+          renderOption={(props, option) => {
+            const { key, ...rest } = props;
+            return (
+              <Box
+                key={key}
+                component="li"
+                {...rest}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.25,
+                  py: 0.75,
+                }}
+              >
+                <Box
+                  component="img"
+                  loading="lazy"
+                  width="22"
+                  height="15"
+                  src={option.flagUrl}
+                  alt={option.iso2}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                  sx={{
+                    borderRadius: "2px",
+                    objectFit: "cover",
+                    border: "1px solid #CBD5E1",
+                    flexShrink: 0,
+                  }}
+                />
+                <Typography variant="body2" sx={{ fontSize: "0.875rem" }}>
+                  {option.vietnameseName !== option.name
+                    ? `${option.vietnameseName} (${option.name})`
+                    : option.name}
+                </Typography>
+              </Box>
+            );
+          }}
+        />
+
+        {/* Location Filter */}
+        <Autocomplete<
+          { label: string; value: string | number },
+          false,
+          false,
+          false
+        >
+          size="small"
+          options={travelLocationsSelections}
+          getOptionLabel={(option) => option.label}
+          value={selectedLocation}
+          isOptionEqualToValue={(option, value) =>
+            Number(option.value) === Number(value.value)
+          }
+          onChange={(_, newValue) => {
+            handleLocationChange(newValue ? Number(newValue.value) : "");
+          }}
+          sx={{ width: { xs: "100%", sm: 300 } }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Địa điểm"
+              placeholder="Chọn địa điểm..."
+              size="small"
+            />
+          )}
+        />
       </Card>
 
       {/* 5.4 List Header & Group Navigation */}
@@ -567,8 +765,9 @@ export const TravelMemoryListPage: React.FC = () => {
             Không tìm thấy chuyến đi nào
           </Typography>
           <Typography variant="body2" sx={{ color: "#64748B", maxWidth: 460 }}>
-            Bạn chưa có chuyến đi nào được lưu giữ. Hãy bấm '+ Thêm chuyến đi'
-            để tạo kỷ niệm đầu tiên!
+            {countryFilter || locationFilter !== ""
+              ? "Không có chuyến đi nào phù hợp với bộ lọc hiện tại. Thử thay đổi hoặc xóa bộ lọc."
+              : "Bạn chưa có chuyến đi nào được lưu giữ. Hãy bấm '+ Thêm chuyến đi' để tạo kỷ niệm đầu tiên!"}
           </Typography>
         </Card>
       ) : (
