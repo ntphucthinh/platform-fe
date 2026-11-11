@@ -16,7 +16,7 @@ export interface UseTravelLocationDetailResult {
 
 /**
  * Custom hook to fetch a single travel location by numeric ID using Refine's useOne.
- * Uses AppResource.TravelLocationID ("travel-locations/:id").
+ * Uses AppResource.TravelLocation ("travel-locations").
  * Preserves numeric id throughout mapping.
  */
 export function useTravelLocationDetail(
@@ -25,7 +25,7 @@ export function useTravelLocationDetail(
   const isValidId = typeof id === "number" && !isNaN(id) && id > 0;
 
   const { query, result } = useOne<ILocation>({
-    resource: AppResource.TravelLocationID,
+    resource: AppResource.TravelLocation,
     id: isValidId ? id : "",
     queryOptions: {
       enabled: isValidId,

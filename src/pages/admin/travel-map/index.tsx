@@ -96,7 +96,8 @@ export function TravelMapPage() {
   );
 
   // Hook for single location detail
-  const { data: detailData } = useTravelLocationDetail(selectedLocationId);
+  const { data: detailData, refetch: refetchDetail } =
+    useTravelLocationDetail(selectedLocationId);
 
   // Sync state to URL search parameters for history & back navigation retention
   useEffect(() => {
@@ -154,14 +155,21 @@ export function TravelMapPage() {
     [locations, filters],
   );
 
-  // Selected Location with details: prefer fetchedDetail, fallback to list item
+  // Selected Location with details: merge target from locations list and detailData
   const selectedLocationDetails = useMemo<ILocationWithDetails | null>(() => {
     if (selectedLocationId === null) return null;
-    if (detailData && detailData.id === selectedLocationId) {
-      return detailData;
-    }
     const target = locations.find((l) => l.id === selectedLocationId);
-    return target ?? null;
+    const detail =
+      detailData && detailData.id === selectedLocationId ? detailData : null;
+
+    if (!target && !detail) return null;
+    if (!detail) return target ?? null;
+    if (!target) return detail;
+
+    return {
+      ...detail,
+      ...target,
+    };
   }, [selectedLocationId, detailData, locations]);
 
   // Handle location selection
@@ -199,7 +207,7 @@ export function TravelMapPage() {
         return { success: false, error };
       }
       if (updated) {
-        await refetchLocations();
+        await Promise.all([refetchLocations(), refetchDetail()]);
         setSnackbar({
           open: true,
           message: `Đã cập nhật địa điểm thành công!`,

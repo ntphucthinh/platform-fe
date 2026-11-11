@@ -94,7 +94,7 @@ export const TravelMapDetailPage: React.FC = () => {
       await refetch();
       setSnackbar({
         open: true,
-        message: `Đã cập nhật thông tin địa điểm "${updated.locationName}" thành công!`,
+        message: "Đã cập nhật địa điểm thành công!",
         severity: "success",
       });
       return { success: true };
@@ -193,7 +193,9 @@ export const TravelMapDetailPage: React.FC = () => {
         pb: 8,
       }}
     >
-      <HeaderTitle>{`Chi tiết: ${details.locationName || details.name}`}</HeaderTitle>
+      <HeaderTitle>{`Chi tiết: ${
+        details.locationName || details.name
+      }`}</HeaderTitle>
 
       {/* 1. Breadcrumbs & Quick Back Navigation */}
       <Box
@@ -365,7 +367,9 @@ export const TravelMapDetailPage: React.FC = () => {
                 }}
               >
                 {details.latitude !== null && details.longitude !== null
-                  ? `${details.latitude.toFixed(4)}, ${details.longitude.toFixed(4)}`
+                  ? `${details.latitude.toFixed(
+                      4,
+                    )}, ${details.longitude.toFixed(4)}`
                   : "Chưa có tọa độ"}
               </Typography>
             </Box>
