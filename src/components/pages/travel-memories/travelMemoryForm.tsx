@@ -64,12 +64,8 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
   // Form fields
   const [title, setTitle] = useState(initialData?.title || "");
   const [destination, setDestination] = useState(initialData?.destination || "");
-  const [startDate, setStartDate] = useState(
-    initialData?.startDate || dayjs().format("YYYY-MM-DD"),
-  );
-  const [endDate, setEndDate] = useState(
-    initialData?.endDate || dayjs().add(2, "day").format("YYYY-MM-DD"),
-  );
+  const [startDate, setStartDate] = useState(initialData?.startDate || "");
+  const [endDate, setEndDate] = useState(initialData?.endDate || "");
   const [description, setDescription] = useState(
     initialData?.description || "",
   );
@@ -783,9 +779,17 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                   px: 2,
                   py: 0.5,
                   borderRadius: "8px",
-                  bgcolor: dateRangeValidation.isValid ? "#EFF6FF" : "#FEF2F2",
+                  bgcolor: dateRangeValidation.isValid
+                    ? "#EFF6FF"
+                    : !startDate || !endDate
+                    ? "#F8FAFC"
+                    : "#FEF2F2",
                   border: "1px solid",
-                  borderColor: dateRangeValidation.isValid ? "#BFDBFE" : "#FECACA",
+                  borderColor: dateRangeValidation.isValid
+                    ? "#BFDBFE"
+                    : !startDate || !endDate
+                    ? "#E2E8F0"
+                    : "#FECACA",
                   display: "flex",
                   alignItems: "center",
                   gap: 1.5,
@@ -797,7 +801,11 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
               >
                 <CalendarMonthOutlinedIcon
                   sx={{
-                    color: dateRangeValidation.isValid ? "#2563EB" : "#DC2626",
+                    color: dateRangeValidation.isValid
+                      ? "#2563EB"
+                      : !startDate || !endDate
+                      ? "#94A3B8"
+                      : "#DC2626",
                     fontSize: 22,
                     flexShrink: 0,
                   }}
@@ -821,10 +829,18 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                       fontWeight: 700,
                       fontSize: "0.875rem",
                       lineHeight: 1.25,
-                      color: dateRangeValidation.isValid ? "#1E40AF" : "#DC2626",
+                      color: dateRangeValidation.isValid
+                        ? "#1E40AF"
+                        : !startDate || !endDate
+                        ? "#64748B"
+                        : "#DC2626",
                     }}
                   >
-                    {dateRangeValidation.isValid ? duration.label : "Không hợp lệ"}
+                    {!startDate || !endDate
+                      ? "--"
+                      : dateRangeValidation.isValid
+                      ? duration.label
+                      : "Không hợp lệ"}
                   </Typography>
                 </Box>
               </Box>
