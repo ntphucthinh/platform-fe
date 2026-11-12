@@ -14,9 +14,12 @@ This is a Vite React admin UI scaffold. API communication and data fetching are 
 - React Router DOM 7
 - MUI 9, MUI X Data Grid, Emotion, and Sass
 - React Hook Form + Yup (`@hookform/resolvers`)
+- Impeccable (Design system & UI anti-pattern detection via `PRODUCT.md` and `DESIGN.md`)
 
 ## Project Structure
 
+- `PRODUCT.md` — Product vision, target personas, design principles, and boundaries.
+- `DESIGN.md` — Design system specs, color tokens, typography, component rules, and anti-patterns.
 - `src/providers/routerProvider.tsx` — application providers, Refine setup, and route tree.
 - `src/providers/authProvider.ts` — Refine `authProvider` implementation bridging authentication hooks and session state.
 - `src/router/resources.ts` — Refine resource metadata.
@@ -130,6 +133,8 @@ src/types/pages/users/user.ts
 ## UI and MUI
 
 - Build UI from MUI components and `sx` props, as existing pages do. Reuse `CustomThemeProvider`, `appTheme`, and palette tokens (`primary.main`, `text.secondary`, `background.*`) where suitable.
+- Adhere to the design system and tokens specified in `PRODUCT.md` and `DESIGN.md`. Avoid generic AI anti-patterns (such as arbitrary gradient glows, missing visual hierarchy, unnecessary card wrapping, low-contrast text, or inconsistent border radiuses).
+- Use the Impeccable skill (`/impeccable polish`, `/impeccable critique`, `/impeccable audit`) when creating or refining UI components to ensure professional polish and craft.
 - Extend global visual defaults in `src/theme/theme.ts`/`lightTheme.ts`, not by duplicating broad overrides in each feature. Local `sx` is appropriate for feature-specific layout/detail styling.
 - Reuse `AdminLayout`, `Header`, `Sidebar`, and `HeaderTitle`; do not recreate a feature-local shell.
 - For admin tables, use `DataGrid` with typed columns and reuse `tableSx` from `components/ui/table/tableStyles.ts`. Preserve its paging, non-selectable rows, and custom no-results pattern unless requirements differ.
@@ -152,6 +157,7 @@ src/types/pages/users/user.ts
 ```bash
 npm run lint
 npm run build
+npm run impeccable:detect
 ```
 
 There is no configured test runner. Run the relevant manual UI flow when changing routes, responsive layout, forms, or the DataGrid.
@@ -161,7 +167,7 @@ There is no configured test runner. Run the relevant manual UI flow when changin
 - New files are placed in the appropriate feature/shared layer and imports use `@/`.
 - Routes, Refine resources, and sidebar entries agree when a navigable resource changes.
 - Forms have matching typed schema, defaults, validation messages, and submit/cancel behavior.
-- UI follows the shared theme/layout/table patterns and works at mobile and desktop breakpoints where relevant.
+- UI follows the shared theme/layout/table patterns, aligns with `DESIGN.md`, and works at mobile and desktop breakpoints where relevant.
 - API calls and data fetching follow the Refine hooks -> Custom Hooks priority; no direct API calls or service invocations in components/pages.
 - Auth, geo, and homestays conform to the hook-based architecture.
-- `npm run lint` and `npm run build` pass.
+- `npm run lint`, `npm run build`, and `npm run impeccable:detect` pass.
