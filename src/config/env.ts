@@ -12,6 +12,9 @@ export const env = {
   apiUrl: normalizeApiUrl(import.meta.env.VITE_API_URL as string | undefined),
   appName: import.meta.env.VITE_APP_NAME as string | undefined,
   appEnv: import.meta.env.VITE_APP_ENV as string | undefined,
-  cloudinaryCloudName: (import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string | undefined) || "aapohgop",
-  cloudinaryAssetEnv: (import.meta.env.VITE_CLOUDINARY_ASSET_ENV as string | undefined) || "dev",
+  cloudinaryCloudName:
+    (import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string | undefined) ||
+    "aapohgop",
+  cloudinaryAssetEnv:
+    (import.meta.env.VITE_CLOUDINARY_ASSET_ENV as string | undefined) || "dev",
 };
