@@ -43,6 +43,7 @@ function buildListItems(): IItineraryListItem[] {
       item.status === 'Đã hoàn thiện' ? 'Đã hoàn thiện' : 'Bản nháp'
     return {
       id: item.id,
+      locationId: item.locationId,
       title: item.title,
       destination: item.destination,
       duration:
@@ -171,6 +172,7 @@ export function createItinerary(input: ICreateItineraryInput): ITravelItinerary 
 
   const newItinerary: ITravelItinerary = {
     id: `itinerary-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    locationId: input.locationId ?? undefined,
     title: input.title.trim(),
     destination: input.destination.trim(),
     duration: durationStr,
@@ -252,6 +254,8 @@ export function updateItinerary(
     ...existing,
     ...input,
     id: targetId,
+    locationId:
+      input.locationId !== undefined ? input.locationId : existing.locationId,
     title: input.title !== undefined ? input.title.trim() : existing.title,
     destination:
       input.destination !== undefined

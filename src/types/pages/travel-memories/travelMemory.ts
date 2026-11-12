@@ -48,6 +48,7 @@ export interface ITravelMemory {
 export interface ITravelMemoryFormData {
   title: string;
   destination: string;
+  locationId?: number | null;
   startDate: string;
   endDate: string;
   description?: string;

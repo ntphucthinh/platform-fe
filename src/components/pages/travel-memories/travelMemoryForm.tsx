@@ -10,6 +10,7 @@ import {
   Chip,
   Collapse,
   IconButton,
+  Autocomplete,
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -39,6 +40,7 @@ import { TravelMemoryPhotoGrid } from "@/components/pages/travel-memories/travel
 import { TravelMemoryPhotoLightbox } from "@/components/pages/travel-memories/travelMemoryPhotoLightbox";
 import { TravelMemoryDateConfirmDialog } from "@/components/pages/travel-memories/travelMemoryDateConfirmDialog";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
+import useTravelLocationSelection from "@/hooks/selections/useTravelLocationSelection";
 
 export interface TravelMemoryFormProps {
   initialData?: ITravelMemory | null;
@@ -46,6 +48,7 @@ export interface TravelMemoryFormProps {
   onSubmit: (formData: {
     title: string;
     destination: string;
+    locationId?: number | null;
     startDate: string;
     endDate: string;
     description: string;
@@ -61,9 +64,23 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
   onSubmit,
   onCancel,
 }) => {
+  // Hook selection location
+  const {
+    travelLocationsSelections,
+    data: locationData,
+    isLoading: isLoadingLocations,
+  } = useTravelLocationSelection();
+
   // Form fields
   const [title, setTitle] = useState(initialData?.title || "");
-  const [destination, setDestination] = useState(initialData?.destination || "");
+  const [locationId, setLocationId] = useState<number | null>(() => {
+    if (initialData?.locationId) return Number(initialData.locationId);
+    if (initialData?.location?.id) return Number(initialData.location.id);
+    return null;
+  });
+  const [destination, setDestination] = useState(
+    initialData?.destination || initialData?.locationName || "",
+  );
   const [startDate, setStartDate] = useState(initialData?.startDate || "");
   const [endDate, setEndDate] = useState(initialData?.endDate || "");
   const [description, setDescription] = useState(
@@ -193,6 +210,37 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
     if (!endDate && errors.dateRange && startDate) return errors.dateRange;
     return undefined;
   }, [errors.endDate, errors.dateRange, startDate, endDate]);
+
+  // Selected location object for Autocomplete
+  const selectedLocation = useMemo(() => {
+    if (locationId !== null && locationId !== undefined) {
+      const foundInOptions = travelLocationsSelections.find(
+        (loc) => Number(loc.value) === Number(locationId),
+      );
+      if (foundInOptions) return foundInOptions;
+
+      const foundInRaw = locationData.find(
+        (l) => Number(l.id) === Number(locationId),
+      );
+      if (foundInRaw) {
+        return { label: foundInRaw.name, value: foundInRaw.id };
+      }
+
+      if (destination) {
+        return { label: destination, value: locationId };
+      }
+      return null;
+    }
+
+    if (destination) {
+      const foundByName = travelLocationsSelections.find(
+        (loc) => loc.label.toLowerCase() === destination.trim().toLowerCase(),
+      );
+      if (foundByName) return foundByName;
+    }
+
+    return null;
+  }, [travelLocationsSelections, locationData, locationId, destination]);
 
 
   // Hidden file inputs refs
@@ -412,11 +460,14 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
 
     const newErrors: Record<string, string> = {};
 
+    const resolvedLocationId =
+      locationId ?? (selectedLocation ? Number(selectedLocation.value) : null);
+
     if (!title.trim()) {
       newErrors.title = "Vui lòng nhập tên chuyến đi.";
     }
-    if (!destination.trim()) {
-      newErrors.destination = "Vui lòng nhập địa điểm chuyến đi.";
+    if (!resolvedLocationId && !destination.trim()) {
+      newErrors.destination = "Vui lòng chọn địa điểm chuyến đi.";
     }
 
     if (!startDate) {
@@ -454,6 +505,7 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
     onSubmit({
       title: title.trim(),
       destination: destination.trim(),
+      locationId: resolvedLocationId,
       startDate,
       endDate,
       description: description.trim(),
@@ -578,16 +630,27 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
             />
           </Grid>
 
-          {/* Destination - Full Width */}
+          {/* Destination / Location Selectbox - Full Width */}
           <Grid sx={{ width: "100%" }}>
-            <TextField
+            <Autocomplete<
+              { label: string; value: string | number },
+              false,
+              false,
+              false
+            >
               fullWidth
-              required
-              label="Địa điểm"
-              placeholder="Ví dụ: Đà Lạt, Lâm Đồng"
-              value={destination}
-              onChange={(e) => {
-                setDestination(e.target.value);
+              loading={isLoadingLocations}
+              options={travelLocationsSelections}
+              getOptionLabel={(option) => option.label || ""}
+              value={selectedLocation}
+              isOptionEqualToValue={(option, value) =>
+                Number(option.value) === Number(value.value)
+              }
+              onChange={(_, newValue) => {
+                const nextId = newValue ? Number(newValue.value) : null;
+                const nextLabel = newValue ? newValue.label : "";
+                setLocationId(nextId);
+                setDestination(nextLabel);
                 if (errors.destination) {
                   setErrors((prev) => {
                     const next = { ...prev };
@@ -596,8 +659,18 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                   });
                 }
               }}
-              error={Boolean(errors.destination)}
-              helperText={errors.destination}
+              noOptionsText="Không tìm thấy địa điểm"
+              loadingText="Đang tải danh sách địa điểm..."
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  required
+                  label="Địa điểm"
+                  placeholder="Chọn địa điểm..."
+                  error={Boolean(errors.destination)}
+                  helperText={errors.destination}
+                />
+              )}
             />
           </Grid>
 

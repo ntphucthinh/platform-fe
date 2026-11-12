@@ -9,6 +9,7 @@ export const TravelMemoryCreatePage: React.FC = () => {
   const handleSubmit = (formData: {
     title: string;
     destination: string;
+    locationId?: number | null;
     startDate: string;
     endDate: string;
     description: string;

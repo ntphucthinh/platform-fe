@@ -507,7 +507,6 @@ export const TravelMemoryDetailPage: React.FC = () => {
                         borderRadius: "10px",
                         bgcolor: "#F8FAFC",
                         border: "1px solid #E2E8F0",
-                        borderLeft: "4px solid #2563EB",
                       }}
                     >
                       <Typography

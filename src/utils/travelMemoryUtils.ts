@@ -195,8 +195,8 @@ export function normalizeTravelMemory(raw: ITravelMemory): ITravelMemory {
 
   return {
     id: raw.id,
-    locationId: raw.locationId,
-    locationName: raw.locationName,
+    locationId: raw.locationId ?? raw.location?.id,
+    locationName: raw.locationName ?? raw.location?.locationName,
     location: raw.location,
     title: raw.title || "",
     destination,

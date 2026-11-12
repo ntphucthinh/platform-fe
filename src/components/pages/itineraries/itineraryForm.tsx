@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -17,6 +17,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Autocomplete,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SaveIcon from "@mui/icons-material/Save";
@@ -55,6 +56,7 @@ import { ItineraryOverview } from "@/components/pages/itineraries/itineraryOverv
 import { ItineraryTimeline } from "@/components/pages/itineraries/itineraryTimeline";
 import { ItineraryImageGallery } from "@/components/pages/itineraries/itineraryImageGallery";
 import { ItineraryTravelTips } from "@/components/pages/itineraries/itineraryTravelTips";
+import useTravelLocationSelection from "@/hooks/selections/useTravelLocationSelection";
 
 const AVAILABLE_THEMES = [
   "Thiên nhiên",
@@ -90,11 +92,53 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
   onSubmit,
   onCancel,
 }) => {
+  // Hook selection location
+  const {
+    travelLocationsSelections,
+    data: locationData,
+    isLoading: isLoadingLocations,
+  } = useTravelLocationSelection();
+
   // Form State
   const [title, setTitle] = useState(initialData?.title || "");
+  const [locationId, setLocationId] = useState<number | null>(() => {
+    if (initialData?.locationId) return Number(initialData.locationId);
+    return null;
+  });
   const [destination, setDestination] = useState(
     initialData?.destination || "",
   );
+
+  // Selected location object for Autocomplete
+  const selectedLocation = useMemo(() => {
+    if (locationId !== null && locationId !== undefined) {
+      const foundInOptions = travelLocationsSelections.find(
+        (loc) => Number(loc.value) === Number(locationId),
+      );
+      if (foundInOptions) return foundInOptions;
+
+      const foundInRaw = locationData.find(
+        (l) => Number(l.id) === Number(locationId),
+      );
+      if (foundInRaw) {
+        return { label: foundInRaw.name, value: foundInRaw.id };
+      }
+
+      if (destination) {
+        return { label: destination, value: locationId };
+      }
+      return null;
+    }
+
+    if (destination) {
+      const foundByName = travelLocationsSelections.find(
+        (loc) => loc.label.toLowerCase() === destination.trim().toLowerCase(),
+      );
+      if (foundByName) return foundByName;
+    }
+
+    return null;
+  }, [travelLocationsSelections, locationData, locationId, destination]);
   const [durationDays, setDurationDays] = useState(
     initialData?.durationDays || initialData?.days?.length || 3,
   );
@@ -482,11 +526,14 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
   // Validation & Submit
   const handleSave = () => {
     const newErrors: { title?: string; destination?: string } = {};
+    const resolvedLocationId =
+      locationId ?? (selectedLocation ? Number(selectedLocation.value) : null);
+
     if (!title.trim()) {
       newErrors.title = "Vui lòng nhập tên lịch trình";
     }
-    if (!destination.trim()) {
-      newErrors.destination = "Vui lòng nhập địa điểm";
+    if (!resolvedLocationId && !destination.trim()) {
+      newErrors.destination = "Vui lòng chọn địa điểm";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -503,6 +550,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     const payload: ICreateItineraryInput = {
       title: title.trim(),
       destination: destination.trim(),
+      locationId: resolvedLocationId,
       durationDays,
       durationNights,
       duration: `${durationDays} ngày ${durationNights} đêm`,
@@ -538,6 +586,8 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
   // Temporary Itinerary object for real-time preview
   const livePreviewItinerary: ITravelItinerary = {
     id: initialData?.id || "preview-temp",
+    locationId:
+      locationId ?? (selectedLocation ? Number(selectedLocation.value) : null),
     title: title || "Lịch trình chưa đặt tên",
     destination: destination || "Địa điểm chưa xác định",
     duration: `${durationDays} ngày ${durationNights} đêm`,
@@ -729,20 +779,42 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             size="medium"
           />
 
-          {/* Row 2: Địa điểm */}
-          <TextField
-            label="Địa điểm *"
-            placeholder="Ví dụ: Đà Lạt, Lâm Đồng"
-            value={destination}
-            onChange={(e) => {
-              setDestination(e.target.value);
-              if (errors.destination)
-                setErrors((prev) => ({ ...prev, destination: undefined }));
-            }}
-            error={Boolean(errors.destination)}
-            helperText={errors.destination}
+          {/* Row 2: Địa điểm Selectbox */}
+          <Autocomplete<
+            { label: string; value: string | number },
+            false,
+            false,
+            false
+          >
             fullWidth
-            required
+            loading={isLoadingLocations}
+            options={travelLocationsSelections}
+            getOptionLabel={(option) => option.label || ""}
+            value={selectedLocation}
+            isOptionEqualToValue={(option, value) =>
+              Number(option.value) === Number(value.value)
+            }
+            onChange={(_, newValue) => {
+              const nextId = newValue ? Number(newValue.value) : null;
+              const nextLabel = newValue ? newValue.label : "";
+              setLocationId(nextId);
+              setDestination(nextLabel);
+              if (errors.destination) {
+                setErrors((prev) => ({ ...prev, destination: undefined }));
+              }
+            }}
+            noOptionsText="Không tìm thấy địa điểm"
+            loadingText="Đang tải danh sách địa điểm..."
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                required
+                label="Địa điểm *"
+                placeholder="Chọn địa điểm..."
+                error={Boolean(errors.destination)}
+                helperText={errors.destination}
+              />
+            )}
           />
 
           {/* Row 3: Thời lượng (Số ngày, Số đêm) & Đối tượng phù hợp */}
