@@ -13,7 +13,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'
 import { useNavigate, useParams } from 'react-router-dom'
 import { HeaderTitle } from '@/components/ui/header/headerTitle'
-import { getItineraryById, subscribeItineraries } from '@/services/itineraryService'
+import { useItineraryDetail } from '@/hooks/itineraries/useItineraries'
 import type { IItineraryDay } from '@/types/pages/itineraries/itinerary'
 import { ItineraryHero } from '@/components/pages/itineraries/itineraryHero'
 import { ItineraryInfoPanel } from '@/components/pages/itineraries/itineraryInfoPanel'
@@ -30,17 +30,7 @@ import { ItineraryNotFound } from '@/components/pages/itineraries/itineraryNotFo
 export const ItineraryPreviewPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-
-  const [itinerary, setItinerary] = useState(() =>
-    id ? getItineraryById(id) : undefined,
-  )
-
-  useEffect(() => {
-    const unsub = subscribeItineraries(() => {
-      setItinerary(id ? getItineraryById(id) : undefined)
-    })
-    return unsub
-  }, [id])
+  const { data: itinerary } = useItineraryDetail(id)
 
   const [activeTab, setActiveTab] = useState<ItineraryTabKey>('overview')
   const contentRef = useRef<HTMLDivElement>(null)

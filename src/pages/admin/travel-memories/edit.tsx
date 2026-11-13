@@ -46,7 +46,7 @@ export const TravelMemoryEditPage: React.FC = () => {
   if (isFetching) {
     return (
       <Box sx={{ py: 10, textAlign: "center" }}>
-        <CircularProgress size={36} sx={{ color: "#2563EB" }} />
+        <CircularProgress size={36} color="primary" />
       </Box>
     );
   }
@@ -56,12 +56,18 @@ export const TravelMemoryEditPage: React.FC = () => {
       <Box sx={{ py: 6, textAlign: "center" }}>
         <HeaderTitle>Không tìm thấy kỷ niệm</HeaderTitle>
         <CollectionsBookmarkOutlinedIcon
-          sx={{ fontSize: 48, color: "#94A3B8", mb: 2 }}
+          sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
         />
-        <Typography variant="h6" sx={{ fontWeight: 600, color: "#1E293B" }}>
+        <Typography
+          variant="h6"
+          sx={{ fontWeight: 600, color: "text.primary" }}
+        >
           Chuyến đi không tồn tại hoặc đã bị xóa
         </Typography>
-        <Typography variant="body2" sx={{ color: "#64748B", mt: 1, mb: 3 }}>
+        <Typography
+          variant="body2"
+          sx={{ color: "text.secondary", mt: 1, mb: 3 }}
+        >
           Không thể tìm thấy thông tin chuyến đi để chỉnh sửa.
         </Typography>
         <Button
@@ -69,7 +75,16 @@ export const TravelMemoryEditPage: React.FC = () => {
           color="primary"
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate("/admin/travel-memories")}
-          sx={{ borderRadius: "8px", textTransform: "none", fontWeight: 600 }}
+          sx={{
+            borderRadius: "8px",
+            textTransform: "none",
+            fontWeight: 600,
+            boxShadow: "none",
+            "&:focus-visible": {
+              outline: "2px solid #1976D2",
+              outlineOffset: 2,
+            },
+          }}
         >
           Quay lại danh sách
         </Button>

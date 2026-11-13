@@ -107,3 +107,14 @@ export interface IUpdateItineraryInput extends Partial<ICreateItineraryInput> {
   description?: string
   coverImage?: string
 }
+
+export interface IItineraryFormData {
+  title: string
+  destination: string
+  locationId?: number | null
+  durationDays: number
+  durationNights: number
+  suitableFor?: string
+  description?: string
+  coverImage: string
+}

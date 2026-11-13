@@ -73,11 +73,11 @@ export const TravelMapHeader: React.FC<TravelMapHeaderProps> = ({
       subtitle: "Hành trình đã thực hiện",
       icon: (
         <FlightTakeoffRoundedIcon
-          sx={{ fontSize: { xs: 20, sm: 22 }, color: "#7C3AED" }}
+          sx={{ fontSize: { xs: 20, sm: 22 }, color: "#0284C7" }}
         />
       ),
-      bgColor: "#F5F3FF",
-      borderColor: "#DDD6FE",
+      bgColor: "#F0F9FF",
+      borderColor: "#BAE6FD",
     },
   ];
 
@@ -205,8 +205,9 @@ export const TravelMapHeader: React.FC<TravelMapHeaderProps> = ({
             elevation={0}
             sx={{
               borderRadius: "12px",
-              border: "1px solid #E2E8F0",
-              bgcolor: "#FFFFFF",
+              border: "1px solid",
+              borderColor: "divider",
+              bgcolor: "background.paper",
               minHeight: { xs: 70, sm: 75 },
               height: "100%",
               display: "flex",
@@ -252,7 +253,7 @@ export const TravelMapHeader: React.FC<TravelMapHeaderProps> = ({
                   sx={{
                     display: "block",
                     fontWeight: 700,
-                    color: "#64748B",
+                    color: "text.secondary",
                     textTransform: "uppercase",
                     letterSpacing: { xs: "0.01em", sm: "0.03em" },
                     fontSize: { xs: "0.62rem", sm: "0.72rem" },
@@ -275,9 +276,10 @@ export const TravelMapHeader: React.FC<TravelMapHeaderProps> = ({
                     component="span"
                     sx={{
                       fontWeight: 800,
-                      color: "#0F172A",
+                      color: "text.primary",
                       fontSize: { xs: "1.15rem", sm: "1.42rem" },
                       lineHeight: 1.1,
+                      fontVariantNumeric: "tabular-nums",
                     }}
                   >
                     {c.value}
@@ -286,7 +288,7 @@ export const TravelMapHeader: React.FC<TravelMapHeaderProps> = ({
                     variant="caption"
                     noWrap
                     sx={{
-                      color: "#94A3B8",
+                      color: "text.secondary",
                       fontSize: { xs: "0.68rem", sm: "0.76rem" },
                       lineHeight: 1.2,
                       maxWidth: "100%",

@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import {
   Box,
   Typography,
@@ -12,6 +18,7 @@ import {
   IconButton,
   Autocomplete,
   CircularProgress,
+  Snackbar,
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -23,14 +30,18 @@ import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import dayjs from "dayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { useForm, useWatch } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import type {
   ITravelMemory,
   ITravelMemoryDay,
   ITravelMemoryPhoto,
   IRemovedDatePhotoSummary,
+  ITravelMemoryFormData,
   ITravelMemoryFormSubmitData,
 } from "@/types/pages/travel-memories/travelMemory";
+import { travelMemorySchema } from "@/schemas/travel-memories/travelMemorySchema";
 import {
   calculateCalendarDuration,
   formatDateVietnamese,
@@ -66,22 +77,41 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
     isLoading: isLoadingLocations,
   } = useTravelLocationSelection();
 
-  // Form fields
-  const [title, setTitle] = useState(initialData?.title || "");
-  const [locationId, setLocationId] = useState<number | null>(() => {
+  // React Hook Form + Yup Resolver
+  const initialLocationId = useMemo<number | null>(() => {
     if (initialData?.locationId) return Number(initialData.locationId);
     if (initialData?.location?.id) return Number(initialData.location.id);
     return null;
+  }, [initialData]);
+
+  const {
+    register,
+    control,
+    setValue,
+    setError,
+    clearErrors,
+    handleSubmit: handleFormSubmit,
+    formState: { errors },
+  } = useForm<ITravelMemoryFormData>({
+    resolver: yupResolver(travelMemorySchema),
+    defaultValues: {
+      title: initialData?.title || "",
+      locationId: initialLocationId,
+      destination:
+        initialData?.destination || initialData?.locationName || "",
+      startDate: initialData?.startDate || "",
+      endDate: initialData?.endDate || "",
+      description: initialData?.description || "",
+      coverImage: initialData?.coverImage || "",
+    },
   });
-  const [destination, setDestination] = useState(
-    initialData?.destination || initialData?.locationName || "",
-  );
-  const [startDate, setStartDate] = useState(initialData?.startDate || "");
-  const [endDate, setEndDate] = useState(initialData?.endDate || "");
-  const [description, setDescription] = useState(
-    initialData?.description || "",
-  );
-  const [coverImage, setCoverImage] = useState(initialData?.coverImage || "");
+
+  const locationId = useWatch({ control, name: "locationId" }) ?? null;
+  const destination = useWatch({ control, name: "destination" }) ?? "";
+  const startDate = useWatch({ control, name: "startDate" }) ?? "";
+  const endDate = useWatch({ control, name: "endDate" }) ?? "";
+  const coverImage = useWatch({ control, name: "coverImage" }) ?? "";
+
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePath, setCoverImagePath] = useState<string | null>(
     initialData?.coverImagePath || null,
@@ -114,6 +144,18 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
     }
     return map;
   });
+
+  // Batch selection per date: key = ISO date, value = array of selected photo IDs
+  const [selectedPhotoIdsByDate, setSelectedPhotoIdsByDate] = useState<
+    Record<string, number[]>
+  >({});
+
+  // Soft-delete undo buffer
+  const [undoBuffer, setUndoBuffer] = useState<{
+    date: string;
+    photos: ITravelMemoryPhoto[];
+  } | null>(null);
+  const [showUndoSnackbar, setShowUndoSnackbar] = useState(false);
 
   // Track created blob object URLs to safely revoke them on unmount / replacement
   const createdObjectUrlsRef = useRef<Set<string>>(new Set());
@@ -149,9 +191,6 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
     };
   }, []);
 
-  // Validation errors
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
   // Date range confirmation state
   const [pendingDateChange, setPendingDateChange] = useState<{
     newStartDate: string;
@@ -174,7 +213,9 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
   });
 
   // Collapse state per day: key = ISO date, value = collapsed boolean
-  const [collapsedDays, setCollapsedDays] = useState<Record<string, boolean>>({});
+  const [collapsedDays, setCollapsedDays] = useState<Record<string, boolean>>(
+    {},
+  );
 
   const toggleDayCollapse = useCallback((date: string) => {
     setCollapsedDays((prev) => ({ ...prev, [date]: !prev[date] }));
@@ -197,18 +238,8 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
   );
 
   // Resolve specific validation messages for each date field
-  const startDateError = useMemo(() => {
-    if (errors.startDate) return errors.startDate;
-    if (!startDate && errors.dateRange && !errors.endDate) return errors.dateRange;
-    return undefined;
-  }, [errors.startDate, errors.dateRange, errors.endDate, startDate]);
-
-  const endDateError = useMemo(() => {
-    if (errors.endDate) return errors.endDate;
-    if (startDate && endDate && errors.dateRange) return errors.dateRange;
-    if (!endDate && errors.dateRange && startDate) return errors.dateRange;
-    return undefined;
-  }, [errors.endDate, errors.dateRange, startDate, endDate]);
+  const startDateError = errors.startDate?.message;
+  const endDateError = errors.endDate?.message;
 
   // Selected location object for Autocomplete
   const selectedLocation = useMemo(() => {
@@ -241,7 +272,6 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
     return null;
   }, [travelLocationsSelections, locationData, locationId, destination]);
 
-
   // Hidden file inputs refs
   const coverInputRef = useRef<HTMLInputElement>(null);
   const dayInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -252,10 +282,10 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setErrors((prev) => ({
-        ...prev,
-        coverImage: "Vui lòng chọn tệp hình ảnh hợp lệ (PNG, JPG, WebP).",
-      }));
+      setError("coverImage", {
+        type: "manual",
+        message: "Vui lòng chọn tệp hình ảnh hợp lệ (PNG, JPG, WebP).",
+      });
       return;
     }
 
@@ -264,14 +294,10 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
     }
 
     const previewUrl = registerObjectUrl(URL.createObjectURL(file));
-    setCoverImage(previewUrl);
+    setValue("coverImage", previewUrl, { shouldDirty: true });
     setCoverImageFile(file);
     setCoverImagePath(null);
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next.coverImage;
-      return next;
-    });
+    clearErrors("coverImage");
 
     // Reset input value so selecting the same file again triggers change
     if (coverInputRef.current) {
@@ -283,7 +309,7 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
     if (coverImage && coverImage.startsWith("blob:")) {
       revokeObjectUrl(coverImage);
     }
-    setCoverImage("");
+    setValue("coverImage", "", { shouldDirty: true });
     setCoverImageFile(null);
     setCoverImagePath(null);
     if (coverInputRef.current) {
@@ -292,37 +318,21 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
   };
 
   // Handle Date Changes with Confirmation Guard
-  const handleDateChangeAttempt = (
-    newStart: string,
-    newEnd: string,
-  ) => {
+  const handleDateChangeAttempt = (newStart: string, newEnd: string) => {
     const validation = validateDateRange(newStart, newEnd);
 
     if (!validation.isValid) {
-      // Allow user to temporarily type or pick invalid date, but record validation error
-      setStartDate(newStart);
-      setEndDate(newEnd);
-      setErrors((prev) => {
-        const next = { ...prev };
-        if (newStart) delete next.startDate;
-        if (newEnd) delete next.endDate;
-        if (newStart && newEnd) {
-          next.dateRange = validation.error || "";
-        } else {
-          delete next.dateRange;
-        }
-        return next;
-      });
+      setValue("startDate", newStart, { shouldDirty: true });
+      setValue("endDate", newEnd, { shouldDirty: true });
+      if (newStart) clearErrors("startDate");
+      if (newEnd) clearErrors("endDate");
+      if (newStart && newEnd && validation.error) {
+        setError("endDate", { type: "manual", message: validation.error });
+      }
       return;
     }
 
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next.dateRange;
-      delete next.startDate;
-      delete next.endDate;
-      return next;
-    });
+    clearErrors(["startDate", "endDate"]);
 
     const newDates = generateCalendarDateRange(newStart, newEnd);
     const affectedDates = findRemovedDatesWithPhotos(photosByDate, newDates);
@@ -333,8 +343,8 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
       setRemovedDatesWarning(affectedDates);
     } else {
       // Immediately apply new dates
-      setStartDate(newStart);
-      setEndDate(newEnd);
+      setValue("startDate", newStart, { shouldDirty: true, shouldValidate: true });
+      setValue("endDate", newEnd, { shouldDirty: true, shouldValidate: true });
     }
   };
 
@@ -373,8 +383,8 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
       return updated;
     });
 
-    setStartDate(newStartDate);
-    setEndDate(newEndDate);
+    setValue("startDate", newStartDate, { shouldDirty: true, shouldValidate: true });
+    setValue("endDate", newEndDate, { shouldDirty: true, shouldValidate: true });
     setPendingDateChange(null);
     setRemovedDatesWarning([]);
   };
@@ -446,92 +456,128 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
     processImageFiles(date, Array.from(e.dataTransfer.files));
   };
 
-  const handleRemovePhoto = (date: string, photoId: number) => {
-    setPhotosByDate((prev) => {
-      const currentList = prev[date] || [];
-      const photoToRemove = currentList.find((p) => p.id === photoId);
-      if (photoToRemove && photoToRemove.imageUrl?.startsWith("blob:")) {
-        revokeObjectUrl(photoToRemove.imageUrl);
-      }
+  // Batch selection handlers
+  const handleTogglePhotoSelect = (date: string, photoId: number) => {
+    setSelectedPhotoIdsByDate((prev) => {
+      const current = prev[date] || [];
+      const exists = current.includes(photoId);
       return {
         ...prev,
-        [date]: currentList.filter((p) => p.id !== photoId),
+        [date]: exists
+          ? current.filter((id) => id !== photoId)
+          : [...current, photoId],
       };
     });
+  };
+
+  const handleSelectAllPhotos = (date: string) => {
+    const currentPhotos = photosByDate[date] || [];
+    const currentSelected = selectedPhotoIdsByDate[date] || [];
+    setSelectedPhotoIdsByDate((prev) => ({
+      ...prev,
+      [date]:
+        currentSelected.length === currentPhotos.length
+          ? []
+          : currentPhotos.map((p) => p.id),
+    }));
+  };
+
+  const handleDeleteSelectedPhotos = (date: string) => {
+    const selected = selectedPhotoIdsByDate[date] || [];
+    if (selected.length === 0) return;
+    const currentPhotos = photosByDate[date] || [];
+    const removed = currentPhotos.filter((p) => selected.includes(p.id));
+
+    setUndoBuffer({ date, photos: removed });
+    setShowUndoSnackbar(true);
+
+    setPhotosByDate((prev) => ({
+      ...prev,
+      [date]: currentPhotos.filter((p) => !selected.includes(p.id)),
+    }));
+    setSelectedPhotoIdsByDate((prev) => ({
+      ...prev,
+      [date]: [],
+    }));
+  };
+
+  const handleRemovePhoto = (date: string, photoId: number) => {
+    const currentList = photosByDate[date] || [];
+    const photoToRemove = currentList.find((p) => p.id === photoId);
+    if (photoToRemove) {
+      setUndoBuffer({ date, photos: [photoToRemove] });
+      setShowUndoSnackbar(true);
+    }
+    setPhotosByDate((prev) => ({
+      ...prev,
+      [date]: (prev[date] || []).filter((p) => p.id !== photoId),
+    }));
+    setSelectedPhotoIdsByDate((prev) => ({
+      ...prev,
+      [date]: (prev[date] || []).filter((id) => id !== photoId),
+    }));
+  };
+
+  const handleUndoDelete = () => {
+    if (!undoBuffer) return;
+    setPhotosByDate((prev) => ({
+      ...prev,
+      [undoBuffer.date]: [
+        ...(prev[undoBuffer.date] || []),
+        ...undoBuffer.photos,
+      ],
+    }));
+    setUndoBuffer(null);
+    setShowUndoSnackbar(false);
   };
 
   // Form Submit
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const onFormValid = useCallback(
+    (values: ITravelMemoryFormData) => {
+      const resolvedLocationId =
+        values.locationId ??
+        (selectedLocation ? Number(selectedLocation.value) : null);
 
-    const newErrors: Record<string, string> = {};
+      // Construct daily collections ordered chronologically, preserving existing day ID
+      const days: ITravelMemoryDay[] = activeDates.map((date) => {
+        const existingDay = initialData?.days?.find((d) => d.date === date);
+        return {
+          id: existingDay?.id,
+          date,
+          description: descriptionsByDate[date]?.trim() || undefined,
+          photos: photosByDate[date] || [],
+        };
+      });
 
-    const resolvedLocationId =
-      locationId ?? (selectedLocation ? Number(selectedLocation.value) : null);
-
-    if (!title.trim()) {
-      newErrors.title = "Vui lòng nhập tên chuyến đi.";
-    }
-    if (!resolvedLocationId) {
-      newErrors.destination = "Vui lòng chọn địa điểm từ danh sách.";
-    } else if (!destination.trim()) {
-      newErrors.destination = "Vui lòng chọn địa điểm chuyến đi.";
-    }
-
-    if (!startDate) {
-      newErrors.startDate = "Vui lòng chọn ngày khởi hành.";
-    }
-    if (!endDate) {
-      newErrors.endDate = "Vui lòng chọn ngày kết thúc.";
-    }
-
-    if (startDate && endDate) {
-      const dateVal = validateDateRange(startDate, endDate);
-      if (!dateVal.isValid) {
-        newErrors.dateRange = dateVal.error || "Khoảng thời gian không hợp lệ.";
-      }
-    } else if (!startDate && !endDate) {
-      newErrors.dateRange = "Vui lòng chọn ngày khởi hành và ngày kết thúc.";
-    } else if (!startDate) {
-      newErrors.dateRange = "Vui lòng chọn ngày khởi hành.";
-    } else if (!endDate) {
-      newErrors.dateRange = "Vui lòng chọn ngày kết thúc.";
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    // Construct daily collections ordered chronologically, preserving existing day ID
-    const days: ITravelMemoryDay[] = activeDates.map((date) => {
-      const existingDay = initialData?.days?.find((d) => d.date === date);
-      return {
-        id: existingDay?.id,
-        date,
-        description: descriptionsByDate[date]?.trim() || undefined,
-        photos: photosByDate[date] || [],
-      };
-    });
-
-    onSubmit({
-      title: title.trim(),
-      destination: destination.trim(),
-      locationId: resolvedLocationId,
-      startDate,
-      endDate,
-      description: description.trim(),
-      coverImage: coverImage || DEFAULT_NO_IMAGE,
+      onSubmit({
+        title: values.title.trim(),
+        destination: values.destination.trim(),
+        locationId: resolvedLocationId,
+        startDate: values.startDate,
+        endDate: values.endDate,
+        description: (values.description || "").trim(),
+        coverImage: values.coverImage || DEFAULT_NO_IMAGE,
+        coverImagePath,
+        coverImageFile,
+        days,
+      });
+    },
+    [
+      selectedLocation,
+      activeDates,
+      initialData?.days,
+      descriptionsByDate,
+      photosByDate,
+      onSubmit,
       coverImagePath,
       coverImageFile,
-      days,
-    });
-  };
+    ],
+  );
 
   return (
     <Box
       component="form"
-      onSubmit={handleSubmit}
+      onSubmit={handleFormSubmit(onFormValid)}
       noValidate
       sx={{ display: "flex", flexDirection: "column", gap: 3, pb: 6 }}
     >
@@ -576,8 +622,12 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
               textTransform: "none",
               fontWeight: 600,
               borderRadius: "8px",
-              borderColor: "#CBD5E1",
-              color: "#475569",
+              borderColor: "divider",
+              color: "text.secondary",
+              "&:focus-visible": {
+                outline: "2px solid #1976D2",
+                outlineOffset: 2,
+              },
             }}
           >
             Quay lại
@@ -600,13 +650,17 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
               fontWeight: 600,
               borderRadius: "8px",
               boxShadow: "none",
+              "&:focus-visible": {
+                outline: "2px solid #1976D2",
+                outlineOffset: 2,
+              },
             }}
           >
             {isLoading
               ? "Đang lưu..."
               : isEdit
-                ? "Cập nhật kỷ niệm"
-                : "Lưu kỷ niệm"}
+              ? "Cập nhật kỷ niệm"
+              : "Lưu kỷ niệm"}
           </Button>
         </Box>
       </Box>
@@ -639,19 +693,9 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
               required
               label="Tên chuyến đi"
               placeholder="Ví dụ: Đà Lạt – Những ngày bình yên"
-              value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-                if (errors.title) {
-                  setErrors((prev) => {
-                    const next = { ...prev };
-                    delete next.title;
-                    return next;
-                  });
-                }
-              }}
+              {...register("title")}
               error={Boolean(errors.title)}
-              helperText={errors.title}
+              helperText={errors.title?.message}
             />
           </Grid>
 
@@ -674,15 +718,14 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
               onChange={(_, newValue) => {
                 const nextId = newValue ? Number(newValue.value) : null;
                 const nextLabel = newValue ? newValue.label : "";
-                setLocationId(nextId);
-                setDestination(nextLabel);
-                if (errors.destination) {
-                  setErrors((prev) => {
-                    const next = { ...prev };
-                    delete next.destination;
-                    return next;
-                  });
-                }
+                setValue("locationId", nextId, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                });
+                setValue("destination", nextLabel, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                });
               }}
               noOptionsText="Không tìm thấy địa điểm"
               loadingText="Đang tải danh sách địa điểm..."
@@ -692,8 +735,10 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                   required
                   label="Địa điểm"
                   placeholder="Chọn địa điểm..."
-                  error={Boolean(errors.destination)}
-                  helperText={errors.destination}
+                  error={Boolean(errors.locationId || errors.destination)}
+                  helperText={
+                    errors.locationId?.message || errors.destination?.message
+                  }
                 />
               )}
             />
@@ -716,7 +761,9 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
               }}
             >
               {/* Start Date Field Wrapper */}
-              <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+              <Box
+                sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}
+              >
                 <DatePicker
                   label="Ngày khởi hành"
                   format="DD/MM/YYYY"
@@ -802,7 +849,9 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
               </Box>
 
               {/* End Date Field Wrapper */}
-              <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+              <Box
+                sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}
+              >
                 <DatePicker
                   label="Ngày kết thúc"
                   format="DD/MM/YYYY"
@@ -880,13 +929,13 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                   bgcolor: dateRangeValidation.isValid
                     ? "#EFF6FF"
                     : !startDate || !endDate
-                    ? "#F8FAFC"
+                    ? "background.default"
                     : "#FEF2F2",
                   border: "1px solid",
                   borderColor: dateRangeValidation.isValid
                     ? "#BFDBFE"
                     : !startDate || !endDate
-                    ? "#E2E8F0"
+                    ? "divider"
                     : "#FECACA",
                   display: "flex",
                   alignItems: "center",
@@ -894,16 +943,17 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                   boxSizing: "border-box",
                   minWidth: { xs: "100%", sm: "fit-content", lg: 200 },
                   width: { xs: "100%", sm: "fit-content", lg: "auto" },
-                  transition: "background-color 0.2s ease, border-color 0.2s ease",
+                  transition:
+                    "background-color 0.2s ease, border-color 0.2s ease",
                 }}
               >
                 <CalendarMonthOutlinedIcon
                   sx={{
                     color: dateRangeValidation.isValid
-                      ? "#2563EB"
+                      ? "primary.main"
                       : !startDate || !endDate
-                      ? "#94A3B8"
-                      : "#DC2626",
+                      ? "text.secondary"
+                      : "error.main",
                     fontSize: 22,
                     flexShrink: 0,
                   }}
@@ -912,7 +962,7 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                   <Typography
                     variant="caption"
                     sx={{
-                      color: "#64748B",
+                      color: "text.secondary",
                       display: "block",
                       fontSize: "0.75rem",
                       lineHeight: 1.15,
@@ -953,8 +1003,7 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
               minRows={2}
               label="Mô tả chuyến đi"
               placeholder="Cảm nhận, ấn tượng hoặc tóm tắt những kỷ niệm đáng nhớ của chuyến đi..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              {...register("description")}
               sx={{
                 "& textarea": {
                   resize: "vertical",
@@ -985,10 +1034,7 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
           }}
         >
           <Box>
-            <Typography
-              variant="h6"
-              sx={{ fontWeight: 700, color: "#172033" }}
-            >
+            <Typography variant="h6" sx={{ fontWeight: 700, color: "#172033" }}>
               Ảnh bìa chuyến đi
             </Typography>
             <Typography variant="body2" sx={{ color: "#64748B" }}>
@@ -1075,31 +1121,49 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
             sx={{
               mt: 2,
               p: 4,
-              border: "2px dashed #CBD5E1",
+              border: "2px dashed",
+              borderColor: "divider",
               borderRadius: "12px",
-              bgcolor: "#F8FAFC",
+              bgcolor: "background.default",
               textAlign: "center",
               cursor: "pointer",
               transition: "all 0.2s ease",
               "&:hover": {
-                borderColor: "#2563EB",
+                borderColor: "primary.main",
                 bgcolor: "#EFF6FF",
               },
+              "&:focus-visible": {
+                outline: "2px solid #1976D2",
+                outlineOffset: 2,
+              },
+            }}
+            tabIndex={0}
+            role="button"
+            aria-label="Nhấp để tải lên ảnh bìa"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                coverInputRef.current?.click();
+              }
             }}
           >
             <CloudUploadOutlinedIcon
-              sx={{ fontSize: 44, color: "#94A3B8", mb: 1 }}
+              sx={{ fontSize: 44, color: "text.secondary", mb: 1 }}
             />
             <Typography
               variant="subtitle1"
-              sx={{ fontWeight: 600, color: "#1E293B" }}
+              sx={{ fontWeight: 600, color: "text.primary" }}
             >
               Nhấp để tải lên ảnh bìa
             </Typography>
-            <Typography variant="body2" sx={{ color: "#64748B", mt: 0.5 }}>
+            <Typography
+              variant="body2"
+              sx={{ color: "text.secondary", mt: 0.5 }}
+            >
               Hỗ trợ định dạng PNG, JPG, WebP. Tối ưu nhất với tỷ lệ 16:9.
             </Typography>
             <Button
+              component="span"
+              tabIndex={-1}
               variant="outlined"
               size="small"
               sx={{
@@ -1127,10 +1191,7 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
       >
         <Box sx={{ mb: 2.5 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Typography
-              variant="h6"
-              sx={{ fontWeight: 700, color: "#172033" }}
-            >
+            <Typography variant="h6" sx={{ fontWeight: 700, color: "#172033" }}>
               Hình ảnh theo từng ngày
             </Typography>
             <Chip
@@ -1138,13 +1199,13 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
               size="small"
               sx={{
                 bgcolor: "#EFF6FF",
-                color: "#2563EB",
+                color: "primary.main",
                 fontWeight: 700,
                 fontSize: "0.75rem",
               }}
             />
           </Box>
-          <Typography variant="body2" sx={{ color: "#64748B", mt: 0.5 }}>
+          <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
             Các phần theo ngày được tạo tự động từ ngày khởi hành đến ngày kết
             thúc. Bạn có thể chọn nhiều ảnh độc lập cho từng ngày.
           </Typography>
@@ -1154,17 +1215,26 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
           <Box
             sx={{
               p: 4,
-              border: "1px dashed #CBD5E1",
+              border: "1px dashed",
+              borderColor: "divider",
               borderRadius: "12px",
-              bgcolor: "#F8FAFC",
+              bgcolor: "background.default",
               textAlign: "center",
             }}
           >
-            <InfoOutlinedIcon sx={{ fontSize: 36, color: "#94A3B8", mb: 1 }} />
-            <Typography variant="body1" sx={{ color: "#475569", fontWeight: 600 }}>
+            <InfoOutlinedIcon
+              sx={{ fontSize: 36, color: "text.secondary", mb: 1 }}
+            />
+            <Typography
+              variant="body1"
+              sx={{ color: "text.primary", fontWeight: 600 }}
+            >
               Chưa có danh sách ngày hợp lệ
             </Typography>
-            <Typography variant="body2" sx={{ color: "#64748B", mt: 0.5 }}>
+            <Typography
+              variant="body2"
+              sx={{ color: "text.secondary", mt: 0.5 }}
+            >
               Vui lòng chọn ngày khởi hành và ngày kết thúc ở phía trên để hệ
               thống tự động tạo các mục tải ảnh theo ngày.
             </Typography>
@@ -1185,9 +1255,9 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                   elevation={0}
                   sx={{
                     border: "1px solid",
-                    borderColor: isDragOver ? "#2563EB" : "#E2E8F0",
+                    borderColor: isDragOver ? "primary.main" : "divider",
                     borderRadius: "12px",
-                    bgcolor: isDragOver ? "#EFF6FF" : "#FAFAFA",
+                    bgcolor: isDragOver ? "#EFF6FF" : "background.paper",
                     overflow: "hidden",
                     transition: "border-color 0.15s, background-color 0.15s",
                   }}
@@ -1200,8 +1270,9 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                     sx={{
                       px: 2.5,
                       py: 1.5,
-                      bgcolor: isDragOver ? "#DBEAFE" : "#F1F5F9",
-                      borderBottom: isCollapsed ? "none" : "1px solid #E2E8F0",
+                      bgcolor: isDragOver ? "#DBEAFE" : "action.hover",
+                      borderBottom: isCollapsed ? "none" : "1px solid",
+                      borderColor: "divider",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
@@ -1220,6 +1291,19 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                         userSelect: "none",
                         flex: 1,
                         minWidth: 0,
+                        borderRadius: "4px",
+                        "&:focus-visible": {
+                          outline: "2px solid #1976D2",
+                          outlineOffset: 2,
+                        },
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      aria-expanded={!isCollapsed}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          toggleDayCollapse(date);
+                        }
                       }}
                       onClick={() => toggleDayCollapse(date)}
                     >
@@ -1227,8 +1311,8 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                         sx={{
                           width: 28,
                           height: 28,
-                          borderRadius: "6px",
-                          bgcolor: "#2563EB",
+                          borderRadius: "4px",
+                          bgcolor: "primary.main",
                           color: "#FFFFFF",
                           display: "flex",
                           alignItems: "center",
@@ -1261,7 +1345,9 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                         sx={{
                           ml: "auto",
                           color: "#64748B",
-                          transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)",
+                          transform: isCollapsed
+                            ? "rotate(-90deg)"
+                            : "rotate(0deg)",
                           transition: "transform 0.2s",
                           flexShrink: 0,
                         }}
@@ -1289,7 +1375,10 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                       size="small"
                       startIcon={<AddPhotoAlternateOutlinedIcon />}
                       onClick={() => {
-                        setCollapsedDays((prev) => ({ ...prev, [date]: false }));
+                        setCollapsedDays((prev) => ({
+                          ...prev,
+                          [date]: false,
+                        }));
                         dayInputRefs.current[date]?.click();
                       }}
                       sx={{
@@ -1342,8 +1431,87 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
 
                     {/* Day Photos Grid */}
                     <CardContent sx={{ p: 2 }}>
+                      {dayPhotos.length > 0 && (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            flexWrap: "wrap",
+                            gap: 1,
+                            mb: 1.5,
+                            p: 1,
+                            borderRadius: "8px",
+                            bgcolor: "#F8FAFC",
+                            border: "1px solid #E2E8F0",
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <Button
+                              size="small"
+                              variant="text"
+                              onClick={() => handleSelectAllPhotos(date)}
+                              sx={{
+                                textTransform: "none",
+                                fontSize: "0.8rem",
+                                fontWeight: 600,
+                                color: "#334155",
+                              }}
+                            >
+                              {(selectedPhotoIdsByDate[date]?.length ?? 0) ===
+                              dayPhotos.length
+                                ? "Bỏ chọn tất cả"
+                                : "Chọn tất cả"}
+                            </Button>
+
+                            {(selectedPhotoIdsByDate[date]?.length ?? 0) >
+                              0 && (
+                              <Chip
+                                label={`Đã chọn ${selectedPhotoIdsByDate[date]?.length} ảnh`}
+                                size="small"
+                                color="primary"
+                                sx={{
+                                  height: 22,
+                                  fontSize: "0.75rem",
+                                  fontWeight: 700,
+                                }}
+                              />
+                            )}
+                          </Box>
+
+                          {(selectedPhotoIdsByDate[date]?.length ?? 0) > 0 && (
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="error"
+                              startIcon={<DeleteOutlinedIcon fontSize="small" />}
+                              onClick={() => handleDeleteSelectedPhotos(date)}
+                              sx={{
+                                textTransform: "none",
+                                fontSize: "0.8rem",
+                                fontWeight: 600,
+                                borderRadius: "6px",
+                              }}
+                            >
+                              Xóa ({selectedPhotoIdsByDate[date]?.length}) ảnh đã
+                              chọn
+                            </Button>
+                          )}
+                        </Box>
+                      )}
+
                       <TravelMemoryPhotoGrid
                         photos={dayPhotos}
+                        selectedPhotoIds={selectedPhotoIdsByDate[date] || []}
+                        onToggleSelectPhoto={(photoId) =>
+                          handleTogglePhotoSelect(date, photoId)
+                        }
                         isDragOver={isDragOver}
                         onPhotoClick={(photoIdx) => {
                           setLightboxState({
@@ -1385,10 +1553,14 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
             textTransform: "none",
             fontWeight: 600,
             borderRadius: "8px",
-            borderColor: "#CBD5E1",
-            color: "#475569",
+            borderColor: "divider",
+            color: "text.secondary",
             px: 3,
             height: 42,
+            "&:focus-visible": {
+              outline: "2px solid #1976D2",
+              outlineOffset: 2,
+            },
           }}
         >
           Hủy bỏ
@@ -1418,8 +1590,8 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
           {isLoading
             ? "Đang lưu..."
             : isEdit
-              ? "Cập nhật kỷ niệm"
-              : "Lưu kỷ niệm"}
+            ? "Cập nhật kỷ niệm"
+            : "Lưu kỷ niệm"}
         </Button>
       </Box>
 
@@ -1441,6 +1613,38 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
         onNavigate={(newIdx) =>
           setLightboxState((prev) => ({ ...prev, currentIndex: newIdx }))
         }
+      />
+
+      {/* Soft-Delete Undo Notification */}
+      <Snackbar
+        open={showUndoSnackbar}
+        autoHideDuration={6000}
+        onClose={() => setShowUndoSnackbar(false)}
+        message={`Đã xóa ${undoBuffer?.photos.length || 1} ảnh`}
+        action={
+          <Button
+            color="primary"
+            size="small"
+            onClick={handleUndoDelete}
+            sx={{
+              fontWeight: 700,
+              textTransform: "none",
+              color: "#60A5FA",
+              "&:hover": { bgcolor: "rgba(255, 255, 255, 0.08)" },
+            }}
+          >
+            Hoàn tác
+          </Button>
+        }
+        sx={{
+          bottom: { xs: 72, sm: 24 },
+          "& .MuiSnackbarContent-root": {
+            bgcolor: "#0F172A",
+            color: "#F8FAFC",
+            borderRadius: "10px",
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.4)",
+          },
+        }}
       />
     </Box>
   );

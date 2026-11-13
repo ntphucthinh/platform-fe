@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useSyncExternalStore } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -30,11 +30,7 @@ import ExploreOutlinedIcon from "@mui/icons-material/ExploreOutlined";
 import { useNavigate } from "react-router-dom";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { tableSx } from "@/components/ui/table/tableStyles";
-import {
-  getItineraryListItems,
-  subscribeItineraries,
-  deleteItinerary,
-} from "@/services/itineraryService";
+import { useItineraryList } from "@/hooks/itineraries/useItineraries";
 import type { IItineraryListItem } from "@/types/pages/itineraries/itinerary";
 import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
@@ -53,10 +49,10 @@ function CustomNoRowsOverlay() {
         textAlign: "center",
       }}
     >
-      <Typography variant="body1" sx={{ fontWeight: 600, color: "#334155" }}>
+      <Typography variant="body1" sx={{ fontWeight: 600, color: "text.primary" }}>
         Không tìm thấy lịch trình nào
       </Typography>
-      <Typography variant="body2" sx={{ color: "#94A3B8", mt: 0.5 }}>
+      <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
         Chưa có dữ liệu phù hợp với từ khóa hoặc bộ lọc đã chọn.
       </Typography>
     </Box>
@@ -65,11 +61,7 @@ function CustomNoRowsOverlay() {
 
 export const ItineraryListPage: React.FC = () => {
   const navigate = useNavigate();
-  const itineraries = useSyncExternalStore(
-    subscribeItineraries,
-    getItineraryListItems,
-    getItineraryListItems,
-  );
+  const { data: itineraries, deleteItinerary } = useItineraryList();
   const [searchTerm, setSearchTerm] = useState("");
   const [destinationFilter, setDestinationFilter] = useState("ALL");
   const [durationFilter, setDurationFilter] = useState("ALL");
@@ -314,8 +306,8 @@ export const ItineraryListPage: React.FC = () => {
               onClick={() => handlePreview(row)}
               sx={{
                 minWidth: 0,
-                width: 32,
-                height: 32,
+                width: { xs: 36, sm: 34 },
+                height: { xs: 36, sm: 34 },
                 p: 0,
                 borderRadius: "8px",
                 borderColor: "#BFDBFE",
@@ -333,8 +325,8 @@ export const ItineraryListPage: React.FC = () => {
               onClick={() => handleEdit(row)}
               sx={{
                 minWidth: 0,
-                width: 32,
-                height: 32,
+                width: { xs: 36, sm: 34 },
+                height: { xs: 36, sm: 34 },
                 p: 0,
                 borderRadius: "8px",
                 boxShadow: "none",
@@ -352,8 +344,8 @@ export const ItineraryListPage: React.FC = () => {
               onClick={() => setItemToDelete(row)}
               sx={{
                 minWidth: 0,
-                width: 32,
-                height: 32,
+                width: { xs: 36, sm: 34 },
+                height: { xs: 36, sm: 34 },
                 p: 0,
                 borderRadius: "8px",
                 boxShadow: "none",
@@ -469,8 +461,9 @@ export const ItineraryListPage: React.FC = () => {
             elevation={0}
             sx={{
               borderRadius: "12px",
-              border: "1px solid #E2E8F0",
-              bgcolor: "#FFFFFF",
+              border: "1px solid",
+              borderColor: "divider",
+              bgcolor: "background.paper",
               minHeight: { xs: 70, sm: 75 },
               height: "100%",
               display: "flex",
@@ -516,7 +509,7 @@ export const ItineraryListPage: React.FC = () => {
                   sx={{
                     display: "block",
                     fontWeight: 700,
-                    color: "#64748B",
+                    color: "text.secondary",
                     textTransform: "uppercase",
                     letterSpacing: { xs: "0.01em", sm: "0.03em" },
                     fontSize: { xs: "0.62rem", sm: "0.72rem" },
@@ -539,9 +532,10 @@ export const ItineraryListPage: React.FC = () => {
                     component="span"
                     sx={{
                       fontWeight: 800,
-                      color: "#0F172A",
+                      color: "text.primary",
                       fontSize: { xs: "1.15rem", sm: "1.42rem" },
                       lineHeight: 1.1,
+                      fontVariantNumeric: "tabular-nums",
                     }}
                   >
                     {c.value}
@@ -550,7 +544,7 @@ export const ItineraryListPage: React.FC = () => {
                     variant="caption"
                     noWrap
                     sx={{
-                      color: "#94A3B8",
+                      color: "text.secondary",
                       fontSize: { xs: "0.68rem", sm: "0.76rem" },
                       lineHeight: 1.2,
                       maxWidth: "100%",

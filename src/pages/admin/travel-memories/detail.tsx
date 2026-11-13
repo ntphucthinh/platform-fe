@@ -42,9 +42,12 @@ export const TravelMemoryDetailPage: React.FC = () => {
   const numericId = id ? Number(id) : null;
   const navigate = useNavigate();
 
-  const { data: memory, isLoading, error, refetch } = useTravelMemoryDetail(
-    numericId && !isNaN(numericId) ? numericId : null,
-  );
+  const {
+    data: memory,
+    isLoading,
+    error,
+    refetch,
+  } = useTravelMemoryDetail(numericId && !isNaN(numericId) ? numericId : null);
 
   // Lightbox state
   const [lightboxState, setLightboxState] = useState<{
@@ -117,8 +120,11 @@ export const TravelMemoryDetailPage: React.FC = () => {
         }}
       >
         <HeaderTitle>Chi tiết chuyến đi</HeaderTitle>
-        <CircularProgress size={40} sx={{ color: "#2563EB" }} />
-        <Typography variant="body1" sx={{ color: "#64748B", fontWeight: 500 }}>
+        <CircularProgress size={40} color="primary" />
+        <Typography
+          variant="body1"
+          sx={{ color: "text.secondary", fontWeight: 500 }}
+        >
           Đang tải thông tin chuyến đi...
         </Typography>
       </Box>
@@ -130,12 +136,18 @@ export const TravelMemoryDetailPage: React.FC = () => {
       <Box sx={{ py: 6, textAlign: "center" }}>
         <HeaderTitle>Không tìm thấy kỷ niệm</HeaderTitle>
         <CollectionsBookmarkOutlinedIcon
-          sx={{ fontSize: 48, color: "#94A3B8", mb: 2 }}
+          sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
         />
-        <Typography variant="h6" sx={{ fontWeight: 600, color: "#1E293B" }}>
+        <Typography
+          variant="h6"
+          sx={{ fontWeight: 600, color: "text.primary" }}
+        >
           {error || "Chuyến đi không tồn tại hoặc đã bị xóa"}
         </Typography>
-        <Typography variant="body2" sx={{ color: "#64748B", mt: 1, mb: 3 }}>
+        <Typography
+          variant="body2"
+          sx={{ color: "text.secondary", mt: 1, mb: 3 }}
+        >
           {error
             ? "Không thể tải dữ liệu từ máy chủ. Vui lòng thử lại hoặc quay lại danh sách."
             : "Không tìm thấy dữ liệu kỷ niệm chuyến đi phù hợp với mã định danh này."}
@@ -145,7 +157,15 @@ export const TravelMemoryDetailPage: React.FC = () => {
             variant="outlined"
             startIcon={<ArrowBackIcon />}
             onClick={() => navigate("/admin/travel-memories")}
-            sx={{ borderRadius: "8px", textTransform: "none", fontWeight: 600 }}
+            sx={{
+              borderRadius: "8px",
+              textTransform: "none",
+              fontWeight: 600,
+              "&:focus-visible": {
+                outline: "2px solid #1976D2",
+                outlineOffset: 2,
+              },
+            }}
           >
             Quay lại danh sách
           </Button>
@@ -154,7 +174,11 @@ export const TravelMemoryDetailPage: React.FC = () => {
               variant="contained"
               color="primary"
               onClick={() => void refetch()}
-              sx={{ borderRadius: "8px", textTransform: "none", fontWeight: 600 }}
+              sx={{
+                borderRadius: "8px",
+                textTransform: "none",
+                fontWeight: 600,
+              }}
             >
               Thử lại
             </Button>
@@ -206,8 +230,12 @@ export const TravelMemoryDetailPage: React.FC = () => {
             borderRadius: "8px",
             textTransform: "none",
             fontWeight: 600,
-            borderColor: "#CBD5E1",
-            color: "#475569",
+            borderColor: "divider",
+            color: "text.secondary",
+            "&:focus-visible": {
+              outline: "2px solid #1976D2",
+              outlineOffset: 2,
+            },
           }}
         >
           Quay lại danh sách
@@ -223,6 +251,10 @@ export const TravelMemoryDetailPage: React.FC = () => {
               borderRadius: "8px",
               textTransform: "none",
               fontWeight: 600,
+              "&:focus-visible": {
+                outline: "2px solid #DC2626",
+                outlineOffset: 2,
+              },
             }}
           >
             Xóa chuyến đi
@@ -238,6 +270,10 @@ export const TravelMemoryDetailPage: React.FC = () => {
               textTransform: "none",
               fontWeight: 600,
               boxShadow: "none",
+              "&:focus-visible": {
+                outline: "2px solid #1976D2",
+                outlineOffset: 2,
+              },
             }}
           >
             Chỉnh sửa chuyến đi
@@ -249,9 +285,10 @@ export const TravelMemoryDetailPage: React.FC = () => {
       <Card
         elevation={1}
         sx={{
-          borderRadius: "16px",
-          border: "1px solid #E2E8F0",
-          bgcolor: "#FFFFFF",
+          borderRadius: "14px",
+          border: "1px solid",
+          borderColor: "divider",
+          bgcolor: "background.paper",
           overflow: "hidden",
         }}
       >
@@ -324,7 +361,7 @@ export const TravelMemoryDetailPage: React.FC = () => {
                   backdropFilter: "blur(6px)",
                   fontWeight: 600,
                   fontSize: "0.75rem",
-                  borderRadius: "6px",
+                  borderRadius: "4px",
                 }}
               />
               <Chip
@@ -344,7 +381,7 @@ export const TravelMemoryDetailPage: React.FC = () => {
                   backdropFilter: "blur(6px)",
                   fontWeight: 600,
                   fontSize: "0.75rem",
-                  borderRadius: "6px",
+                  borderRadius: "4px",
                 }}
               />
             </Box>
@@ -451,8 +488,12 @@ export const TravelMemoryDetailPage: React.FC = () => {
               sx={{
                 textTransform: "none",
                 fontWeight: 600,
-                color: "#2563EB",
-                "&:hover": { bgcolor: "#EFF6FF" },
+                color: "primary.main",
+                "&:hover": { bgcolor: "action.hover" },
+                "&:focus-visible": {
+                  outline: "2px solid #1976D2",
+                  outlineOffset: 2,
+                },
               }}
             >
               {allCollapsed ? "Mở rộng tất cả" : "Thu gọn tất cả"}
@@ -472,8 +513,9 @@ export const TravelMemoryDetailPage: React.FC = () => {
               elevation={1}
               sx={{
                 borderRadius: "14px",
-                border: "1px solid #E2E8F0",
-                bgcolor: "#FFFFFF",
+                border: "1px solid",
+                borderColor: "divider",
+                bgcolor: "background.paper",
                 overflow: "hidden",
               }}
             >
@@ -482,8 +524,9 @@ export const TravelMemoryDetailPage: React.FC = () => {
                 sx={{
                   px: { xs: 2, sm: 3 },
                   py: 1.8,
-                  bgcolor: "#F8FAFC",
-                  borderBottom: isCollapsed ? "none" : "1px solid #E2E8F0",
+                  bgcolor: "background.default",
+                  borderBottom: isCollapsed ? "none" : "1px solid",
+                  borderColor: "divider",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -491,8 +534,20 @@ export const TravelMemoryDetailPage: React.FC = () => {
                   userSelect: "none",
                   transition: "background-color 0.15s",
                   "&:hover": {
-                    bgcolor: "#F1F5F9",
+                    bgcolor: "action.hover",
                   },
+                  "&:focus-visible": {
+                    outline: "2px solid #1976D2",
+                    outlineOffset: -2,
+                  },
+                }}
+                role="button"
+                tabIndex={0}
+                aria-expanded={!isCollapsed}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    toggleDayCollapse(day.date);
+                  }
                 }}
                 onClick={() => toggleDayCollapse(day.date)}
               >
@@ -502,7 +557,7 @@ export const TravelMemoryDetailPage: React.FC = () => {
                       width: 32,
                       height: 32,
                       borderRadius: "8px",
-                      bgcolor: "#2563EB",
+                      bgcolor: "primary.main",
                       color: "#FFFFFF",
                       display: "flex",
                       alignItems: "center",

@@ -326,7 +326,7 @@ export const HomestayGallery: React.FC<HomestayGalleryProps> = ({
               dragOffset !== 0
                 ? "none"
                 : "transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)",
-            willChange: "transform",
+            willChange: dragOffset !== 0 ? "transform" : "auto",
           }}
         >
           {allImages.map((imgUrl, idx) => {

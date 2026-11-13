@@ -13,9 +13,6 @@ import {
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import PeopleIcon from '@mui/icons-material/People'
 import CottageIcon from '@mui/icons-material/Cottage'
-import InventoryIcon from '@mui/icons-material/Inventory'
-import AssessmentIcon from '@mui/icons-material/Assessment'
-import SettingsIcon from '@mui/icons-material/Settings'
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined'
@@ -76,9 +73,6 @@ const menuItems: MenuItem[] = [
       { title: 'Users Setting', path: '/users/setting' },
     ],
   },
-  { title: 'Products', path: '/products', icon: <InventoryIcon />, disabled: true },
-  { title: 'Reports', path: '/reports', icon: <AssessmentIcon />, disabled: true },
-  { title: 'Settings', path: '/settings', icon: <SettingsIcon />, disabled: true },
 ]
 
 export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: SidebarProps) {

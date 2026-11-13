@@ -58,7 +58,7 @@ export interface HomestayFormDialogProps {
   onClose: () => void;
   onSubmit: (
     data: IHomestayFormData,
-    onProgress?: (completed: number, total: number) => void
+    onProgress?: (completed: number, total: number) => void,
   ) => Promise<void> | void;
 }
 
@@ -84,7 +84,9 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
   const isEdit = Boolean(initialData);
 
   // File input refs for each room
-  const fileInputRefs = useRef<{ [localId: string]: HTMLInputElement | null }>({});
+  const fileInputRefs = useRef<{ [localId: string]: HTMLInputElement | null }>(
+    {},
+  );
 
   // Initialize room states
   const [rooms, setRooms] = useState<RoomUIState[]>(() => {
@@ -153,8 +155,10 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
       address: initialData?.address || initialData?.location || "",
       location: initialData?.address || initialData?.location || "",
       description: initialData?.description || "",
-      googleMapsUrl: initialData?.googleMapsUrl || initialData?.googleMapLink || "",
-      googleMapLink: initialData?.googleMapsUrl || initialData?.googleMapLink || "",
+      googleMapsUrl:
+        initialData?.googleMapsUrl || initialData?.googleMapLink || "",
+      googleMapLink:
+        initialData?.googleMapsUrl || initialData?.googleMapLink || "",
       rooms: [],
     },
   });
@@ -167,11 +171,13 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
       description: r.description || null,
       priceText: r.priceText || null,
       priceAmount:
-        r.priceAmount === "" || r.priceAmount === null || r.priceAmount === undefined
+        r.priceAmount === "" ||
+        r.priceAmount === null ||
+        r.priceAmount === undefined
           ? null
           : Number(r.priceAmount),
       priceUnit: r.priceUnit || null,
-      sortOrder: r.sortOrder ?? (rIdx + 1),
+      sortOrder: r.sortOrder ?? rIdx + 1,
       images: r.imageItems.map((img) => img.url),
       imageItems: r.imageItems,
     }));
@@ -224,7 +230,9 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
   // Confirm delete room dialog
   const handleRequestDeleteRoom = (room: RoomUIState) => {
     if (rooms.length <= 1) {
-      setFormError("Homestay phải có ít nhất 1 loại phòng. Không thể xóa loại phòng duy nhất.");
+      setFormError(
+        "Homestay phải có ít nhất 1 loại phòng. Không thể xóa loại phòng duy nhất.",
+      );
       return;
     }
     setFormError(null);
@@ -251,7 +259,9 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
   // Toggle expand / collapse room panel
   const handleToggleExpand = (localId: string) => {
     setRooms((prev) =>
-      prev.map((r) => (r.localId === localId ? { ...r, isExpanded: !r.isExpanded } : r))
+      prev.map((r) =>
+        r.localId === localId ? { ...r, isExpanded: !r.isExpanded } : r,
+      ),
     );
   };
 
@@ -274,11 +284,11 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
   const handleRoomFieldChange = (
     localId: string,
     field: "name" | "priceText" | "priceAmount" | "priceUnit" | "description",
-    value: unknown
+    value: unknown,
   ) => {
     setFormError(null);
     setRooms((prev) =>
-      prev.map((r) => (r.localId === localId ? { ...r, [field]: value } : r))
+      prev.map((r) => (r.localId === localId ? { ...r, [field]: value } : r)),
     );
   };
 
@@ -291,13 +301,30 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
     if (!room) return;
 
     const filesArray = Array.from(files);
-    if (room.imageItems.length >= 50 || room.imageItems.length + filesArray.length > 50) {
-      setFormError(`Loại phòng "${room.name}" chỉ được phép có tối đa 50 hình ảnh/video.`);
+    if (
+      room.imageItems.length >= 50 ||
+      room.imageItems.length + filesArray.length > 50
+    ) {
+      setFormError(
+        `Loại phòng "${room.name}" chỉ được phép có tối đa 50 hình ảnh/video.`,
+      );
       return;
     }
 
-    const validImageTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
-    const validVideoTypes = ["video/mp4", "video/webm", "video/quicktime", "video/ogg", "video/x-m4v", "video/x-matroska"];
+    const validImageTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/jpg",
+    ];
+    const validVideoTypes = [
+      "video/mp4",
+      "video/webm",
+      "video/quicktime",
+      "video/ogg",
+      "video/x-m4v",
+      "video/x-matroska",
+    ];
     const validTypes = [...validImageTypes, ...validVideoTypes];
 
     const newItems: IRoomFormImageItem[] = [];
@@ -317,13 +344,18 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
       }
 
       const isDuplicate = room.imageItems.some(
-        (item) => item.file && item.file.name === file.name && item.file.size === file.size
+        (item) =>
+          item.file &&
+          item.file.name === file.name &&
+          item.file.size === file.size,
       );
       if (isDuplicate) return;
 
       const objectUrl = URL.createObjectURL(file);
       const isFirst = room.imageItems.length === 0 && newItems.length === 0;
-      const mediaType: "image" | "video" = fileTypeLower.startsWith("video/") ? "video" : "image";
+      const mediaType: "image" | "video" = fileTypeLower.startsWith("video/")
+        ? "video"
+        : "image";
 
       newItems.push({
         id: `file-${file.name}-${file.size}-${Date.now()}-${Math.random()}`,
@@ -337,7 +369,9 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
     });
 
     if (hasTypeError) {
-      setFormError("Chỉ chấp nhận hình ảnh (PNG, JPG, WebP) hoặc video (MP4, WebM, MOV, OGG).");
+      setFormError(
+        "Chỉ chấp nhận hình ảnh (PNG, JPG, WebP) hoặc video (MP4, WebM, MOV, OGG).",
+      );
     }
     if (hasSizeError) {
       setFormError(`Mỗi file không được vượt quá ${MAX_MEDIA_FILE_SIZE_MB}MB.`);
@@ -347,18 +381,23 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
       setRooms((prev) =>
         prev.map((r) => {
           if (r.localId !== localId) return r;
-          const updatedImages = [...r.imageItems, ...newItems].map((img, idx) => ({
-            ...img,
-            sortOrder: idx + 1,
-          }));
+          const updatedImages = [...r.imageItems, ...newItems].map(
+            (img, idx) => ({
+              ...img,
+              sortOrder: idx + 1,
+            }),
+          );
           return { ...r, imageItems: updatedImages };
-        })
+        }),
       );
     }
   };
 
   // Handle file select
-  const handleFileSelect = (localId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (
+    localId: string,
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const files = e.target.files;
     if (files && files.length > 0) {
       processRoomFiles(localId, files);
@@ -369,7 +408,10 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
   };
 
   // Drag and Drop handlers for room dropzone
-  const handleDragOver = (localId: string, e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = (
+    localId: string,
+    e: React.DragEvent<HTMLDivElement>,
+  ) => {
     e.preventDefault();
     e.stopPropagation();
     if (!isSubmittingAsync) {
@@ -378,7 +420,10 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
     }
   };
 
-  const handleDragLeave = (localId: string, e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragLeave = (
+    localId: string,
+    e: React.DragEvent<HTMLDivElement>,
+  ) => {
     e.preventDefault();
     e.stopPropagation();
     if (e.currentTarget.contains(e.relatedTarget as Node)) return;
@@ -418,7 +463,7 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
           isCover: wasCover && idx === 0 ? true : img.isCover,
         }));
         return { ...room, imageItems: updated };
-      })
+      }),
     );
   };
 
@@ -432,7 +477,7 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
           isCover: img.id === imageId,
         }));
         return { ...room, imageItems: updated };
-      })
+      }),
     );
   };
 
@@ -440,13 +485,14 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
   const handleReorderImage = (
     roomLocalId: string,
     imgIndex: number,
-    direction: "left" | "right"
+    direction: "left" | "right",
   ) => {
     setRooms((prev) =>
       prev.map((room) => {
         if (room.localId !== roomLocalId) return room;
         if (direction === "left" && imgIndex === 0) return room;
-        if (direction === "right" && imgIndex === room.imageItems.length - 1) return room;
+        if (direction === "right" && imgIndex === room.imageItems.length - 1)
+          return room;
 
         const copy = [...room.imageItems];
         const targetIndex = direction === "left" ? imgIndex - 1 : imgIndex + 1;
@@ -456,9 +502,12 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
 
         return {
           ...room,
-          imageItems: copy.map((item, idx) => ({ ...item, sortOrder: idx + 1 })),
+          imageItems: copy.map((item, idx) => ({
+            ...item,
+            sortOrder: idx + 1,
+          })),
         };
-      })
+      }),
     );
   };
 
@@ -478,7 +527,9 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
         return;
       }
       if (room.imageItems.length > 50) {
-        setFormError(`Loại phòng "${room.name}" vượt quá giới hạn 50 hình ảnh.`);
+        setFormError(
+          `Loại phòng "${room.name}" vượt quá giới hạn 50 hình ảnh.`,
+        );
         return;
       }
     }
@@ -489,17 +540,21 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
       description: r.description.trim() || null,
       priceText: r.priceText.trim() || null,
       priceAmount:
-        r.priceAmount === "" || r.priceAmount === null || r.priceAmount === undefined
+        r.priceAmount === "" ||
+        r.priceAmount === null ||
+        r.priceAmount === undefined
           ? null
           : Number(r.priceAmount),
       priceUnit: r.priceUnit || null,
-      sortOrder: r.sortOrder ?? (rIdx + 1),
+      sortOrder: r.sortOrder ?? rIdx + 1,
       images: r.imageItems.map((img) => img.url),
       imageItems: r.imageItems,
     }));
 
     const rawMapUrl =
-      typeof data.googleMapsUrl === "string" ? data.googleMapsUrl : data.googleMapLink ?? "";
+      typeof data.googleMapsUrl === "string"
+        ? data.googleMapsUrl
+        : data.googleMapLink ?? "";
     const mapUrlValue = rawMapUrl.trim() ? rawMapUrl.trim() : null;
 
     setIsSubmittingAsync(true);
@@ -519,10 +574,11 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
         },
         (completed, total) => {
           setUploadProgress({ completed, total });
-        }
+        },
       );
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Đã xảy ra lỗi khi lưu thông tin.";
+      const msg =
+        err instanceof Error ? err.message : "Đã xảy ra lỗi khi lưu thông tin.";
       setFormError(msg);
     } finally {
       setIsSubmittingAsync(false);
@@ -572,7 +628,11 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
           </IconButton>
         </DialogTitle>
 
-        <Box component="form" onSubmit={handleSubmit(handleFormSubmit)} noValidate>
+        <Box
+          component="form"
+          onSubmit={handleSubmit(handleFormSubmit)}
+          noValidate
+        >
           <DialogContent dividers sx={{ py: 2.5 }}>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
               {/* SECTION A: SHARED HOMESTAY INFORMATION */}
@@ -637,7 +697,9 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                     placeholder="https://maps.google.com/?q=..."
                     {...register("googleMapsUrl")}
                     error={!!errors.googleMapsUrl}
-                    helperText={errors.googleMapsUrl?.message ?? "Để trống nếu chưa có"}
+                    helperText={
+                      errors.googleMapsUrl?.message ?? "Để trống nếu chưa có"
+                    }
                     size="small"
                     disabled={isSubmittingAsync}
                   />
@@ -666,7 +728,8 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                       Danh Sách Loại Phòng
                     </Typography>
                     <Typography variant="body2" sx={{ color: "#64748B" }}>
-                      Mỗi loại phòng có tên, giá thuê, mô tả và thư viện hình ảnh riêng biệt.
+                      Mỗi loại phòng có tên, giá thuê, mô tả và thư viện hình
+                      ảnh riêng biệt.
                     </Typography>
                   </Box>
 
@@ -688,7 +751,9 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                 </Box>
 
                 {/* Rooms List */}
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+                <Box
+                  sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}
+                >
                   {rooms.map((room, index) => {
                     const isOnlyRoom = rooms.length === 1;
                     const isDraggingThis = draggingRoomId === room.localId;
@@ -706,12 +771,28 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                       >
                         {/* Room Panel Header */}
                         <CardHeader
+                          role="button"
+                          tabIndex={0}
+                          aria-expanded={room.isExpanded}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              handleToggleExpand(room.localId);
+                            }
+                          }}
                           sx={{
-                            bgcolor: "#F8FAFC",
+                            bgcolor: "background.default",
                             py: 1.5,
                             px: 2,
-                            borderBottom: room.isExpanded ? "1px solid #E2E8F0" : "none",
+                            borderBottom: room.isExpanded
+                              ? "1px solid #E2E8F0"
+                              : "none",
                             cursor: "pointer",
+                            "&:focus-visible": {
+                              outline: "2px solid",
+                              outlineColor: "primary.main",
+                              outlineOffset: -2,
+                            },
                           }}
                           onClick={() => handleToggleExpand(room.localId)}
                           avatar={
@@ -720,16 +801,26 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                             />
                           }
                           title={
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                              }}
+                            >
                               <Typography
                                 variant="subtitle2"
                                 sx={{ fontWeight: 700, color: "#0F172A" }}
                               >
                                 {room.name || `Loại phòng #${index + 1}`}
                               </Typography>
-                              {room.priceAmount !== "" && Number(room.priceAmount) > 0 ? (
+                              {room.priceAmount !== "" &&
+                              Number(room.priceAmount) > 0 ? (
                                 <Chip
-                                  label={formatRoomPrice(Number(room.priceAmount), room.priceUnit)}
+                                  label={formatRoomPrice(
+                                    Number(room.priceAmount),
+                                    room.priceUnit,
+                                  )}
                                   size="small"
                                   sx={{
                                     bgcolor: "#EFF6FF",
@@ -755,7 +846,11 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                           }
                           action={
                             <Box
-                              sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.5,
+                              }}
                               onClick={(e) => e.stopPropagation()}
                             >
                               {/* Reorder Up */}
@@ -777,9 +872,12 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                   <IconButton
                                     size="small"
                                     disabled={
-                                      index === rooms.length - 1 || isSubmittingAsync
+                                      index === rooms.length - 1 ||
+                                      isSubmittingAsync
                                     }
-                                    onClick={() => handleMoveRoom(index, "down")}
+                                    onClick={() =>
+                                      handleMoveRoom(index, "down")
+                                    }
                                   >
                                     <KeyboardArrowDownIcon fontSize="small" />
                                   </IconButton>
@@ -799,7 +897,9 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                     size="small"
                                     color="error"
                                     disabled={isOnlyRoom || isSubmittingAsync}
-                                    onClick={() => handleRequestDeleteRoom(room)}
+                                    onClick={() =>
+                                      handleRequestDeleteRoom(room)
+                                    }
                                   >
                                     <DeleteOutlineIcon fontSize="small" />
                                   </IconButton>
@@ -822,13 +922,27 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                         />
 
                         {/* Room Panel Content */}
-                        <Collapse in={room.isExpanded} timeout="auto" unmountOnExit>
-                          <CardContent sx={{ p: 2.5, display: "flex", flexDirection: "column", gap: 2 }}>
+                        <Collapse
+                          in={room.isExpanded}
+                          timeout="auto"
+                          unmountOnExit
+                        >
+                          <CardContent
+                            sx={{
+                              p: 2.5,
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 2,
+                            }}
+                          >
                             {/* Room Name, Price Amount, and Price Unit */}
                             <Box
                               sx={{
                                 display: "grid",
-                                gridTemplateColumns: { xs: "1fr", sm: "2fr 1.5fr 1.5fr" },
+                                gridTemplateColumns: {
+                                  xs: "1fr",
+                                  sm: "2fr 1.5fr 1.5fr",
+                                },
                                 gap: 2,
                               }}
                             >
@@ -839,7 +953,11 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                 placeholder="Ví dụ: Room 1, Căn Bê Tông, Phòng Giường Đôi"
                                 value={room.name}
                                 onChange={(e) =>
-                                  handleRoomFieldChange(room.localId, "name", e.target.value)
+                                  handleRoomFieldChange(
+                                    room.localId,
+                                    "name",
+                                    e.target.value,
+                                  )
                                 }
                                 size="small"
                                 disabled={isSubmittingAsync}
@@ -854,11 +972,19 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                 onChange={(e) => {
                                   const val = e.target.value;
                                   if (val === "") {
-                                    handleRoomFieldChange(room.localId, "priceAmount", "");
+                                    handleRoomFieldChange(
+                                      room.localId,
+                                      "priceAmount",
+                                      "",
+                                    );
                                   } else {
                                     const num = Number(val);
                                     if (num >= 0) {
-                                      handleRoomFieldChange(room.localId, "priceAmount", num);
+                                      handleRoomFieldChange(
+                                        room.localId,
+                                        "priceAmount",
+                                        num,
+                                      );
                                     }
                                   }
                                 }}
@@ -868,7 +994,10 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                       <InputAdornment position="end">
                                         <Typography
                                           variant="caption"
-                                          sx={{ color: "#64748B", fontWeight: 700 }}
+                                          sx={{
+                                            color: "#64748B",
+                                            fontWeight: 700,
+                                          }}
                                         >
                                           VNĐ
                                         </Typography>
@@ -881,8 +1010,11 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                   },
                                 }}
                                 helperText={
-                                  room.priceAmount !== "" && Number(room.priceAmount) > 0
-                                    ? `${new Intl.NumberFormat("vi-VN").format(Number(room.priceAmount))}đ`
+                                  room.priceAmount !== "" &&
+                                  Number(room.priceAmount) > 0
+                                    ? `${new Intl.NumberFormat("vi-VN").format(
+                                        Number(room.priceAmount),
+                                      )}đ`
                                     : "Nhập giá thuê (số dương)"
                                 }
                                 size="small"
@@ -898,7 +1030,7 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                   handleRoomFieldChange(
                                     room.localId,
                                     "priceUnit",
-                                    e.target.value as PriceUnit
+                                    e.target.value as PriceUnit,
                                   )
                                 }
                                 size="small"
@@ -921,7 +1053,11 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                               placeholder="Chi tiết tiện nghi, số lượng giường, ban công, view..."
                               value={room.description}
                               onChange={(e) =>
-                                handleRoomFieldChange(room.localId, "description", e.target.value)
+                                handleRoomFieldChange(
+                                  room.localId,
+                                  "description",
+                                  e.target.value,
+                                )
                               }
                               size="small"
                               disabled={isSubmittingAsync}
@@ -967,8 +1103,12 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                               {/* Drag & Drop Dropzone */}
                               <Paper
                                 elevation={0}
-                                onDragOver={(e) => handleDragOver(room.localId, e)}
-                                onDragLeave={(e) => handleDragLeave(room.localId, e)}
+                                onDragOver={(e) =>
+                                  handleDragOver(room.localId, e)
+                                }
+                                onDragLeave={(e) =>
+                                  handleDragLeave(room.localId, e)
+                                }
                                 onDrop={(e) => handleDrop(room.localId, e)}
                                 onClick={() =>
                                   !isSubmittingAsync &&
@@ -986,7 +1126,8 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                     ? "#EFF6FF"
                                     : "#F8FAFC",
                                   cursor:
-                                    isSubmittingAsync || room.imageItems.length >= 50
+                                    isSubmittingAsync ||
+                                    room.imageItems.length >= 50
                                       ? "not-allowed"
                                       : "pointer",
                                   transition: "all 0.2s ease-in-out",
@@ -998,7 +1139,8 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                   mb: 2,
                                   "&:hover": {
                                     borderColor:
-                                      isSubmittingAsync || room.imageItems.length >= 50
+                                      isSubmittingAsync ||
+                                      room.imageItems.length >= 50
                                         ? "#CBD5E1"
                                         : "#2563EB",
                                   },
@@ -1009,8 +1151,12 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                     width: 38,
                                     height: 38,
                                     borderRadius: "50%",
-                                    bgcolor: isDraggingThis ? "#DBEAFE" : "#E2E8F0",
-                                    color: isDraggingThis ? "#2563EB" : "#64748B",
+                                    bgcolor: isDraggingThis
+                                      ? "#DBEAFE"
+                                      : "#E2E8F0",
+                                    color: isDraggingThis
+                                      ? "#2563EB"
+                                      : "#64748B",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
@@ -1022,7 +1168,9 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                   variant="body2"
                                   sx={{
                                     fontWeight: 700,
-                                    color: isDraggingThis ? "#1D4ED8" : "#334155",
+                                    color: isDraggingThis
+                                      ? "#1D4ED8"
+                                      : "#334155",
                                     fontSize: "0.85rem",
                                   }}
                                 >
@@ -1034,7 +1182,8 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                   variant="caption"
                                   sx={{ color: "#64748B" }}
                                 >
-                                  Hỗ trợ PNG, JPG, JPEG, WebP. Tối đa 50 ảnh/phòng.
+                                  Hỗ trợ PNG, JPG, JPEG, WebP. Tối đa 50
+                                  ảnh/phòng.
                                 </Typography>
 
                                 <input
@@ -1045,9 +1194,12 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                   multiple
                                   accept="image/png,image/jpeg,image/webp,image/jpg,video/mp4,video/webm,video/quicktime,video/ogg"
                                   style={{ display: "none" }}
-                                  onChange={(e) => handleFileSelect(room.localId, e)}
+                                  onChange={(e) =>
+                                    handleFileSelect(room.localId, e)
+                                  }
                                   disabled={
-                                    isSubmittingAsync || room.imageItems.length >= 50
+                                    isSubmittingAsync ||
+                                    room.imageItems.length >= 50
                                   }
                                 />
                               </Paper>
@@ -1170,17 +1322,24 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                             size="small"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              handleSetCover(room.localId, img.id);
+                                              handleSetCover(
+                                                room.localId,
+                                                img.id,
+                                              );
                                             }}
                                             sx={{
-                                              color: img.isCover ? "#FBBF24" : "#FFFFFF",
+                                              color: img.isCover
+                                                ? "#FBBF24"
+                                                : "#FFFFFF",
                                               p: 0.3,
                                             }}
                                           >
                                             {img.isCover ? (
                                               <StarIcon sx={{ fontSize: 16 }} />
                                             ) : (
-                                              <StarBorderIcon sx={{ fontSize: 16 }} />
+                                              <StarBorderIcon
+                                                sx={{ fontSize: 16 }}
+                                              />
                                             )}
                                           </IconButton>
                                         </Tooltip>
@@ -1195,16 +1354,19 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                                 handleReorderImage(
                                                   room.localId,
                                                   imgIndex,
-                                                  "left"
+                                                  "left",
                                                 );
                                               }}
                                               sx={{ color: "#FFF", p: 0.2 }}
                                             >
-                                              <ArrowBackIcon sx={{ fontSize: 14 }} />
+                                              <ArrowBackIcon
+                                                sx={{ fontSize: 14 }}
+                                              />
                                             </IconButton>
                                           )}
 
-                                          {imgIndex < room.imageItems.length - 1 && (
+                                          {imgIndex <
+                                            room.imageItems.length - 1 && (
                                             <IconButton
                                               size="small"
                                               onClick={(e) => {
@@ -1212,12 +1374,14 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                                 handleReorderImage(
                                                   room.localId,
                                                   imgIndex,
-                                                  "right"
+                                                  "right",
                                                 );
                                               }}
                                               sx={{ color: "#FFF", p: 0.2 }}
                                             >
-                                              <ArrowForwardIcon sx={{ fontSize: 14 }} />
+                                              <ArrowForwardIcon
+                                                sx={{ fontSize: 14 }}
+                                              />
                                             </IconButton>
                                           )}
                                         </Box>
@@ -1230,16 +1394,28 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                                               e.stopPropagation();
                                               handleRemoveRoomImage(
                                                 room.localId,
-                                                img.id
+                                                img.id,
                                               );
                                             }}
+                                            aria-label="Xóa ảnh phòng này"
                                             sx={{
-                                              color: "#EF4444",
-                                              p: 0.3,
-                                              "&:hover": { color: "#DC2626" },
+                                              color: "error.main",
+                                              width: 30,
+                                              height: 30,
+                                              p: 0,
+                                              "&:hover": {
+                                                color: "error.dark",
+                                                bgcolor: "#FEF2F2",
+                                              },
+                                              "&:focus-visible": {
+                                                outline: "2px solid #DC2626",
+                                                outlineOffset: 1,
+                                              },
                                             }}
                                           >
-                                            <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                                            <DeleteOutlineIcon
+                                              sx={{ fontSize: 16 }}
+                                            />
                                           </IconButton>
                                         </Tooltip>
                                       </Box>
@@ -1273,7 +1449,7 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                     Đang tải ảnh lên... {uploadProgress.completed}/
                     {uploadProgress.total} tệp (
                     {Math.round(
-                      (uploadProgress.completed / uploadProgress.total) * 100
+                      (uploadProgress.completed / uploadProgress.total) * 100,
                     )}
                     %)
                   </Typography>

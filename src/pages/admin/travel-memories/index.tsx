@@ -20,7 +20,7 @@ import PhotoLibraryOutlinedIcon from "@mui/icons-material/PhotoLibraryOutlined";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
-import type { Dayjs } from "dayjs";
+import dayjs, { type Dayjs } from "dayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import type { ITravelMemory } from "@/types/pages/travel-memories/travelMemory";
@@ -30,6 +30,7 @@ import { TravelMemoryCard } from "@/components/pages/travel-memories/travelMemor
 import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
 import { useCountries, type IGlobalCountry } from "@/hooks/common/useGlobalGeo";
 import useTravelLocationSelection from "@/hooks/selections/useTravelLocationSelection";
+import { countTotalPhotos } from "@/utils/travelMemoryUtils";
 
 export const TravelMemoryListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -41,8 +42,18 @@ export const TravelMemoryListPage: React.FC = () => {
   const page = !isNaN(pageParam) && pageParam > 0 ? pageParam : 1;
   const perPage = 10;
 
-  // Filter state
-  const [selectedYear, setSelectedYear] = useState<Dayjs | null>(null);
+  // Year query parameter
+  const yearParam = searchParams.get("year");
+  const parsedYear =
+    yearParam && !isNaN(parseInt(yearParam, 10))
+      ? parseInt(yearParam, 10)
+      : null;
+
+  const selectedYear = useMemo<Dayjs | null>(() => {
+    if (!parsedYear) return null;
+    const d = dayjs().year(parsedYear).startOf("year");
+    return d.isValid() ? d : null;
+  }, [parsedYear]);
 
   // Country & Location query parameters from URL
   const countryParam = searchParams.get("country")?.trim() || "";
@@ -94,7 +105,7 @@ export const TravelMemoryListPage: React.FC = () => {
   }, [travelLocationsSelections, locationData, locationFilter]);
 
   const {
-    data: memories,
+    data: rawMemories,
     total,
     isLoading,
     error,
@@ -103,7 +114,30 @@ export const TravelMemoryListPage: React.FC = () => {
     page,
     countryCode: countryFilter || undefined,
     locationId: typeof locationFilter === "number" ? locationFilter : undefined,
+    year: parsedYear ?? undefined,
   });
+
+  const memories = useMemo(() => {
+    if (!parsedYear) return rawMemories;
+    return rawMemories.filter((m) => {
+      const startYear = m.startDate ? dayjs(m.startDate).year() : null;
+      const endYear = m.endDate ? dayjs(m.endDate).year() : null;
+      return startYear === parsedYear || endYear === parsedYear;
+    });
+  }, [rawMemories, parsedYear]);
+
+  const handleYearChange = (newValue: Dayjs | null) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("page", "1");
+      if (newValue && newValue.isValid()) {
+        next.set("year", newValue.year().toString());
+      } else {
+        next.delete("year");
+      }
+      return next;
+    });
+  };
 
   const { deleteTravelMemory, isLoading: isDeleting } = useDeleteTravelMemory();
 
@@ -178,10 +212,27 @@ export const TravelMemoryListPage: React.FC = () => {
     severity: "success",
   }));
 
-  // Summary counts - mock con số cụ thể theo yêu cầu
-  const totalTrips = 12;
-  const uniqueDestinationsCount = 8;
-  const totalPhotosCount = 64;
+  // Summary counts derived from live data
+  const totalTrips = parsedYear
+    ? memories.length
+    : total > 0
+      ? total
+      : memories.length;
+  const uniqueDestinationsCount = useMemo(() => {
+    const destSet = new Set<string | number>();
+    memories.forEach((m) => {
+      if (m.locationId) {
+        destSet.add(m.locationId);
+      } else if (m.destination?.trim()) {
+        destSet.add(m.destination.trim().toLowerCase());
+      }
+    });
+    return destSet.size;
+  }, [memories]);
+  const totalPhotosCount = useMemo(
+    () => memories.reduce((sum, m) => sum + countTotalPhotos(m.days), 0),
+    [memories],
+  );
 
   const prefersReducedMotion = useMediaQuery(
     "@media (prefers-reduced-motion: reduce)",
@@ -190,7 +241,11 @@ export const TravelMemoryListPage: React.FC = () => {
   const [slideDirection, setSlideDirection] = useState<"next" | "prev">("next");
 
   // Tổng số nhóm/trang theo pagination của server
-  const totalItems = total > 0 ? total : memories.length;
+  const totalItems = parsedYear
+    ? memories.length
+    : total > 0
+      ? total
+      : memories.length;
   const totalGroups = Math.max(1, Math.ceil(totalItems / perPage));
 
   const startItem = totalItems === 0 ? 0 : (page - 1) * perPage + 1;
@@ -220,7 +275,9 @@ export const TravelMemoryListPage: React.FC = () => {
 
   const handleConfirmDelete = async () => {
     if (!itemToDelete) return;
-    const { success, error: delError } = await deleteTravelMemory(itemToDelete.id);
+    const { success, error: delError } = await deleteTravelMemory(
+      itemToDelete.id,
+    );
     if (success) {
       setSnackbar({
         open: true,
@@ -341,8 +398,9 @@ export const TravelMemoryListPage: React.FC = () => {
             elevation={0}
             sx={{
               borderRadius: "12px",
-              border: "1px solid #E2E8F0",
-              bgcolor: "#FFFFFF",
+              border: "1px solid",
+              borderColor: "divider",
+              bgcolor: "background.paper",
               minHeight: { xs: 70, sm: 75 },
               height: "100%",
               display: "flex",
@@ -388,7 +446,7 @@ export const TravelMemoryListPage: React.FC = () => {
                   sx={{
                     display: "block",
                     fontWeight: 700,
-                    color: "#64748B",
+                    color: "text.secondary",
                     textTransform: "uppercase",
                     letterSpacing: { xs: "0.01em", sm: "0.03em" },
                     fontSize: { xs: "0.62rem", sm: "0.72rem" },
@@ -411,9 +469,10 @@ export const TravelMemoryListPage: React.FC = () => {
                     component="span"
                     sx={{
                       fontWeight: 800,
-                      color: "#0F172A",
+                      color: "text.primary",
                       fontSize: { xs: "1.15rem", sm: "1.42rem" },
                       lineHeight: 1.1,
+                      fontVariantNumeric: "tabular-nums",
                     }}
                   >
                     {c.value}
@@ -422,7 +481,7 @@ export const TravelMemoryListPage: React.FC = () => {
                     variant="caption"
                     noWrap
                     sx={{
-                      color: "#94A3B8",
+                      color: "text.secondary",
                       fontSize: { xs: "0.68rem", sm: "0.76rem" },
                       lineHeight: 1.2,
                       maxWidth: "100%",
@@ -447,8 +506,9 @@ export const TravelMemoryListPage: React.FC = () => {
           flexWrap: "wrap",
           gap: 2,
           borderRadius: "12px",
-          border: "1px solid #E2E8F0",
-          bgcolor: "#FFFFFF",
+          border: "1px solid",
+          borderColor: "divider",
+          bgcolor: "background.paper",
         }}
       >
         {/* Year Filter (DatePicker chỉ chọn năm) */}
@@ -458,7 +518,7 @@ export const TravelMemoryListPage: React.FC = () => {
           label="Năm"
           format="YYYY"
           value={selectedYear}
-          onChange={(newValue) => setSelectedYear(newValue)}
+          onChange={handleYearChange}
           sx={{ width: 160 }}
           slotProps={{
             field: { clearable: true },
@@ -752,10 +812,10 @@ export const TravelMemoryListPage: React.FC = () => {
             gap: 2,
           }}
         >
-          <CircularProgress size={36} sx={{ color: "#2563EB" }} />
+          <CircularProgress size={36} color="primary" />
           <Typography
             variant="body1"
-            sx={{ color: "#64748B", fontWeight: 500 }}
+            sx={{ color: "text.secondary", fontWeight: 500 }}
           >
             Đang tải danh sách kỷ niệm chuyến đi...
           </Typography>
@@ -766,9 +826,10 @@ export const TravelMemoryListPage: React.FC = () => {
           sx={{
             py: 6,
             px: 3,
-            border: "1px dashed #CBD5E1",
+            border: "1px dashed",
+            borderColor: "divider",
             borderRadius: "14px",
-            bgcolor: "#FFFFFF",
+            bgcolor: "background.paper",
             textAlign: "center",
             display: "flex",
             flexDirection: "column",
@@ -777,13 +838,19 @@ export const TravelMemoryListPage: React.FC = () => {
           }}
         >
           <CollectionsBookmarkOutlinedIcon
-            sx={{ fontSize: 48, color: "#94A3B8" }}
+            sx={{ fontSize: 48, color: "text.secondary" }}
           />
-          <Typography variant="h6" sx={{ fontWeight: 600, color: "#334155" }}>
+          <Typography
+            variant="h6"
+            sx={{ fontWeight: 600, color: "text.primary" }}
+          >
             Không tìm thấy chuyến đi nào
           </Typography>
-          <Typography variant="body2" sx={{ color: "#64748B", maxWidth: 460 }}>
-            {countryFilter || locationFilter !== ""
+          <Typography
+            variant="body2"
+            sx={{ color: "text.secondary", maxWidth: 460 }}
+          >
+            {countryFilter || locationFilter !== "" || parsedYear
               ? "Không có chuyến đi nào phù hợp với bộ lọc hiện tại. Thử thay đổi hoặc xóa bộ lọc."
               : "Bạn chưa có chuyến đi nào được lưu giữ. Hãy bấm '+ Thêm chuyến đi' để tạo kỷ niệm đầu tiên!"}
           </Typography>
@@ -850,9 +917,9 @@ export const TravelMemoryListPage: React.FC = () => {
             mt: 0.5,
           }}
         >
-          {/* Progress dots if multiple groups */}
+          {/* Progress dots if multiple groups with accessible touch targets */}
           {totalGroups > 1 && totalGroups <= 12 && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
               {Array.from({ length: totalGroups }).map((_, idx) => (
                 <Box
                   key={idx}
@@ -866,17 +933,35 @@ export const TravelMemoryListPage: React.FC = () => {
                   }}
                   aria-label={`Chuyển đến nhóm ${idx + 1}`}
                   sx={{
-                    width: idx === page - 1 ? 24 : 8,
-                    height: 8,
-                    borderRadius: "4px",
-                    bgcolor: idx === page - 1 ? "primary.main" : "#CBD5E1",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    minHeight: 32,
+                    minWidth: idx === page - 1 ? 32 : 20,
+                    px: 0.5,
                     cursor: "pointer",
-                    transition: "all 0.25s cubic-bezier(0.22, 1, 0.36, 1)",
-                    "&:hover": {
-                      bgcolor: idx === page - 1 ? "primary.main" : "#94A3B8",
+                    borderRadius: "4px",
+                    "&:focus-visible": {
+                      outline: "2px solid #1976D2",
+                      outlineOffset: 2,
                     },
                   }}
-                />
+                >
+                  <Box
+                    sx={{
+                      width: idx === page - 1 ? 24 : 8,
+                      height: 8,
+                      borderRadius: "4px",
+                      bgcolor:
+                        idx === page - 1 ? "primary.main" : "text.disabled",
+                      transition: "all 0.25s cubic-bezier(0.22, 1, 0.36, 1)",
+                      "&:hover": {
+                        bgcolor:
+                          idx === page - 1 ? "primary.main" : "text.secondary",
+                      },
+                    }}
+                  />
+                </Box>
               ))}
             </Box>
           )}

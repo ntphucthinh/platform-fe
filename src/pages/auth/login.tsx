@@ -182,24 +182,12 @@ export const Login: React.FC = () => {
               helperText={errors.email?.message}
               sx={{
                 "& .MuiOutlinedInput-root": {
-                  borderRadius: "8px",
-                  bgcolor: "#FFFFFF",
+                  bgcolor: "background.paper",
                   fontSize: "14px",
-                  height: "48px",
-                  "& fieldset": {
-                    borderColor: "#D1D5DB",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "#9CA3AF",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "primary.main",
-                    borderWidth: "1.5px",
-                  },
                 },
                 "& .MuiInputLabel-root": {
                   fontSize: "14px",
-                  color: "#64748B",
+                  color: "text.secondary",
                   "&.Mui-focused": {
                     color: "primary.main",
                   },
@@ -209,7 +197,7 @@ export const Login: React.FC = () => {
                 input: {
                   startAdornment: (
                     <InputAdornment position="start">
-                      <EmailOutlined sx={{ color: "#94A3B8", fontSize: 20 }} />
+                      <EmailOutlined sx={{ color: "text.secondary", fontSize: 20 }} />
                     </InputAdornment>
                   ),
                 },
@@ -230,24 +218,12 @@ export const Login: React.FC = () => {
               helperText={errors.password?.message}
               sx={{
                 "& .MuiOutlinedInput-root": {
-                  borderRadius: "8px",
-                  bgcolor: "#FFFFFF",
+                  bgcolor: "background.paper",
                   fontSize: "14px",
-                  height: "48px",
-                  "& fieldset": {
-                    borderColor: "#D1D5DB",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "#9CA3AF",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "primary.main",
-                    borderWidth: "1.5px",
-                  },
                 },
                 "& .MuiInputLabel-root": {
                   fontSize: "14px",
-                  color: "#64748B",
+                  color: "text.secondary",
                   "&.Mui-focused": {
                     color: "primary.main",
                   },
@@ -257,7 +233,7 @@ export const Login: React.FC = () => {
                 input: {
                   startAdornment: (
                     <InputAdornment position="start">
-                      <LockOutlined sx={{ color: "#94A3B8", fontSize: 20 }} />
+                      <LockOutlined sx={{ color: "text.secondary", fontSize: 20 }} />
                     </InputAdornment>
                   ),
                   endAdornment: (
@@ -267,7 +243,7 @@ export const Login: React.FC = () => {
                         onClick={handleTogglePasswordVisibility}
                         edge="end"
                         size="small"
-                        sx={{ color: "#94A3B8" }}
+                        sx={{ color: "text.secondary" }}
                       >
                         {showPassword ? (
                           <VisibilityOff sx={{ fontSize: 20 }} />

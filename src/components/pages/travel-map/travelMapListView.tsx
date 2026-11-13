@@ -330,13 +330,21 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
             <Card
               key={loc.id}
               elevation={0}
+              role="button"
+              tabIndex={0}
               onClick={() => onSelectLocation(loc.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onSelectLocation(loc.id);
+                }
+              }}
               sx={{
                 borderRadius: "16px",
                 border: isSelected
                   ? "2px solid #1976D2"
                   : "1px solid #E2E8F0",
-                bgcolor: "#FFFFFF",
+                bgcolor: "background.paper",
                 cursor: "pointer",
                 display: "flex",
                 flexDirection: "column",
@@ -348,7 +356,12 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                 "&:hover": {
                   transform: "translateY(-3px)",
                   boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
-                  borderColor: isSelected ? "#1976D2" : "#CBD5E1",
+                  borderColor: isSelected ? "primary.main" : "#CBD5E1",
+                },
+                "&:focus-visible": {
+                  outline: "2px solid",
+                  outlineColor: "primary.main",
+                  outlineOffset: 2,
                 },
               }}
             >
@@ -358,12 +371,14 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                   position: "relative",
                   bgcolor:
                     !loc.coverImage || loc.coverImage === DEFAULT_NO_IMAGE
-                      ? "#F8FAFC"
+                      ? "background.default"
                       : "transparent",
                 }}
               >
                 <CardMedia
                   component="img"
+                  loading="lazy"
+                  decoding="async"
                   height="160"
                   image={loc.coverImage || DEFAULT_NO_IMAGE}
                   alt={loc.locationName || loc.name}
@@ -572,9 +587,9 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
           mt: 0.5,
         }}
       >
-        {/* Progress dots if multiple groups */}
+        {/* Progress dots if multiple groups with accessible touch targets */}
         {totalGroups > 1 && totalGroups <= 12 && (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             {Array.from({ length: totalGroups }).map((_, idx) => (
               <Box
                 key={idx}
@@ -583,22 +598,44 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                 tabIndex={0}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
                     handleGoToGroup(idx);
                   }
                 }}
                 aria-label={`Chuyển đến nhóm ${idx + 1}`}
                 sx={{
-                  width: idx === currentGroup ? 24 : 8,
-                  height: 8,
-                  borderRadius: "4px",
-                  bgcolor: idx === currentGroup ? "primary.main" : "#CBD5E1",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minHeight: 32,
+                  minWidth: idx === currentGroup ? 32 : 24,
+                  px: 0.5,
                   cursor: "pointer",
-                  transition: "all 0.25s cubic-bezier(0.22, 1, 0.36, 1)",
-                  "&:hover": {
-                    bgcolor: idx === currentGroup ? "primary.main" : "#94A3B8",
+                  borderRadius: "4px",
+                  "&:focus-visible": {
+                    outline: "2px solid",
+                    outlineColor: "primary.main",
+                    outlineOffset: 2,
                   },
                 }}
-              />
+              >
+                <Box
+                  sx={{
+                    width: idx === currentGroup ? 24 : 8,
+                    height: 8,
+                    borderRadius: "4px",
+                    bgcolor:
+                      idx === currentGroup ? "primary.main" : "text.disabled",
+                    transition: "all 0.25s cubic-bezier(0.22, 1, 0.36, 1)",
+                    "&:hover": {
+                      bgcolor:
+                        idx === currentGroup
+                          ? "primary.main"
+                          : "text.secondary",
+                    },
+                  }}
+                />
+              </Box>
             ))}
           </Box>
         )}

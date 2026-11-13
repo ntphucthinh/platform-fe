@@ -2,17 +2,13 @@ import React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ItineraryForm } from '@/components/pages/itineraries/itineraryForm'
 import { ItineraryNotFound } from '@/components/pages/itineraries/itineraryNotFound'
-import {
-  getItineraryById,
-  updateItinerary,
-} from '@/services/itineraryService'
+import { useItineraryDetail } from '@/hooks/itineraries/useItineraries'
 import type { ICreateItineraryInput } from '@/types/pages/itineraries/itinerary'
 
 export const ItineraryEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-
-  const itinerary = id ? getItineraryById(id) : undefined
+  const { data: itinerary, updateItinerary } = useItineraryDetail(id)
 
   if (!itinerary || !id) {
     return (

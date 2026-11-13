@@ -45,16 +45,34 @@ export const PublicHeader: React.FC = () => {
       }}
     >
       <Container maxWidth="xl">
-        <Toolbar disableGutters sx={{ justifyContent: "space-between", height: 72 }}>
+        <Toolbar
+          disableGutters
+          sx={{ justifyContent: "space-between", height: 72 }}
+        >
           {/* Logo */}
           <Box
+            role="button"
+            tabIndex={0}
+            aria-label="Trang chủ HomeStays"
             onClick={() => navigate("/")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                navigate("/");
+              }
+            }}
             sx={{
               display: "flex",
               alignItems: "center",
               gap: 1.5,
               cursor: "pointer",
               userSelect: "none",
+              borderRadius: "10px",
+              "&:focus-visible": {
+                outline: "2px solid",
+                outlineColor: "primary.main",
+                outlineOffset: 2,
+              },
             }}
           >
             <Box
@@ -102,9 +120,17 @@ export const PublicHeader: React.FC = () => {
           </Box>
 
           {/* Desktop Nav Items */}
-          <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 1 }}>
+          <Box
+            sx={{
+              display: { xs: "none", md: "flex" },
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
             {navItems.map((item) => {
-              const isActive = location.pathname + location.search === item.path || (item.path === "/" && location.pathname === "/");
+              const isActive =
+                location.pathname + location.search === item.path ||
+                (item.path === "/" && location.pathname === "/");
               return (
                 <Button
                   key={item.label}
@@ -131,7 +157,11 @@ export const PublicHeader: React.FC = () => {
 
           {/* Mobile Hamburger */}
           <Box sx={{ display: { xs: "flex", md: "none" } }}>
-            <IconButton onClick={handleDrawerToggle} sx={{ color: "#334155" }}>
+            <IconButton
+              aria-label="Mở menu điều hướng"
+              onClick={handleDrawerToggle}
+              sx={{ color: "text.primary", width: 44, height: 44 }}
+            >
               <MenuIcon />
             </IconButton>
           </Box>
@@ -145,8 +175,25 @@ export const PublicHeader: React.FC = () => {
         onClose={handleDrawerToggle}
         ModalProps={{ keepMounted: true }}
       >
-        <Box sx={{ width: 280, p: 2, display: "flex", flexDirection: "column", height: "100%" }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, pb: 2, mb: 2, borderBottom: "1px solid #E2E8F0" }}>
+        <Box
+          sx={{
+            width: 280,
+            p: 2,
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+              pb: 2,
+              mb: 2,
+              borderBottom: "1px solid #E2E8F0",
+            }}
+          >
             <CottageIcon sx={{ color: "#2563EB" }} />
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
               HomeStays

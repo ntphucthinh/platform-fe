@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import {
   Box,
   Typography,
@@ -27,13 +27,9 @@ import AddHomeWorkOutlinedIcon from "@mui/icons-material/AddHomeWorkOutlined";
 import AddPhotoAlternateOutlinedIcon from "@mui/icons-material/AddPhotoAlternateOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
-import {
-  getItineraryListItems,
-  subscribeItineraries,
-} from "@/services/itineraryService";
+import { useItineraryList } from "@/hooks/itineraries/useItineraries";
 import { useTravelMemoryList } from "@/hooks/travel-memories/useTravelMemoryList";
 import { useHomestayList } from "@/hooks/homestays/useHomestayList";
-import type { IItineraryListItem } from "@/types/pages/itineraries/itinerary";
 import {
   countTotalPhotos,
   formatDateRangeVietnamese,
@@ -46,7 +42,7 @@ interface RecentlyUpdatedItem {
   title: string;
   type: "homestay" | "itinerary" | "memory";
   typeLabel: string;
-  typeColor: "primary" | "success" | "secondary";
+  typeColor: "primary" | "success" | "info";
   dateDisplay: string;
   rawDate: number;
   targetUrl: string;
@@ -57,25 +53,12 @@ export function DashboardPage() {
 
   // 1. Data States
   const { data: homestays } = useHomestayList();
-  const [itineraries, setItineraries] = useState<IItineraryListItem[]>(
-    getItineraryListItems(),
-  );
+  const { data: itineraries } = useItineraryList();
   const { data: memories = [], total: totalMemories } = useTravelMemoryList({
     page: 1,
   });
 
-  // 2. Subscribe to real-time updates for Itineraries
-  useEffect(() => {
-    const unsubscribeItineraries = subscribeItineraries(() => {
-      setItineraries(getItineraryListItems());
-    });
-
-    return () => {
-      unsubscribeItineraries();
-    };
-  }, []);
-
-  // 3. Derived Metrics
+  // 2. Derived Metrics
   const totalPhotosCount = useMemo(() => {
     return memories.reduce((acc, memory) => acc + countTotalPhotos(memory.days), 0);
   }, [memories]);
@@ -105,7 +88,7 @@ export function DashboardPage() {
           title: mem.title,
           type: "memory",
           typeLabel: "Kỷ niệm",
-          typeColor: "secondary",
+          typeColor: "info",
           dateDisplay: parsed.isValid() ? parsed.format("DD/MM/YYYY") : timeStr,
           rawDate: parsed.isValid() ? parsed.valueOf() : 0,
           targetUrl: `/admin/travel-memories/${mem.id}`,
@@ -166,24 +149,24 @@ export function DashboardPage() {
       title: "Lịch trình",
       value: itineraries.length,
       subtitle: "Kế hoạch du lịch đã lập",
-      icon: <ExploreOutlinedIcon sx={{ fontSize: 28, color: "#16A34A" }} />,
-      iconBg: "#DCFCE7",
+      icon: <ExploreOutlinedIcon sx={{ fontSize: 28, color: "#059669" }} />,
+      iconBg: "#ECFDF5",
       actionUrl: "/admin/itineraries",
     },
     {
       title: "Kỷ niệm chuyến đi",
       value: totalMemories > 0 ? totalMemories : memories.length,
       subtitle: "Hành trình đã lưu lại",
-      icon: <CollectionsBookmarkOutlinedIcon sx={{ fontSize: 28, color: "#9333EA" }} />,
-      iconBg: "#F3E8FF",
+      icon: <CollectionsBookmarkOutlinedIcon sx={{ fontSize: 28, color: "#1976D2" }} />,
+      iconBg: "#EFF6FF",
       actionUrl: "/admin/travel-memories",
     },
     {
       title: "Ảnh kỷ niệm",
-      value: totalPhotosCount > 0 ? totalPhotosCount : 48,
+      value: totalPhotosCount,
       subtitle: "Khoảnh khắc được lưu giữ",
-      icon: <PhotoLibraryOutlinedIcon sx={{ fontSize: 28, color: "#EA580C" }} />,
-      iconBg: "#FFEDD5",
+      icon: <PhotoLibraryOutlinedIcon sx={{ fontSize: 28, color: "#D97706" }} />,
+      iconBg: "#FFFBEB",
       actionUrl: "/admin/travel-memories",
     },
   ];
@@ -304,11 +287,20 @@ export function DashboardPage() {
           <Grid key={idx} sx={{ width: { xs: "100%", sm: "50%", md: "25%" } }}>
             <Card
               elevation={0}
+              role="button"
+              tabIndex={0}
               onClick={() => navigate(card.actionUrl)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate(card.actionUrl);
+                }
+              }}
               sx={{
-                bgcolor: "#FFFFFF",
+                bgcolor: "background.paper",
                 borderRadius: "14px",
-                border: "1px solid #E2E8F0",
+                border: "1px solid",
+                borderColor: "divider",
                 p: 2.5,
                 height: "100%",
                 cursor: "pointer",
@@ -316,7 +308,12 @@ export function DashboardPage() {
                 "&:hover": {
                   transform: "translateY(-2px)",
                   boxShadow: "0 6px 20px -2px rgba(0, 0, 0, 0.06)",
-                  borderColor: "#CBD5E1",
+                  borderColor: "primary.light",
+                },
+                "&:focus-visible": {
+                  outline: "2px solid",
+                  outlineColor: "primary.main",
+                  outlineOffset: 2,
                 },
               }}
             >
@@ -330,7 +327,7 @@ export function DashboardPage() {
               >
                 <Typography
                   variant="subtitle2"
-                  sx={{ fontWeight: 600, color: "#64748B", fontSize: "0.9rem" }}
+                  sx={{ fontWeight: 600, color: "text.secondary", fontSize: "0.9rem" }}
                 >
                   {card.title}
                 </Typography>
@@ -352,9 +349,10 @@ export function DashboardPage() {
                 variant="h4"
                 sx={{
                   fontWeight: 700,
-                  color: "#0F172A",
+                  color: "text.primary",
                   mb: 0.5,
                   fontSize: { xs: "1.75rem", sm: "2rem" },
+                  fontVariantNumeric: "tabular-nums",
                 }}
               >
                 {card.value.toLocaleString("vi-VN")}
@@ -362,7 +360,7 @@ export function DashboardPage() {
 
               <Typography
                 variant="body2"
-                sx={{ color: "#94A3B8", fontSize: "0.85rem" }}
+                sx={{ color: "text.secondary", fontSize: "0.85rem" }}
               >
                 {card.subtitle}
               </Typography>
@@ -374,9 +372,10 @@ export function DashboardPage() {
       {/* SECTION C: Quick Access Strip */}
       <Box
         sx={{
-          bgcolor: "#F8FAFC",
+          bgcolor: "background.default",
           borderRadius: "14px",
-          border: "1px solid #E2E8F0",
+          border: "1px solid",
+          borderColor: "divider",
           p: 2,
         }}
       >
@@ -385,7 +384,7 @@ export function DashboardPage() {
           sx={{
             fontWeight: 700,
             textTransform: "uppercase",
-            color: "#64748B",
+            color: "text.secondary",
             letterSpacing: "0.06em",
             display: "block",
             mb: 1.5,
@@ -404,15 +403,16 @@ export function DashboardPage() {
               onClick={() => navigate("/admin/homestay", { state: { openCreate: true } })}
               sx={{
                 justifyContent: "flex-start",
-                bgcolor: "#FFFFFF",
-                border: "1px solid #E2E8F0",
+                bgcolor: "background.paper",
+                border: "1px solid",
+                borderColor: "divider",
                 borderRadius: "10px",
                 p: 1.5,
-                color: "#1E293B",
+                color: "text.primary",
                 fontWeight: 600,
                 textTransform: "none",
                 "&:hover": {
-                  bgcolor: "#FFFFFF",
+                  bgcolor: "background.paper",
                   borderColor: "#0284C7",
                   boxShadow: "0 2px 8px rgba(2, 132, 199, 0.08)",
                 },
@@ -426,21 +426,22 @@ export function DashboardPage() {
             <Button
               fullWidth
               variant="text"
-              startIcon={<ExploreOutlinedIcon sx={{ color: "#16A34A" }} />}
+              startIcon={<ExploreOutlinedIcon sx={{ color: "#059669" }} />}
               onClick={() => navigate("/admin/itineraries/create")}
               sx={{
                 justifyContent: "flex-start",
-                bgcolor: "#FFFFFF",
-                border: "1px solid #E2E8F0",
+                bgcolor: "background.paper",
+                border: "1px solid",
+                borderColor: "divider",
                 borderRadius: "10px",
                 p: 1.5,
-                color: "#1E293B",
+                color: "text.primary",
                 fontWeight: 600,
                 textTransform: "none",
                 "&:hover": {
-                  bgcolor: "#FFFFFF",
-                  borderColor: "#16A34A",
-                  boxShadow: "0 2px 8px rgba(22, 163, 74, 0.08)",
+                  bgcolor: "background.paper",
+                  borderColor: "#059669",
+                  boxShadow: "0 2px 8px rgba(5, 150, 105, 0.08)",
                 },
               }}
             >
@@ -452,21 +453,22 @@ export function DashboardPage() {
             <Button
               fullWidth
               variant="text"
-              startIcon={<AddIcon sx={{ color: "#9333EA" }} />}
+              startIcon={<AddIcon sx={{ color: "primary.main" }} />}
               onClick={() => navigate("/admin/travel-memories/create")}
               sx={{
                 justifyContent: "flex-start",
-                bgcolor: "#FFFFFF",
-                border: "1px solid #E2E8F0",
+                bgcolor: "background.paper",
+                border: "1px solid",
+                borderColor: "divider",
                 borderRadius: "10px",
                 p: 1.5,
-                color: "#1E293B",
+                color: "text.primary",
                 fontWeight: 600,
                 textTransform: "none",
                 "&:hover": {
-                  bgcolor: "#FFFFFF",
-                  borderColor: "#9333EA",
-                  boxShadow: "0 2px 8px rgba(147, 51, 234, 0.08)",
+                  bgcolor: "background.paper",
+                  borderColor: "primary.main",
+                  boxShadow: "0 2px 8px rgba(25, 118, 210, 0.08)",
                 },
               }}
             >
@@ -478,21 +480,22 @@ export function DashboardPage() {
             <Button
               fullWidth
               variant="text"
-              startIcon={<CollectionsBookmarkOutlinedIcon sx={{ color: "#2563EB" }} />}
+              startIcon={<CollectionsBookmarkOutlinedIcon sx={{ color: "primary.main" }} />}
               onClick={() => navigate("/admin/travel-memories")}
               sx={{
                 justifyContent: "flex-start",
-                bgcolor: "#FFFFFF",
-                border: "1px solid #E2E8F0",
+                bgcolor: "background.paper",
+                border: "1px solid",
+                borderColor: "divider",
                 borderRadius: "10px",
                 p: 1.5,
-                color: "#1E293B",
+                color: "text.primary",
                 fontWeight: 600,
                 textTransform: "none",
                 "&:hover": {
-                  bgcolor: "#FFFFFF",
-                  borderColor: "#2563EB",
-                  boxShadow: "0 2px 8px rgba(37, 99, 235, 0.08)",
+                  bgcolor: "background.paper",
+                  borderColor: "primary.main",
+                  boxShadow: "0 2px 8px rgba(25, 118, 210, 0.08)",
                 },
               }}
             >
@@ -616,21 +619,35 @@ export function DashboardPage() {
                 >
                   <Card
                     elevation={0}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => navigate(`/admin/travel-memories/${memory.id}`)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        navigate(`/admin/travel-memories/${memory.id}`);
+                      }
+                    }}
                     sx={{
                       display: "flex",
                       flexDirection: "column",
                       height: "100%",
                       borderRadius: "14px",
                       overflow: "hidden",
-                      border: "1px solid #E2E8F0",
-                      bgcolor: "#FFFFFF",
+                      border: "1px solid",
+                      borderColor: "divider",
+                      bgcolor: "background.paper",
                       cursor: "pointer",
                       transition: "transform 0.2s ease, box-shadow 0.2s ease",
                       "&:hover": {
                         transform: "translateY(-3px)",
                         boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.08)",
-                        borderColor: "#CBD5E1",
+                        borderColor: "primary.light",
+                      },
+                      "&:focus-visible": {
+                        outline: "2px solid",
+                        outlineColor: "primary.main",
+                        outlineOffset: 2,
                       },
                     }}
                   >
@@ -638,6 +655,8 @@ export function DashboardPage() {
                     <Box sx={{ position: "relative", width: "100%", pt: "56.25%" }}>
                       <CardMedia
                         component="img"
+                        loading="lazy"
+                        decoding="async"
                         image={memory.coverImage || DEFAULT_NO_IMAGE}
                         alt={memory.title}
                         onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -811,7 +830,15 @@ export function DashboardPage() {
             {recentlyUpdatedItems.map((item, index) => (
               <Box
                 key={item.id}
+                role="button"
+                tabIndex={0}
                 onClick={() => navigate(item.targetUrl)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate(item.targetUrl);
+                  }
+                }}
                 sx={{
                   display: "flex",
                   alignItems: { xs: "flex-start", sm: "center" },
@@ -828,7 +855,12 @@ export function DashboardPage() {
                       : "none",
                   transition: "background-color 0.15s ease",
                   "&:hover": {
-                    bgcolor: "#F8FAFC",
+                    bgcolor: "background.default",
+                  },
+                  "&:focus-visible": {
+                    outline: "2px solid",
+                    outlineColor: "primary.main",
+                    outlineOffset: -2,
                   },
                 }}
               >
@@ -856,7 +888,7 @@ export function DashboardPage() {
                     variant="body2"
                     sx={{
                       fontWeight: 600,
-                      color: "#1E293B",
+                      color: "text.primary",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
@@ -880,29 +912,31 @@ export function DashboardPage() {
                       display: "flex",
                       alignItems: "center",
                       gap: 0.5,
-                      color: "#94A3B8",
+                      color: "text.secondary",
                       fontSize: "0.8rem",
                     }}
                   >
                     <AccessTimeOutlinedIcon sx={{ fontSize: 15 }} />
-                    <Typography variant="caption" sx={{ color: "#64748B" }}>
+                    <Typography variant="caption" sx={{ color: "text.secondary" }}>
                       {item.dateDisplay}
                     </Typography>
                   </Box>
 
                   <Tooltip title="Mở trang xem">
-                    <Button
-                      size="small"
-                      variant="text"
+                    <Box
+                      component="span"
                       sx={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                         minWidth: 32,
                         p: 0.5,
-                        color: "#64748B",
+                        color: "text.secondary",
                         "&:hover": { color: "primary.main" },
                       }}
                     >
                       <VisibilityOutlinedIcon fontSize="small" />
-                    </Button>
+                    </Box>
                   </Tooltip>
                 </Box>
               </Box>

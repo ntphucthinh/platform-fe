@@ -397,6 +397,7 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
             aria-label="Kéo xuống để đóng"
             aria-valuemin={0}
             aria-valuemax={100}
+            aria-valuenow={100}
             sx={{
               position: "absolute",
               top: 0,
@@ -516,15 +517,18 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
             }}
           />
 
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
             <Tooltip title="Chỉnh sửa">
               <IconButton
                 size="small"
+                aria-label="Chỉnh sửa địa điểm"
                 onClick={() => onEdit(location)}
                 sx={{
+                  width: { xs: 36, sm: 32 },
+                  height: { xs: 36, sm: 32 },
                   bgcolor: "rgba(255,255,255,0.9)",
-                  color: "#0F172A",
-                  "&:hover": { bgcolor: "#FFFFFF" },
+                  color: "text.primary",
+                  "&:hover": { bgcolor: "background.paper" },
                 }}
               >
                 <EditOutlinedIcon fontSize="small" />
@@ -534,6 +538,7 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
             <Tooltip title="Xóa địa điểm">
               <IconButton
                 size="small"
+                aria-label="Xóa địa điểm"
                 onClick={() =>
                   onDelete(
                     location.id,
@@ -541,8 +546,10 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
                   )
                 }
                 sx={{
+                  width: { xs: 36, sm: 32 },
+                  height: { xs: 36, sm: 32 },
                   bgcolor: "rgba(255,255,255,0.9)",
-                  color: "#EF4444",
+                  color: "error.main",
                   "&:hover": { bgcolor: "#FEE2E2" },
                 }}
               >
@@ -553,11 +560,14 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
             <Tooltip title="Đóng">
               <IconButton
                 size="small"
+                aria-label="Đóng bảng chi tiết"
                 onClick={onClose}
                 sx={{
+                  width: { xs: 36, sm: 32 },
+                  height: { xs: 36, sm: 32 },
                   bgcolor: "rgba(255,255,255,0.9)",
-                  color: "#0F172A",
-                  "&:hover": { bgcolor: "#FFFFFF" },
+                  color: "text.primary",
+                  "&:hover": { bgcolor: "background.paper" },
                 }}
               >
                 <CloseIcon fontSize="small" />

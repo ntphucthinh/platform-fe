@@ -22,8 +22,11 @@ export interface HomestayCardProps {
 
 export const HomestayCard: React.FC<HomestayCardProps> = ({ homestay }) => {
   const navigate = useNavigate();
-  const rawCover = homestay.mainImage || (homestay.images && homestay.images.length > 0 ? homestay.images[0] : null);
-  const coverImage = rawCover && rawCover.trim() !== "" ? rawCover : DEFAULT_NO_IMAGE;
+  const rawCover =
+    homestay.mainImage ||
+    (homestay.images && homestay.images.length > 0 ? homestay.images[0] : null);
+  const coverImage =
+    rawCover && rawCover.trim() !== "" ? rawCover : DEFAULT_NO_IMAGE;
 
   const [prevCover, setPrevCover] = useState<string>(coverImage);
   const [hasError, setHasError] = useState<boolean>(false);
@@ -43,12 +46,19 @@ export const HomestayCard: React.FC<HomestayCardProps> = ({ homestay }) => {
   return (
     <Card
       elevation={0}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          handleCardClick();
+        }
+      }}
       onClick={handleCardClick}
       sx={{
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        borderRadius: "16px",
+        borderRadius: "14px",
         border: "1px solid #E2E8F0",
         bgcolor: "#FFFFFF",
         cursor: "pointer",
@@ -63,16 +73,29 @@ export const HomestayCard: React.FC<HomestayCardProps> = ({ homestay }) => {
             transform: isNoCover ? "none" : "scale(1.05)",
           },
           "& .view-button": {
-            color: "#2563EB",
+            color: "primary.main",
             transform: "translateX(4px)",
           },
+        },
+        "&:focus-visible": {
+          outline: "2px solid #1976D2",
+          outlineOffset: 2,
         },
       }}
     >
       {/* Cover Image */}
-      <Box sx={{ position: "relative", overflow: "hidden", pt: "62%", bgcolor: "#F8FAFC" }}>
+      <Box
+        sx={{
+          position: "relative",
+          overflow: "hidden",
+          pt: "62%",
+          bgcolor: "#F8FAFC",
+        }}
+      >
         <CardMedia
           component="img"
+          loading="lazy"
+          decoding="async"
           image={currentCover}
           alt={homestay.name}
           className="card-media"
@@ -193,11 +216,16 @@ export const HomestayCard: React.FC<HomestayCardProps> = ({ homestay }) => {
 
             return hasPrice ? (
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <AttachMoneyIcon sx={{ color: "#2563EB", fontSize: 18 }} />
+                <AttachMoneyIcon sx={{ color: "primary.main", fontSize: 18 }} />
                 <Typography
                   component="span"
                   noWrap
-                  sx={{ fontWeight: 800, fontSize: "0.95rem", color: "#2563EB", maxWidth: 160 }}
+                  sx={{
+                    fontWeight: 800,
+                    fontSize: "0.95rem",
+                    color: "primary.main",
+                    maxWidth: 160,
+                  }}
                 >
                   {displayPrice}
                 </Typography>
@@ -205,7 +233,11 @@ export const HomestayCard: React.FC<HomestayCardProps> = ({ homestay }) => {
             ) : (
               <Typography
                 component="span"
-                sx={{ fontSize: "0.8rem", color: "#94A3B8", fontStyle: "italic" }}
+                sx={{
+                  fontSize: "0.8rem",
+                  color: "text.secondary",
+                  fontStyle: "italic",
+                }}
               >
                 Chưa cập nhật giá
               </Typography>
@@ -213,10 +245,17 @@ export const HomestayCard: React.FC<HomestayCardProps> = ({ homestay }) => {
           })()}
 
           <Button
+            component="span"
+            tabIndex={-1}
             size="small"
-            endIcon={<ArrowForwardIcon className="view-button" sx={{ transition: "transform 0.2s" }} />}
+            endIcon={
+              <ArrowForwardIcon
+                className="view-button"
+                sx={{ transition: "transform 0.2s" }}
+              />
+            }
             sx={{
-              color: "#334155",
+              color: "text.primary",
               fontWeight: 700,
               fontSize: "0.875rem",
               textTransform: "none",

@@ -9,6 +9,7 @@ export interface UseTravelMemoryListOptions {
   // Query parameters reserved for future search/filter implementation
   locationId?: number;
   countryCode?: string;
+  year?: number;
 }
 
 export interface UseTravelMemoryListResult {
@@ -44,6 +45,10 @@ export function useTravelMemoryList(
   const country = options?.countryCode?.trim();
   if (country) {
     queryParams.countryCode = country;
+  }
+
+  if (options?.year !== undefined && !isNaN(Number(options.year))) {
+    queryParams.year = options.year.toString();
   }
 
   const { query, result } = useList<ITravelMemory>({

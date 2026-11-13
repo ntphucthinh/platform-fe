@@ -536,14 +536,15 @@ export const TravelMapDetailPage: React.FC = () => {
               variant="h4"
               sx={{
                 fontWeight: 800,
-                color: "#0F172A",
+                color: "text.primary",
                 lineHeight: 1.1,
                 my: 0.25,
+                fontVariantNumeric: "tabular-nums",
               }}
             >
               {details.visitCount}
             </Typography>
-            <Typography variant="body2" sx={{ color: "#94A3B8" }}>
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
               {details.visitCount > 0
                 ? "Chuyến đi đã hoàn thành"
                 : "Chưa có chuyến đi nào"}
@@ -555,8 +556,9 @@ export const TravelMapDetailPage: React.FC = () => {
           elevation={0}
           sx={{
             borderRadius: "16px",
-            border: "1px solid #E2E8F0",
-            bgcolor: "#FFFFFF",
+            border: "1px solid",
+            borderColor: "divider",
+            bgcolor: "background.paper",
             p: 3,
             display: "flex",
             alignItems: "center",
@@ -583,7 +585,7 @@ export const TravelMapDetailPage: React.FC = () => {
             <Typography
               variant="caption"
               sx={{
-                color: "#64748B",
+                color: "text.secondary",
                 fontWeight: 600,
                 textTransform: "uppercase",
                 letterSpacing: "0.04em",
@@ -595,14 +597,15 @@ export const TravelMapDetailPage: React.FC = () => {
               variant="h4"
               sx={{
                 fontWeight: 800,
-                color: "#0F172A",
+                color: "text.primary",
                 lineHeight: 1.1,
                 my: 0.25,
+                fontVariantNumeric: "tabular-nums",
               }}
             >
               {details.totalPhotos}
             </Typography>
-            <Typography variant="body2" sx={{ color: "#94A3B8" }}>
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
               {details.totalPhotos > 0
                 ? "Khoảnh khắc được lưu lại"
                 : "0 ảnh lưu giữ"}
@@ -614,8 +617,9 @@ export const TravelMapDetailPage: React.FC = () => {
           elevation={0}
           sx={{
             borderRadius: "16px",
-            border: "1px solid #E2E8F0",
-            bgcolor: "#FFFFFF",
+            border: "1px solid",
+            borderColor: "divider",
+            bgcolor: "background.paper",
             p: 3,
             display: "flex",
             alignItems: "center",
@@ -642,7 +646,7 @@ export const TravelMapDetailPage: React.FC = () => {
             <Typography
               variant="caption"
               sx={{
-                color: "#64748B",
+                color: "text.secondary",
                 fontWeight: 600,
                 textTransform: "uppercase",
                 letterSpacing: "0.04em",
@@ -654,7 +658,7 @@ export const TravelMapDetailPage: React.FC = () => {
               variant="h5"
               sx={{
                 fontWeight: 800,
-                color: "#0F172A",
+                color: "text.primary",
                 lineHeight: 1.2,
                 my: 0.5,
               }}
@@ -666,7 +670,7 @@ export const TravelMapDetailPage: React.FC = () => {
                   )
                 : "Chưa có dữ liệu"}
             </Typography>
-            <Typography variant="body2" sx={{ color: "#94A3B8" }}>
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
               {details.latestVisitDate ? "Thời điểm ghé thăm" : "—"}
             </Typography>
           </Box>
@@ -787,11 +791,20 @@ export const TravelMapDetailPage: React.FC = () => {
                 <Card
                   key={mem.id}
                   elevation={0}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => navigate(`/admin/travel-memories/${mem.id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      navigate(`/admin/travel-memories/${mem.id}`);
+                    }
+                  }}
                   sx={{
                     borderRadius: "16px",
-                    border: "1px solid #E2E8F0",
-                    bgcolor: "#FFFFFF",
+                    border: "1px solid",
+                    borderColor: "divider",
+                    bgcolor: "background.paper",
                     display: "flex",
                     flexDirection: { xs: "column", sm: "row" },
                     overflow: "hidden",
@@ -800,13 +813,20 @@ export const TravelMapDetailPage: React.FC = () => {
                     "&:hover": {
                       transform: "translateY(-2px)",
                       boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
-                      borderColor: "#1976D2",
+                      borderColor: "primary.main",
+                    },
+                    "&:focus-visible": {
+                      outline: "2px solid",
+                      outlineColor: "primary.main",
+                      outlineOffset: 2,
                     },
                   }}
                 >
                   {/* Trip Cover Image */}
                   <CardMedia
                     component="img"
+                    loading="lazy"
+                    decoding="async"
                     image={mem.coverImage || DEFAULT_NO_IMAGE}
                     alt={mem.title}
                     onError={(e: React.SyntheticEvent<HTMLImageElement>) => {

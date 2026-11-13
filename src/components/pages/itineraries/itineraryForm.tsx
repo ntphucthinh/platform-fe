@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -30,9 +30,13 @@ import CloseIcon from "@mui/icons-material/Close";
 import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
+import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import dayjs from "dayjs";
+import { useForm, useWatch } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import type {
   ITravelItinerary,
@@ -40,7 +44,9 @@ import type {
   IItineraryActivity,
   ItineraryActivityType,
   ICreateItineraryInput,
+  IItineraryFormData,
 } from "@/types/pages/itineraries/itinerary";
+import { itinerarySchema } from "@/schemas/itineraries/itinerarySchema";
 import {
   ITINERARY_CATEGORY_COLORS,
   MOCK_DALAT_ITINERARY,
@@ -99,15 +105,42 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     isLoading: isLoadingLocations,
   } = useTravelLocationSelection();
 
-  // Form State
-  const [title, setTitle] = useState(initialData?.title || "");
-  const [locationId, setLocationId] = useState<number | null>(() => {
-    if (initialData?.locationId) return Number(initialData.locationId);
-    return null;
+  // React Hook Form + Yup Resolver
+  const initialDaysCount =
+    initialData?.durationDays || initialData?.days?.length || 3;
+  const initialNightsCount =
+    initialData?.durationNights !== undefined
+      ? initialData.durationNights
+      : Math.max(0, initialDaysCount - 1);
+
+  const {
+    register,
+    control,
+    setValue,
+    handleSubmit: handleFormSubmit,
+    formState: { errors },
+  } = useForm<IItineraryFormData>({
+    resolver: yupResolver(itinerarySchema),
+    defaultValues: {
+      title: initialData?.title || "",
+      locationId: initialData?.locationId ? Number(initialData.locationId) : null,
+      destination: initialData?.destination || "",
+      durationDays: initialDaysCount,
+      durationNights: initialNightsCount,
+      suitableFor: initialData?.suitableFor || "Cặp đôi, nhóm bạn, gia đình",
+      description: initialData?.description || "",
+      coverImage: initialData?.coverImage || MOCK_DALAT_ITINERARY.coverImage,
+    },
   });
-  const [destination, setDestination] = useState(
-    initialData?.destination || "",
-  );
+
+  const title = useWatch({ control, name: "title" }) ?? "";
+  const locationId = useWatch({ control, name: "locationId" }) ?? null;
+  const destination = useWatch({ control, name: "destination" }) ?? "";
+  const durationDays = useWatch({ control, name: "durationDays" }) ?? 3;
+  const durationNights = useWatch({ control, name: "durationNights" }) ?? 2;
+  const suitableFor = useWatch({ control, name: "suitableFor" }) ?? "";
+  const description = useWatch({ control, name: "description" }) ?? "";
+  const coverImage = useWatch({ control, name: "coverImage" }) ?? "";
 
   // Selected location object for Autocomplete
   const selectedLocation = useMemo(() => {
@@ -139,34 +172,40 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
 
     return null;
   }, [travelLocationsSelections, locationData, locationId, destination]);
-  const [durationDays, setDurationDays] = useState(
-    initialData?.durationDays || initialData?.days?.length || 3,
-  );
-  const [durationNights, setDurationNights] = useState(
-    initialData?.durationNights !== undefined
-      ? initialData.durationNights
-      : Math.max(0, (initialData?.days?.length || 3) - 1),
-  );
+
   const status = initialData?.status || "Đã hoàn thiện";
-  const [suitableFor, setSuitableFor] = useState(
-    initialData?.suitableFor || "Cặp đôi, nhóm bạn, gia đình",
-  );
   const [themes, setThemes] = useState<string[]>(
     initialData?.themes && initialData.themes.length > 0
       ? initialData.themes
       : ["Thiên nhiên", "Ẩm thực"],
   );
   const [customThemeInput, setCustomThemeInput] = useState("");
-  const [description, setDescription] = useState(
-    initialData?.description || "",
-  );
-  const [coverImage, setCoverImage] = useState(
-    initialData?.coverImage || MOCK_DALAT_ITINERARY.coverImage,
-  );
   const [travelTipsText, setTravelTipsText] = useState(
     initialData?.travelTips?.join("\n") ||
       "Thời gian di chuyển có thể thay đổi tùy tình hình giao thông.\nNên chuẩn bị trang phục phù hợp với thời tiết điểm đến.\nLịch trình có thể tùy chỉnh linh hoạt theo nhu cầu thực tế.",
   );
+
+  // Track created blob object URLs to safely revoke them on unmount
+  const createdObjectUrlsRef = useRef<Set<string>>(new Set());
+
+  const registerObjectUrl = useCallback((url: string) => {
+    createdObjectUrlsRef.current.add(url);
+    return url;
+  }, []);
+
+  useEffect(() => {
+    const urls = createdObjectUrlsRef.current;
+    return () => {
+      urls.forEach((url) => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch {
+          // Ignore
+        }
+      });
+      urls.clear();
+    };
+  }, []);
 
   // Days state
   const [days, setDays] = useState<IItineraryDay[]>(() => {
@@ -258,11 +297,13 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     ];
   });
 
-  // Errors state
-  const [errors, setErrors] = useState<{
-    title?: string;
-    destination?: string;
-  }>({});
+  // Active Day Index for Tabbed Wizard Authoring
+  const [activeDayIndex, setActiveDayIndex] = useState<number>(0);
+  const safeActiveDayIndex = Math.min(
+    Math.max(0, activeDayIndex),
+    Math.max(0, days.length - 1),
+  );
+  const currentActiveDay = days[safeActiveDayIndex] || days[0];
 
   // File Input Ref for Cover Image
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -303,36 +344,32 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
   // Day Deletion Confirmation Dialog State
   const [dayToDelete, setDayToDelete] = useState<number | null>(null);
 
-  // Handle Cover Image Upload
+  // Handle Cover Image Upload using URL.createObjectURL
   const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === "string") {
-          setCoverImage(reader.result);
-        }
-      };
-      reader.readAsDataURL(file);
+    if (file && file.type.startsWith("image/")) {
+      const previewUrl = registerObjectUrl(URL.createObjectURL(file));
+      setValue("coverImage", previewUrl, { shouldDirty: true });
+    }
+    if (coverInputRef.current) {
+      coverInputRef.current.value = "";
     }
   };
 
-  // Handle Activity Image Upload
+  // Handle Activity Image Upload using URL.createObjectURL
   const handleActivityImageUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === "string") {
-          setActivityModal((prev) => ({
-            ...prev,
-            image: reader.result as string,
-          }));
-        }
-      };
-      reader.readAsDataURL(file);
+    if (file && file.type.startsWith("image/")) {
+      const previewUrl = registerObjectUrl(URL.createObjectURL(file));
+      setActivityModal((prev) => ({
+        ...prev,
+        image: previewUrl,
+      }));
+    }
+    if (activityImageInputRef.current) {
+      activityImageInputRef.current.value = "";
     }
   };
 
@@ -356,8 +393,8 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
   // Duration changes
   const handleDaysCountChange = (newDays: number) => {
     const clamped = Math.max(1, Math.min(30, newDays));
-    setDurationDays(clamped);
-    setDurationNights(Math.max(0, clamped - 1));
+    setValue("durationDays", clamped, { shouldDirty: true });
+    setValue("durationNights", Math.max(0, clamped - 1), { shouldDirty: true });
 
     // Expand days if count increased
     if (clamped > days.length) {
@@ -376,6 +413,8 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
         });
       }
       setDays([...days, ...added]);
+    } else if (clamped < days.length && activeDayIndex >= clamped) {
+      setActiveDayIndex(clamped - 1);
     }
   };
 
@@ -393,8 +432,11 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
       activities: [],
     };
     setDays([...days, newDay]);
-    setDurationDays(nextDayNum);
-    setDurationNights(Math.max(0, nextDayNum - 1));
+    setValue("durationDays", nextDayNum, { shouldDirty: true });
+    setValue("durationNights", Math.max(0, nextDayNum - 1), {
+      shouldDirty: true,
+    });
+    setActiveDayIndex(days.length);
   };
 
   // Delete Day
@@ -407,8 +449,13 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
         dayNumber: idx + 1,
       }));
     setDays(updated);
-    setDurationDays(updated.length);
-    setDurationNights(Math.max(0, updated.length - 1));
+    setValue("durationDays", updated.length, { shouldDirty: true });
+    setValue("durationNights", Math.max(0, updated.length - 1), {
+      shouldDirty: true,
+    });
+    if (safeActiveDayIndex >= updated.length) {
+      setActiveDayIndex(Math.max(0, updated.length - 1));
+    }
     setDayToDelete(null);
   };
 
@@ -523,65 +570,58 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     );
   };
 
-  // Validation & Submit
-  const handleSave = () => {
-    const newErrors: { title?: string; destination?: string } = {};
-    const resolvedLocationId =
-      locationId ?? (selectedLocation ? Number(selectedLocation.value) : null);
+  // Validation & Submit via React Hook Form + Yup
+  const handleSave = handleFormSubmit(
+    (values) => {
+      const resolvedLocationId =
+        values.locationId ??
+        (selectedLocation ? Number(selectedLocation.value) : null);
 
-    if (!title.trim()) {
-      newErrors.title = "Vui lòng nhập tên lịch trình";
-    }
-    if (!resolvedLocationId && !destination.trim()) {
-      newErrors.destination = "Vui lòng chọn địa điểm";
-    }
+      const tips = travelTipsText
+        .split("\n")
+        .map((t) => t.trim())
+        .filter(Boolean);
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+      const payload: ICreateItineraryInput = {
+        title: values.title.trim(),
+        destination: values.destination.trim(),
+        locationId: resolvedLocationId,
+        durationDays: values.durationDays,
+        durationNights: values.durationNights,
+        duration: `${values.durationDays} ngày ${values.durationNights} đêm`,
+        description:
+          (values.description || "").trim() ||
+          `Khám phá vẻ đẹp tuyệt vời tại ${values.destination}.`,
+        coverImage: values.coverImage || DEFAULT_NO_IMAGE,
+        status,
+        suitableFor: values.suitableFor,
+        themes,
+        days,
+        travelTips: tips,
+        featuredImages: initialData?.featuredImages || [
+          {
+            id: `img-1`,
+            title: values.title.trim(),
+            url: values.coverImage || DEFAULT_NO_IMAGE,
+            caption: values.destination.trim(),
+          },
+        ],
+        highlights: initialData?.highlights || [
+          {
+            id: `hl-1`,
+            title: values.destination.trim(),
+            subtitle: "Điểm đến hấp dẫn",
+            icon: "nature",
+          },
+        ],
+      };
+
+      onSubmit(payload);
+    },
+    () => {
       window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-
-    const tips = travelTipsText
-      .split("\n")
-      .map((t) => t.trim())
-      .filter(Boolean);
-
-    const payload: ICreateItineraryInput = {
-      title: title.trim(),
-      destination: destination.trim(),
-      locationId: resolvedLocationId,
-      durationDays,
-      durationNights,
-      duration: `${durationDays} ngày ${durationNights} đêm`,
-      description:
-        description.trim() || `Khám phá vẻ đẹp tuyệt vời tại ${destination}.`,
-      coverImage: coverImage || DEFAULT_NO_IMAGE,
-      status,
-      suitableFor,
-      themes,
-      days,
-      travelTips: tips,
-      featuredImages: initialData?.featuredImages || [
-        {
-          id: `img-1`,
-          title: title.trim(),
-          url: coverImage || DEFAULT_NO_IMAGE,
-          caption: destination.trim(),
-        },
-      ],
-      highlights: initialData?.highlights || [
-        {
-          id: `hl-1`,
-          title: destination.trim(),
-          subtitle: "Điểm đến hấp dẫn",
-          icon: "nature",
-        },
-      ],
-    };
-
-    onSubmit(payload);
-  };
+    },
+  );
 
   // Temporary Itinerary object for real-time preview
   const livePreviewItinerary: ITravelItinerary = {
@@ -766,14 +806,9 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
           <TextField
             label="Tên lịch trình *"
             placeholder="Ví dụ: Khám phá Đà Lạt – 3 ngày 2 đêm thơ mộng"
-            value={title}
-            onChange={(e) => {
-              setTitle(e.target.value);
-              if (errors.title)
-                setErrors((prev) => ({ ...prev, title: undefined }));
-            }}
+            {...register("title")}
             error={Boolean(errors.title)}
-            helperText={errors.title}
+            helperText={errors.title?.message}
             fullWidth
             required
             size="medium"
@@ -797,11 +832,14 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             onChange={(_, newValue) => {
               const nextId = newValue ? Number(newValue.value) : null;
               const nextLabel = newValue ? newValue.label : "";
-              setLocationId(nextId);
-              setDestination(nextLabel);
-              if (errors.destination) {
-                setErrors((prev) => ({ ...prev, destination: undefined }));
-              }
+              setValue("locationId", nextId, {
+                shouldDirty: true,
+                shouldValidate: true,
+              });
+              setValue("destination", nextLabel, {
+                shouldDirty: true,
+                shouldValidate: true,
+              });
             }}
             noOptionsText="Không tìm thấy địa điểm"
             loadingText="Đang tải danh sách địa điểm..."
@@ -812,7 +850,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                 label="Địa điểm *"
                 placeholder="Chọn địa điểm..."
                 error={Boolean(errors.destination)}
-                helperText={errors.destination}
+                helperText={errors.destination?.message}
               />
             )}
           />
@@ -839,7 +877,9 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
               type="number"
               value={durationNights}
               onChange={(e) =>
-                setDurationNights(Math.max(0, Number(e.target.value)))
+                setValue("durationNights", Math.max(0, Number(e.target.value)), {
+                  shouldDirty: true,
+                })
               }
               slotProps={{ htmlInput: { min: 0, max: 30 } }}
               helperText={`${durationNights} đêm`}
@@ -848,8 +888,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             <TextField
               label="Đối tượng phù hợp"
               placeholder="Ví dụ: Cặp đôi, nhóm bạn, gia đình"
-              value={suitableFor}
-              onChange={(e) => setSuitableFor(e.target.value)}
+              {...register("suitableFor")}
             />
           </Box>
 
@@ -917,8 +956,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
           <TextField
             label="Mô tả tổng quan chuyến đi"
             placeholder="Mô tả cảm hứng, không khí, điểm nổi bật của toàn bộ chuyến hành trình..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            {...register("description")}
             multiline
             rows={3}
             fullWidth
@@ -1016,7 +1054,9 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                       variant="text"
                       color="error"
                       startIcon={<DeleteOutlinedIcon />}
-                      onClick={() => setCoverImage("")}
+                      onClick={() =>
+                        setValue("coverImage", "", { shouldDirty: true })
+                      }
                       sx={{ textTransform: "none" }}
                     >
                       Xóa ảnh
@@ -1081,16 +1121,131 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
           </Button>
         </Box>
 
-        {/* Days List */}
-        {days.map((day, dayIndex) => (
+        {/* Day Tabs Strip for Tabbed Wizard Authoring */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.25,
+            overflowX: "auto",
+            pb: 1,
+            WebkitOverflowScrolling: "touch",
+            scrollbarWidth: "thin",
+            "&::-webkit-scrollbar": { height: 6 },
+            "&::-webkit-scrollbar-thumb": {
+              bgcolor: "#CBD5E1",
+              borderRadius: "3px",
+            },
+          }}
+        >
+          {days.map((day, dayIndex) => {
+            const isActive = dayIndex === safeActiveDayIndex;
+            const actCount = day.activities?.length || 0;
+            return (
+              <Button
+                key={day.id || day.dayNumber}
+                onClick={() => setActiveDayIndex(dayIndex)}
+                sx={{
+                  flexShrink: 0,
+                  px: 2,
+                  py: 1,
+                  borderRadius: "12px",
+                  border: "1px solid",
+                  borderColor: isActive ? "primary.main" : "#E2E8F0",
+                  bgcolor: isActive ? "#EFF6FF" : "#FFFFFF",
+                  color: isActive ? "primary.dark" : "#475569",
+                  fontWeight: isActive ? 700 : 500,
+                  textTransform: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  boxShadow: isActive
+                    ? "0 2px 6px rgba(37, 99, 235, 0.12)"
+                    : "none",
+                  transition: "all 0.18s ease-in-out",
+                  "&:hover": {
+                    bgcolor: isActive ? "#DBEAFE" : "#F8FAFC",
+                    borderColor: isActive ? "primary.main" : "#CBD5E1",
+                  },
+                  "&:focus-visible": {
+                    outline: "2px solid #2563EB",
+                    outlineOffset: 2,
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: "50%",
+                    bgcolor: isActive ? "primary.main" : "#E2E8F0",
+                    color: isActive ? "#FFFFFF" : "#475569",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "0.75rem",
+                    fontWeight: 800,
+                  }}
+                >
+                  {day.dayNumber}
+                </Box>
+                <Typography
+                  variant="body2"
+                  sx={{ fontWeight: "inherit", fontSize: "0.88rem" }}
+                >
+                  Ngày {day.dayNumber}
+                </Typography>
+                <Chip
+                  label={`${actCount}`}
+                  size="small"
+                  sx={{
+                    height: 20,
+                    fontSize: "0.7rem",
+                    fontWeight: 700,
+                    bgcolor: isActive ? "primary.main" : "#F1F5F9",
+                    color: isActive ? "#FFFFFF" : "#64748B",
+                  }}
+                />
+              </Button>
+            );
+          })}
+
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<AddIcon fontSize="small" />}
+            onClick={handleAddDay}
+            sx={{
+              flexShrink: 0,
+              borderRadius: "12px",
+              textTransform: "none",
+              fontWeight: 600,
+              height: 40,
+              px: 1.75,
+              borderColor: "#CBD5E1",
+              color: "#334155",
+              "&:hover": { borderColor: "primary.main", bgcolor: "#EFF6FF" },
+            }}
+          >
+            + Ngày mới
+          </Button>
+        </Box>
+
+        {/* Active Day Content (Focused Single-Day Wizard) */}
+        {currentActiveDay && (
           <Card
-            key={day.id || day.dayNumber}
+            key={currentActiveDay.id || currentActiveDay.dayNumber}
             elevation={0}
             sx={{
               borderRadius: "16px",
               border: "1px solid #E2E8F0",
               bgcolor: "#FFFFFF",
               overflow: "hidden",
+              animation: "fadeInDay 0.2s ease-out",
+              "@keyframes fadeInDay": {
+                from: { opacity: 0, transform: "translateY(4px)" },
+                to: { opacity: 1, transform: "translateY(0)" },
+              },
             }}
           >
             {/* Day Header Banner */}
@@ -1121,7 +1276,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                     fontSize: "0.95rem",
                   }}
                 >
-                  {day.dayNumber}
+                  {currentActiveDay.dayNumber}
                 </Box>
                 <Typography
                   variant="subtitle1"
@@ -1131,10 +1286,10 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                     fontSize: "1.05rem",
                   }}
                 >
-                  Ngày {day.dayNumber}: {day.title}
+                  Ngày {currentActiveDay.dayNumber}: {currentActiveDay.title}
                 </Typography>
                 <Chip
-                  label={`${day.activities.length} hoạt động`}
+                  label={`${currentActiveDay.activities.length} hoạt động`}
                   size="small"
                   sx={{
                     bgcolor: "#EFF6FF",
@@ -1151,7 +1306,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                   variant="outlined"
                   color="primary"
                   startIcon={<AddIcon />}
-                  onClick={() => handleOpenAddActivity(dayIndex)}
+                  onClick={() => handleOpenAddActivity(safeActiveDayIndex)}
                   sx={{
                     borderRadius: "6px",
                     textTransform: "none",
@@ -1166,7 +1321,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                     <IconButton
                       size="small"
                       color="error"
-                      onClick={() => setDayToDelete(dayIndex)}
+                      onClick={() => setDayToDelete(safeActiveDayIndex)}
                       sx={{
                         border: "1px solid #FECDD3",
                         bgcolor: "#FFF1F2",
@@ -1192,9 +1347,13 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
               >
                 <TextField
                   label="Tiêu đề ngày"
-                  value={day.title}
+                  value={currentActiveDay.title}
                   onChange={(e) =>
-                    handleUpdateDayField(dayIndex, "title", e.target.value)
+                    handleUpdateDayField(
+                      safeActiveDayIndex,
+                      "title",
+                      e.target.value,
+                    )
                   }
                   size="small"
                   fullWidth
@@ -1204,15 +1363,21 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                   label="Ngày hiển thị (Tùy chọn)"
                   format="DD/MM/YYYY"
                   value={
-                    day.date
-                      ? dayjs(day.date, ["DD/MM/YYYY", "YYYY-MM-DD"]).isValid()
-                        ? dayjs(day.date, ["DD/MM/YYYY", "YYYY-MM-DD"])
+                    currentActiveDay.date
+                      ? dayjs(currentActiveDay.date, [
+                          "DD/MM/YYYY",
+                          "YYYY-MM-DD",
+                        ]).isValid()
+                        ? dayjs(currentActiveDay.date, [
+                            "DD/MM/YYYY",
+                            "YYYY-MM-DD",
+                          ])
                         : null
                       : null
                   }
                   onChange={(newValue) => {
                     handleUpdateDayField(
-                      dayIndex,
+                      safeActiveDayIndex,
                       "date",
                       newValue && newValue.isValid()
                         ? newValue.format("DD/MM/YYYY")
@@ -1233,9 +1398,13 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
 
               <TextField
                 label="Mô tả / Tóm tắt ngày"
-                value={day.summary || ""}
+                value={currentActiveDay.summary || ""}
                 onChange={(e) =>
-                  handleUpdateDayField(dayIndex, "summary", e.target.value)
+                  handleUpdateDayField(
+                    safeActiveDayIndex,
+                    "summary",
+                    e.target.value,
+                  )
                 }
                 multiline
                 rows={3}
@@ -1258,7 +1427,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                   Danh sách hoạt động trong ngày:
                 </Typography>
 
-                {day.activities.length === 0 ? (
+                {currentActiveDay.activities.length === 0 ? (
                   <Box
                     sx={{
                       p: 3,
@@ -1272,20 +1441,20 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                       variant="body2"
                       sx={{ color: "#64748B", mb: 1 }}
                     >
-                      Chưa có hoạt động nào cho ngày {day.dayNumber}.
+                      Chưa có hoạt động nào cho ngày {currentActiveDay.dayNumber}.
                     </Typography>
                     <Button
                       size="small"
                       variant="outlined"
                       startIcon={<AddIcon />}
-                      onClick={() => handleOpenAddActivity(dayIndex)}
+                      onClick={() => handleOpenAddActivity(safeActiveDayIndex)}
                       sx={{ borderRadius: "6px", textTransform: "none" }}
                     >
                       Thêm hoạt động đầu tiên
                     </Button>
                   </Box>
                 ) : (
-                  day.activities.map((act, actIndex) => {
+                  currentActiveDay.activities.map((act, actIndex) => {
                     const catStyle =
                       ITINERARY_CATEGORY_COLORS[act.type] ||
                       ITINERARY_CATEGORY_COLORS["Tham quan"];
@@ -1404,7 +1573,11 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                             <IconButton
                               size="small"
                               onClick={() =>
-                                handleOpenEditActivity(dayIndex, actIndex, act)
+                                handleOpenEditActivity(
+                                  safeActiveDayIndex,
+                                  actIndex,
+                                  act,
+                                )
                               }
                               sx={{ color: "#475569" }}
                             >
@@ -1417,7 +1590,10 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                               size="small"
                               color="error"
                               onClick={() =>
-                                handleDeleteActivity(dayIndex, actIndex)
+                                handleDeleteActivity(
+                                  safeActiveDayIndex,
+                                  actIndex,
+                                )
                               }
                             >
                               <DeleteOutlinedIcon fontSize="small" />
@@ -1429,9 +1605,83 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                   })
                 )}
               </Box>
+
+              {/* Day Wizard Stepper Navigation Footer */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  mt: 3.5,
+                  pt: 2.5,
+                  borderTop: "1px solid #F1F5F9",
+                  flexWrap: "wrap",
+                  gap: 1.5,
+                }}
+              >
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<NavigateBeforeIcon />}
+                  disabled={safeActiveDayIndex === 0}
+                  onClick={() =>
+                    setActiveDayIndex((prev) => Math.max(0, prev - 1))
+                  }
+                  sx={{
+                    borderRadius: "8px",
+                    textTransform: "none",
+                    fontWeight: 600,
+                  }}
+                >
+                  Ngày trước
+                </Button>
+
+                <Typography
+                  variant="caption"
+                  sx={{ color: "#64748B", fontWeight: 600 }}
+                >
+                  Đang xem: Ngày {safeActiveDayIndex + 1} / {days.length} ngày
+                </Typography>
+
+                {safeActiveDayIndex < days.length - 1 ? (
+                  <Button
+                    variant="contained"
+                    size="small"
+                    endIcon={<NavigateNextIcon />}
+                    onClick={() =>
+                      setActiveDayIndex((prev) =>
+                        Math.min(days.length - 1, prev + 1),
+                      )
+                    }
+                    sx={{
+                      borderRadius: "8px",
+                      textTransform: "none",
+                      fontWeight: 600,
+                      boxShadow: "none",
+                    }}
+                  >
+                    Ngày {safeActiveDayIndex + 2} tiếp theo
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    size="small"
+                    startIcon={<AddIcon />}
+                    onClick={handleAddDay}
+                    sx={{
+                      borderRadius: "8px",
+                      textTransform: "none",
+                      fontWeight: 600,
+                    }}
+                  >
+                    + Thêm ngày mới
+                  </Button>
+                )}
+              </Box>
             </CardContent>
           </Card>
-        ))}
+        )}
       </Box>
 
       {/* BOTTOM ACTION BAR */}

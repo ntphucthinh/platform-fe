@@ -347,7 +347,7 @@ export const AdminHomestayPage: React.FC = () => {
             </Link>
           </Tooltip>
         ) : (
-          <Typography sx={{ color: "#CBD5E1", fontSize: "12px" }}>—</Typography>
+          <Typography sx={{ color: "text.secondary", fontSize: "12px" }}>—</Typography>
         ),
     },
     {
@@ -369,8 +369,8 @@ export const AdminHomestayPage: React.FC = () => {
               onClick={() => handleOpenView(row)}
               sx={{
                 minWidth: 0,
-                width: 32,
-                height: 32,
+                width: { xs: 36, sm: 34 },
+                height: { xs: 36, sm: 34 },
                 p: 0,
                 borderRadius: "8px",
                 borderColor: "#BFDBFE",
@@ -388,8 +388,8 @@ export const AdminHomestayPage: React.FC = () => {
               onClick={() => handleOpenEdit(row)}
               sx={{
                 minWidth: 0,
-                width: 32,
-                height: 32,
+                width: { xs: 36, sm: 34 },
+                height: { xs: 36, sm: 34 },
                 p: 0,
                 borderRadius: "8px",
               }}
@@ -406,8 +406,8 @@ export const AdminHomestayPage: React.FC = () => {
               onClick={() => setHomestayToDelete(row)}
               sx={{
                 minWidth: 0,
-                width: 32,
-                height: 32,
+                width: { xs: 36, sm: 34 },
+                height: { xs: 36, sm: 34 },
                 p: 0,
                 borderRadius: "8px",
               }}

@@ -18,7 +18,11 @@ export const tableSx: SxProps<Theme> = {
   '& .MuiDataGrid-columnHeader': {
     bgcolor: '#F8FAFC',
     px: '16px',
-    '&:focus, &:focus-within': { outline: 'none' },
+    '&:focus': { outline: 'none' },
+    '&:focus-visible': {
+      outline: '2px solid #1976D2',
+      outlineOffset: '-2px',
+    },
   },
   '& .MuiDataGrid-columnHeaderTitle': {
     fontWeight: 600,
@@ -108,7 +112,11 @@ export const tableSx: SxProps<Theme> = {
     py: 0,
     display: 'flex',
     alignItems: 'center',
-    '&:focus, &:focus-within': { outline: 'none' },
+    '&:focus': { outline: 'none' },
+    '&:focus-visible': {
+      outline: '2px solid #1976D2',
+      outlineOffset: '-2px',
+    },
   },
 
   // ── Virtual scroller ────────────────────────────────────────────────────────

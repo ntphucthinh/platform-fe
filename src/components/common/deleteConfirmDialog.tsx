@@ -24,7 +24,7 @@ export interface DeleteConfirmDialogProps {
 
 export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
   open,
-  title = "Delete Confirmation",
+  title = "Xác nhận xóa",
   message,
   loading: externalLoading,
   onClose,
@@ -68,7 +68,7 @@ export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
       slotProps={{
         paper: {
           sx: {
-            borderRadius: 3,
+            borderRadius: "14px",
             p: 1,
           },
         },
@@ -82,7 +82,7 @@ export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
               height: 40,
               borderRadius: "50%",
               bgcolor: "#FEF2F2",
-              color: "#DC2626",
+              color: "error.main",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -111,13 +111,20 @@ export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
           onClick={onClose}
           disabled={isLoading}
           sx={{
-            borderColor: "#D1D5DB",
-            color: "#374151",
+            borderColor: "divider",
+            color: "text.primary",
             textTransform: "none",
             fontWeight: 500,
+            borderRadius: "8px",
+            minHeight: 38,
+            px: 2,
+            "&:focus-visible": {
+              outline: "2px solid #1976D2",
+              outlineOffset: 2,
+            },
           }}
         >
-          Cancel
+          Hủy
         </Button>
         <Button
           variant="contained"
@@ -133,12 +140,19 @@ export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
             textTransform: "none",
             fontWeight: 600,
             boxShadow: "none",
+            borderRadius: "8px",
+            minHeight: 38,
+            px: 2,
             "&:hover": {
               boxShadow: "none",
             },
+            "&:focus-visible": {
+              outline: "2px solid #DC2626",
+              outlineOffset: 2,
+            },
           }}
         >
-          {isLoading ? "Deleting..." : "Delete"}
+          {isLoading ? "Đang xóa..." : "Xóa"}
         </Button>
       </DialogActions>
     </Dialog>

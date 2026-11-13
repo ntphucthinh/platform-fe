@@ -13,7 +13,6 @@ import {
   Tooltip,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useLogout } from "@refinedev/core";
@@ -53,8 +52,7 @@ export const Header = ({ onToggleSidebar }: HeaderProps) => {
       position="sticky"
       elevation={0}
       sx={{
-        background:
-          "linear-gradient(90deg, #4FA3F8 0%, #3B8AF5 50%, #257CE6 100%)",
+        background: (theme) => theme.palette.layout.headerGradient,
         color: "#FFFFFF",
         position: "sticky",
         top: 0,
@@ -131,34 +129,39 @@ export const Header = ({ onToggleSidebar }: HeaderProps) => {
           </Typography>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-            <Tooltip title="Account settings">
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Tooltip title="Tài khoản">
               <IconButton
-                aria-label="user profile menu"
+                aria-label="Mở menu tài khoản"
+                aria-haspopup="true"
+                aria-expanded={Boolean(anchorEl)}
                 onClick={handleOpenUserMenu}
-                sx={{ p: 0.25 }}
+                sx={{
+                  p: 0.5,
+                  pr: 0.75,
+                  gap: 0.5,
+                  borderRadius: "24px",
+                  color: "#FFFFFF",
+                  "&:hover": {
+                    bgcolor: "rgba(255, 255, 255, 0.14)",
+                  },
+                }}
               >
                 <Avatar
                   sx={{
                     width: 34,
                     height: 34,
                     bgcolor: "#FFFFFF",
-                    color: "#257CE6",
+                    color: "primary.main",
                     fontSize: "0.85rem",
                     fontWeight: 700,
                   }}
                 >
                   {initials || "AD"}
                 </Avatar>
+                <KeyboardArrowDownIcon sx={{ fontSize: 20 }} />
               </IconButton>
             </Tooltip>
-            <IconButton
-              aria-label="user menu dropdown"
-              onClick={handleOpenUserMenu}
-              sx={{ p: 0.25, color: "#FFFFFF" }}
-            >
-              <KeyboardArrowDownIcon sx={{ fontSize: 20 }} />
-            </IconButton>
             <Menu
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
@@ -187,17 +190,11 @@ export const Header = ({ onToggleSidebar }: HeaderProps) => {
                 )}
               </Box>
               <Divider />
-              <MenuItem onClick={handleCloseUserMenu}>
-                <ListItemIcon>
-                  <PersonIcon fontSize="small" />
-                </ListItemIcon>
-                Profile
-              </MenuItem>
               <MenuItem onClick={handleLogout}>
                 <ListItemIcon>
                   <LogoutIcon fontSize="small" color="error" />
                 </ListItemIcon>
-                <Typography color="error">Logout</Typography>
+                <Typography color="error">Đăng xuất</Typography>
               </MenuItem>
             </Menu>
           </Box>

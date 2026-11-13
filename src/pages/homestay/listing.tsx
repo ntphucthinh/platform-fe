@@ -15,12 +15,22 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import { useSearchParams } from "react-router-dom";
 import { PublicHeader } from "@/components/pages/homestay/publicHeader";
 import { PublicFooter } from "@/components/pages/homestay/publicFooter";
 import { HomestayCard } from "@/components/pages/homestay/homestayCard";
 import type { IHomestayItem } from "@/types/pages/homestay/homestay";
 import { useHomestayList } from "@/hooks/homestays/useHomestayList";
 import { formatRoomPrice } from "@/constants/homestay";
+
+function normalizeSearchText(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/gi, "d")
+    .toLowerCase()
+    .trim();
+}
 
 export const HomestayListingPage: React.FC = () => {
   const {
@@ -29,29 +39,42 @@ export const HomestayListingPage: React.FC = () => {
     error,
     refetch: handleRetry,
   } = useHomestayList();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const locationQuery = searchParams.get("location")?.trim() || "";
+  const [searchTerm, setSearchTerm] = useState(locationQuery);
+  const [prevLocationQuery, setPrevLocationQuery] = useState(locationQuery);
+
+  if (locationQuery !== prevLocationQuery) {
+    setPrevLocationQuery(locationQuery);
+    setSearchTerm(locationQuery);
+  }
 
   const homestayList = dbHomestays;
 
   const filteredHomestays = useMemo(() => {
-    const term = searchTerm.toLowerCase();
+    const term = normalizeSearchText(searchTerm);
+    if (!term) return homestayList;
     return homestayList.filter((h) => {
       const locStr = h.address || h.location || "";
       const matchesRoom = (h.rooms || []).some((r) => {
-        const formatted = formatRoomPrice(r.priceAmount, r.priceUnit).toLowerCase();
+        const formatted = normalizeSearchText(
+          formatRoomPrice(r.priceAmount, r.priceUnit),
+        );
         return (
-          r.name.toLowerCase().includes(term) ||
-          (r.description ?? "").toLowerCase().includes(term) ||
+          normalizeSearchText(r.name).includes(term) ||
+          normalizeSearchText(r.description ?? "").includes(term) ||
           (r.priceAmount ? String(r.priceAmount).includes(term) : false) ||
           formatted.includes(term)
         );
       });
 
       return (
-        (h.name ?? "").toLowerCase().includes(term) ||
-        locStr.toLowerCase().includes(term) ||
-        (h.description ?? "").toLowerCase().includes(term) ||
-        (h.shortDescription && h.shortDescription.toLowerCase().includes(term)) ||
+        normalizeSearchText(h.name ?? "").includes(term) ||
+        normalizeSearchText(locStr).includes(term) ||
+        normalizeSearchText(h.description ?? "").includes(term) ||
+        (h.shortDescription
+          ? normalizeSearchText(h.shortDescription).includes(term)
+          : false) ||
         matchesRoom
       );
     });
@@ -59,6 +82,13 @@ export const HomestayListingPage: React.FC = () => {
 
   const handleResetFilters = () => {
     setSearchTerm("");
+    if (searchParams.has("location")) {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("location");
+        return next;
+      });
+    }
   };
 
   return (
@@ -109,7 +139,7 @@ export const HomestayListingPage: React.FC = () => {
             <Typography
               variant="body1"
               sx={{
-                color: "#94A3B8",
+                color: "#CBD5E1",
                 fontSize: { xs: "1rem", sm: "1.125rem" },
                 lineHeight: 1.6,
                 mb: 4,
@@ -124,8 +154,8 @@ export const HomestayListingPage: React.FC = () => {
               sx={{
                 p: { xs: 2, sm: 2.5 },
                 borderRadius: "16px",
-                bgcolor: "#FFFFFF",
-                color: "#0F172A",
+                bgcolor: "background.paper",
+                color: "text.primary",
                 display: "flex",
                 alignItems: "center",
                 boxShadow: "0 20px 25px -5px rgba(0,0,0,0.3)",
@@ -141,7 +171,7 @@ export const HomestayListingPage: React.FC = () => {
                   input: {
                     startAdornment: (
                       <InputAdornment position="start">
-                        <SearchIcon sx={{ color: "#64748B" }} />
+                        <SearchIcon sx={{ color: "text.secondary" }} />
                       </InputAdornment>
                     ),
                   },
@@ -149,7 +179,7 @@ export const HomestayListingPage: React.FC = () => {
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     borderRadius: "10px",
-                    bgcolor: "#F8FAFC",
+                    bgcolor: "background.default",
                   },
                 }}
               />
@@ -172,10 +202,10 @@ export const HomestayListingPage: React.FC = () => {
           }}
         >
           <Box>
-            <Typography variant="h5" sx={{ fontWeight: 800, color: "#0F172A", letterSpacing: "-0.01em" }}>
+            <Typography variant="h5" sx={{ fontWeight: 800, color: "text.primary", letterSpacing: "-0.01em" }}>
               Danh Sách Homestay
             </Typography>
-            <Typography variant="body2" sx={{ color: "#64748B", mt: 0.5 }}>
+            <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
               Hiển thị {filteredHomestays.length} trên tổng số {homestayList.length} homestay
             </Typography>
           </Box>

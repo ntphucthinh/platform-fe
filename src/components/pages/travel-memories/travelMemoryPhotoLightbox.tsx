@@ -64,11 +64,18 @@ export const TravelMemoryPhotoLightbox: React.FC<
       maxWidth="md"
       fullWidth
       slotProps={{
+        backdrop: {
+          sx: {
+            bgcolor: "rgba(10, 15, 29, 0.92)",
+            backdropFilter: "blur(12px)",
+          },
+        },
         paper: {
           sx: {
             bgcolor: "#0F172A",
             color: "#F8FAFC",
-            borderRadius: "16px",
+            borderRadius: "14px",
+            border: "1px solid rgba(255, 255, 255, 0.12)",
             overflow: "hidden",
             boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
             m: { xs: 1, sm: 2 },
@@ -91,7 +98,7 @@ export const TravelMemoryPhotoLightbox: React.FC<
           {dateLabel && (
             <Typography
               variant="subtitle2"
-              sx={{ color: "#94A3B8", fontWeight: 600 }}
+              sx={{ color: "#CBD5E1", fontWeight: 600 }}
             >
               {dateLabel}
             </Typography>
@@ -115,7 +122,16 @@ export const TravelMemoryPhotoLightbox: React.FC<
             onClick={onClose}
             sx={{
               color: "#94A3B8",
-              "&:hover": { color: "#FFFFFF", bgcolor: "rgba(255, 255, 255, 0.1)" },
+              width: 40,
+              height: 40,
+              "&:hover": {
+                color: "#FFFFFF",
+                bgcolor: "rgba(255, 255, 255, 0.1)",
+              },
+              "&:focus-visible": {
+                outline: "2px solid #FFFFFF",
+                outlineOffset: 2,
+              },
             }}
             aria-label="Đóng ảnh"
           >
@@ -149,8 +165,18 @@ export const TravelMemoryPhotoLightbox: React.FC<
               transform: "translateY(-50%)",
               bgcolor: "rgba(15, 23, 42, 0.75)",
               color: "#FFFFFF",
-              backdropFilter: "blur(4px)",
-              "&:hover": { bgcolor: "rgba(15, 23, 42, 0.95)" },
+              width: 44,
+              height: 44,
+              backdropFilter: "blur(8px)",
+              transition: "all 0.18s ease-in-out",
+              "&:hover": {
+                bgcolor: "rgba(15, 23, 42, 0.95)",
+                transform: "translateY(-50%) scale(1.08)",
+              },
+              "&:focus-visible": {
+                outline: "2px solid #FFFFFF",
+                outlineOffset: 2,
+              },
               zIndex: 2,
             }}
             aria-label="Ảnh trước"
@@ -186,8 +212,18 @@ export const TravelMemoryPhotoLightbox: React.FC<
               transform: "translateY(-50%)",
               bgcolor: "rgba(15, 23, 42, 0.75)",
               color: "#FFFFFF",
-              backdropFilter: "blur(4px)",
-              "&:hover": { bgcolor: "rgba(15, 23, 42, 0.95)" },
+              width: 44,
+              height: 44,
+              backdropFilter: "blur(8px)",
+              transition: "all 0.18s ease-in-out",
+              "&:hover": {
+                bgcolor: "rgba(15, 23, 42, 0.95)",
+                transform: "translateY(-50%) scale(1.08)",
+              },
+              "&:focus-visible": {
+                outline: "2px solid #FFFFFF",
+                outlineOffset: 2,
+              },
               zIndex: 2,
             }}
             aria-label="Ảnh tiếp theo"

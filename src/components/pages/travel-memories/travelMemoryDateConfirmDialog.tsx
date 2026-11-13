@@ -41,7 +41,7 @@ export const TravelMemoryDateConfirmDialog: React.FC<
       slotProps={{
         paper: {
           sx: {
-            borderRadius: "16px",
+            borderRadius: "14px",
             p: 1,
           },
         },
@@ -55,7 +55,7 @@ export const TravelMemoryDateConfirmDialog: React.FC<
               height: 44,
               borderRadius: "12px",
               bgcolor: "#FEF2F2",
-              color: "#DC2626",
+              color: "error.main",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -68,14 +68,14 @@ export const TravelMemoryDateConfirmDialog: React.FC<
             <Typography
               variant="h6"
               component="h2"
-              sx={{ fontWeight: 700, color: "#1E293B" }}
+              sx={{ fontWeight: 700, color: "text.primary" }}
             >
               Xác nhận thay đổi khoảng thời gian
             </Typography>
             <Typography
               variant="caption"
               component="p"
-              sx={{ color: "#64748B" }}
+              sx={{ color: "text.secondary" }}
             >
               Một số ngày đã chọn trước đó có chứa hình ảnh
             </Typography>
@@ -86,19 +86,21 @@ export const TravelMemoryDateConfirmDialog: React.FC<
       <DialogContent sx={{ pt: 1.5, pb: 2 }}>
         <DialogContentText
           component="div"
-          sx={{ color: "#334155", fontSize: "0.95rem", mb: 2 }}
+          sx={{ color: "text.primary", fontSize: "0.95rem", mb: 2 }}
         >
           Khoảng thời gian mới không bao gồm{" "}
-          <strong>{removedDates.length} ngày</strong> có hình ảnh đã chọn. Nếu tiếp
-          tục, <strong>{totalPhotos} hình ảnh</strong> thuộc các ngày này sẽ bị hủy
-          bỏ. Các ngày vẫn nằm trong khoảng thời gian mới sẽ được giữ nguyên ảnh.
+          <strong>{removedDates.length} ngày</strong> có hình ảnh đã chọn. Nếu
+          tiếp tục, <strong>{totalPhotos} hình ảnh</strong> thuộc các ngày này
+          sẽ bị hủy bỏ. Các ngày vẫn nằm trong khoảng thời gian mới sẽ được giữ
+          nguyên ảnh.
         </DialogContentText>
 
         <Box
           sx={{
-            bgcolor: "#F8FAFC",
-            border: "1px solid #E2E8F0",
-            borderRadius: "10px",
+            bgcolor: "background.default",
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: "8px",
             p: 1.5,
           }}
         >
@@ -106,7 +108,7 @@ export const TravelMemoryDateConfirmDialog: React.FC<
             variant="caption"
             sx={{
               fontWeight: 700,
-              color: "#475569",
+              color: "text.secondary",
               textTransform: "uppercase",
               letterSpacing: "0.05em",
               display: "block",
@@ -123,9 +125,10 @@ export const TravelMemoryDateConfirmDialog: React.FC<
                 sx={{
                   px: 1.5,
                   py: 0.75,
-                  borderRadius: "6px",
-                  bgcolor: "#FFFFFF",
-                  border: "1px solid #F1F5F9",
+                  borderRadius: "4px",
+                  bgcolor: "background.paper",
+                  border: "1px solid",
+                  borderColor: "divider",
                   mb: 0.5,
                   display: "flex",
                   justifyContent: "space-between",
@@ -135,13 +138,16 @@ export const TravelMemoryDateConfirmDialog: React.FC<
                   primary={
                     <Typography
                       variant="body2"
-                      sx={{ fontWeight: 600, color: "#1E293B" }}
+                      sx={{ fontWeight: 600, color: "text.primary" }}
                     >
                       {item.formattedDate}
                     </Typography>
                   }
                   secondary={
-                    <Typography variant="caption" sx={{ color: "#64748B" }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "text.secondary" }}
+                    >
                       Mã ngày: {item.date}
                     </Typography>
                   }
@@ -156,7 +162,7 @@ export const TravelMemoryDateConfirmDialog: React.FC<
                   size="small"
                   sx={{
                     bgcolor: "#FEE2E2",
-                    color: "#B91C1C",
+                    color: "error.dark",
                     fontWeight: 600,
                     fontSize: "0.75rem",
                   }}
@@ -173,11 +179,17 @@ export const TravelMemoryDateConfirmDialog: React.FC<
           color="inherit"
           onClick={onCancel}
           sx={{
-            borderColor: "#CBD5E1",
-            color: "#475569",
+            borderColor: "divider",
+            color: "text.secondary",
             textTransform: "none",
             fontWeight: 600,
             borderRadius: "8px",
+            minHeight: 38,
+            px: 2,
+            "&:focus-visible": {
+              outline: "2px solid #1976D2",
+              outlineOffset: 2,
+            },
           }}
         >
           Hủy & giữ ngày cũ
@@ -191,6 +203,12 @@ export const TravelMemoryDateConfirmDialog: React.FC<
             fontWeight: 600,
             borderRadius: "8px",
             boxShadow: "none",
+            minHeight: 38,
+            px: 2,
+            "&:focus-visible": {
+              outline: "2px solid #DC2626",
+              outlineOffset: 2,
+            },
           }}
         >
           Xác nhận loại bỏ ảnh & đổi ngày
