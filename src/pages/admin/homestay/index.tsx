@@ -578,7 +578,7 @@ export const AdminHomestayPage: React.FC = () => {
       <DeleteConfirmDialog
         open={Boolean(homestayToDelete)}
         title="Xóa Homestay"
-        itemName={homestayToDelete?.name}
+        message="Bạn có chắc chắn muốn xóa homestay này? Hành động này không thể hoàn tác."
         loading={isDeleting}
         onClose={() => setHomestayToDelete(null)}
         onConfirm={handleConfirmDelete}
@@ -587,12 +587,11 @@ export const AdminHomestayPage: React.FC = () => {
       {/* Toast Feedback */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={3000}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
         <Alert
-          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
           severity={snackbar.severity}
           sx={{ width: "100%", borderRadius: "8px", fontWeight: 500 }}
         >

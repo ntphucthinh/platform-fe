@@ -11,6 +11,7 @@ import {
   Collapse,
   IconButton,
   Autocomplete,
+  CircularProgress,
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -28,6 +29,7 @@ import type {
   ITravelMemoryDay,
   ITravelMemoryPhoto,
   IRemovedDatePhotoSummary,
+  ITravelMemoryFormSubmitData,
 } from "@/types/pages/travel-memories/travelMemory";
 import {
   calculateCalendarDuration,
@@ -45,22 +47,15 @@ import useTravelLocationSelection from "@/hooks/selections/useTravelLocationSele
 export interface TravelMemoryFormProps {
   initialData?: ITravelMemory | null;
   isEdit?: boolean;
-  onSubmit: (formData: {
-    title: string;
-    destination: string;
-    locationId?: number | null;
-    startDate: string;
-    endDate: string;
-    description: string;
-    coverImage: string;
-    days: ITravelMemoryDay[];
-  }) => void;
+  isLoading?: boolean;
+  onSubmit: (formData: ITravelMemoryFormSubmitData) => void;
   onCancel: () => void;
 }
 
 export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
   initialData,
   isEdit = false,
+  isLoading = false,
   onSubmit,
   onCancel,
 }) => {
@@ -87,6 +82,10 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
     initialData?.description || "",
   );
   const [coverImage, setCoverImage] = useState(initialData?.coverImage || "");
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [coverImagePath, setCoverImagePath] = useState<string | null>(
+    initialData?.coverImagePath || null,
+  );
 
   // Photo collections mapped strictly by ISO date string: 'YYYY-MM-DD'
   const [photosByDate, setPhotosByDate] = useState<
@@ -266,6 +265,8 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
 
     const previewUrl = registerObjectUrl(URL.createObjectURL(file));
     setCoverImage(previewUrl);
+    setCoverImageFile(file);
+    setCoverImagePath(null);
     setErrors((prev) => {
       const next = { ...prev };
       delete next.coverImage;
@@ -283,6 +284,8 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
       revokeObjectUrl(coverImage);
     }
     setCoverImage("");
+    setCoverImageFile(null);
+    setCoverImagePath(null);
     if (coverInputRef.current) {
       coverInputRef.current.value = "";
     }
@@ -405,6 +408,7 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
           imageUrl: previewUrl,
           fileName: file.name,
           fileSize: file.size,
+          file,
           caption: "",
         });
       }
@@ -430,7 +434,9 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragOverDate(null);
+    if (e.currentTarget && !e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragOverDate(null);
+    }
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, date: string) => {
@@ -466,7 +472,9 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
     if (!title.trim()) {
       newErrors.title = "Vui lòng nhập tên chuyến đi.";
     }
-    if (!resolvedLocationId && !destination.trim()) {
+    if (!resolvedLocationId) {
+      newErrors.destination = "Vui lòng chọn địa điểm từ danh sách.";
+    } else if (!destination.trim()) {
       newErrors.destination = "Vui lòng chọn địa điểm chuyến đi.";
     }
 
@@ -495,12 +503,16 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
       return;
     }
 
-    // Construct daily collections ordered chronologically
-    const days: ITravelMemoryDay[] = activeDates.map((date) => ({
-      date,
-      description: descriptionsByDate[date]?.trim() || undefined,
-      photos: photosByDate[date] || [],
-    }));
+    // Construct daily collections ordered chronologically, preserving existing day ID
+    const days: ITravelMemoryDay[] = activeDates.map((date) => {
+      const existingDay = initialData?.days?.find((d) => d.date === date);
+      return {
+        id: existingDay?.id,
+        date,
+        description: descriptionsByDate[date]?.trim() || undefined,
+        photos: photosByDate[date] || [],
+      };
+    });
 
     onSubmit({
       title: title.trim(),
@@ -510,6 +522,8 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
       endDate,
       description: description.trim(),
       coverImage: coverImage || DEFAULT_NO_IMAGE,
+      coverImagePath,
+      coverImageFile,
       days,
     });
   };
@@ -573,7 +587,14 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
             type="submit"
             variant="contained"
             color="primary"
-            startIcon={<SaveIcon />}
+            disabled={isLoading}
+            startIcon={
+              isLoading ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : (
+                <SaveIcon />
+              )
+            }
             sx={{
               textTransform: "none",
               fontWeight: 600,
@@ -581,7 +602,11 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
               boxShadow: "none",
             }}
           >
-            {isEdit ? "Cập nhật kỷ niệm" : "Lưu kỷ niệm"}
+            {isLoading
+              ? "Đang lưu..."
+              : isEdit
+                ? "Cập nhật kỷ niệm"
+                : "Lưu kỷ niệm"}
           </Button>
         </Box>
       </Box>
@@ -1281,29 +1306,6 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
 
                   {/* Collapsible body */}
                   <Collapse in={!isCollapsed} timeout={200}>
-                    {/* Drag hint banner - shown only when dragging over */}
-                    {isDragOver && (
-                      <Box
-                        sx={{
-                          mx: 2,
-                          mt: 2,
-                          p: 2,
-                          borderRadius: "8px",
-                          border: "2px dashed #2563EB",
-                          bgcolor: "#EFF6FF",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 1,
-                        }}
-                      >
-                        <AddPhotoAlternateOutlinedIcon sx={{ color: "#2563EB", fontSize: 20 }} />
-                        <Typography variant="body2" sx={{ color: "#2563EB", fontWeight: 600 }}>
-                          Thả ảnh vào đây
-                        </Typography>
-                      </Box>
-                    )}
-
                     {/* Day Description Textarea */}
                     <Box sx={{ px: 2, pt: 2 }}>
                       <TextField
@@ -1342,6 +1344,7 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                     <CardContent sx={{ p: 2 }}>
                       <TravelMemoryPhotoGrid
                         photos={dayPhotos}
+                        isDragOver={isDragOver}
                         onPhotoClick={(photoIdx) => {
                           setLightboxState({
                             open: true,
@@ -1395,7 +1398,14 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
           type="submit"
           variant="contained"
           color="primary"
-          startIcon={<SaveIcon />}
+          disabled={isLoading}
+          startIcon={
+            isLoading ? (
+              <CircularProgress size={18} color="inherit" />
+            ) : (
+              <SaveIcon />
+            )
+          }
           sx={{
             textTransform: "none",
             fontWeight: 600,
@@ -1405,7 +1415,11 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
             height: 42,
           }}
         >
-          {isEdit ? "Cập nhật kỷ niệm" : "Lưu kỷ niệm"}
+          {isLoading
+            ? "Đang lưu..."
+            : isEdit
+              ? "Cập nhật kỷ niệm"
+              : "Lưu kỷ niệm"}
         </Button>
       </Box>
 

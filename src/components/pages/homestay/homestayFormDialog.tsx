@@ -1336,7 +1336,7 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
       <DeleteConfirmDialog
         open={Boolean(roomToDelete)}
         title="Xóa Loại Phòng"
-        itemName={roomToDelete?.name}
+        message="Bạn có chắc chắn muốn xóa loại phòng này? Hành động này không thể hoàn tác."
         loading={false}
         onClose={() => setRoomToDelete(null)}
         onConfirm={handleConfirmDeleteRoom}

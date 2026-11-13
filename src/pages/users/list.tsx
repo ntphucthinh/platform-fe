@@ -419,7 +419,7 @@ export function UsersList() {
       <DeleteConfirmDialog
         open={Boolean(userToDelete)}
         title="Delete User"
-        itemName={userToDelete?.name}
+        message="Are you sure you want to delete this user? This action cannot be undone."
         loading={isDeleting}
         onClose={() => setUserToDelete(null)}
         onConfirm={handleConfirmDelete}

@@ -26,7 +26,6 @@ export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
   open,
   title = "Delete Confirmation",
   message,
-  itemName,
   loading: externalLoading,
   onClose,
   onConfirm,
@@ -57,14 +56,8 @@ export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
     }
   };
 
-  const defaultMessage = itemName ? (
-    <>
-      Are you sure you want to delete <strong>{itemName}</strong>? This action
-      cannot be undone.
-    </>
-  ) : (
-    "Are you sure you want to delete this item? This action cannot be undone."
-  );
+  const defaultMessage =
+    "Bạn có chắc chắn muốn xóa mục này? Hành động này không thể hoàn tác.";
 
   return (
     <Dialog

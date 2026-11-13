@@ -1190,13 +1190,12 @@ export const TravelMapDetailPage: React.FC = () => {
       {/* 8. Notification Feedback */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={3000}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
         <Alert
           severity={snackbar.severity}
-          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
           sx={{ borderRadius: "10px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
         >
           {snackbar.message}

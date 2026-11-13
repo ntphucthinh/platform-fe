@@ -3,6 +3,7 @@ import { Box, Typography, IconButton, Tooltip } from "@mui/material";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ZoomInRoundedIcon from "@mui/icons-material/ZoomInRounded";
 import CollectionsOutlinedIcon from "@mui/icons-material/CollectionsOutlined";
+import AddPhotoAlternateOutlinedIcon from "@mui/icons-material/AddPhotoAlternateOutlined";
 import type { ITravelMemoryPhoto } from "@/types/pages/travel-memories/travelMemory";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 
@@ -12,6 +13,7 @@ export interface TravelMemoryPhotoGridProps {
   onRemovePhoto?: (photoId: number) => void;
   readOnly?: boolean;
   emptyMessage?: string;
+  isDragOver?: boolean;
 }
 
 export const TravelMemoryPhotoGrid: React.FC<TravelMemoryPhotoGridProps> = ({
@@ -20,8 +22,35 @@ export const TravelMemoryPhotoGrid: React.FC<TravelMemoryPhotoGridProps> = ({
   onRemovePhoto,
   readOnly = false,
   emptyMessage = "Chưa có hình ảnh nào cho ngày này.",
+  isDragOver = false,
 }) => {
   if (photos.length === 0) {
+    if (isDragOver) {
+      return (
+        <Box
+          sx={{
+            py: 3.5,
+            px: 2,
+            border: "2px dashed #2563EB",
+            borderRadius: "10px",
+            bgcolor: "#EFF6FF",
+            textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 1,
+            transition: "all 0.2s ease-in-out",
+          }}
+        >
+          <AddPhotoAlternateOutlinedIcon sx={{ color: "#2563EB", fontSize: 32 }} />
+          <Typography variant="body2" sx={{ color: "#2563EB", fontWeight: 600 }}>
+            Thả ảnh vào đây
+          </Typography>
+        </Box>
+      );
+    }
+
     return (
       <Box
         sx={{
@@ -47,18 +76,44 @@ export const TravelMemoryPhotoGrid: React.FC<TravelMemoryPhotoGridProps> = ({
   }
 
   return (
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: {
-          xs: "repeat(3, 1fr)",
-          sm: "repeat(4, 1fr)",
-          md: "repeat(5, 1fr)",
-          lg: "repeat(6, 1fr)",
-        },
-        gap: 1.5,
-      }}
-    >
+    <Box sx={{ position: "relative" }}>
+      {isDragOver && (
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 10,
+            borderRadius: "10px",
+            border: "2px dashed #2563EB",
+            bgcolor: "rgba(239, 246, 255, 0.92)",
+            backdropFilter: "blur(2px)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 1,
+            pointerEvents: "none",
+          }}
+        >
+          <AddPhotoAlternateOutlinedIcon sx={{ color: "#2563EB", fontSize: 32 }} />
+          <Typography variant="body2" sx={{ color: "#2563EB", fontWeight: 600 }}>
+            Thả ảnh vào đây
+          </Typography>
+        </Box>
+      )}
+
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "repeat(3, 1fr)",
+            sm: "repeat(4, 1fr)",
+            md: "repeat(5, 1fr)",
+            lg: "repeat(6, 1fr)",
+          },
+          gap: 1.5,
+        }}
+      >
       {photos.map((photo, index) => (
         <Box
           key={photo.id}
@@ -174,6 +229,7 @@ export const TravelMemoryPhotoGrid: React.FC<TravelMemoryPhotoGridProps> = ({
           )}
         </Box>
       ))}
+      </Box>
     </Box>
   );
 };

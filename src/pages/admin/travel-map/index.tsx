@@ -439,9 +439,7 @@ export function TravelMapPage() {
       <DeleteConfirmDialog
         open={deleteConfirmOpen}
         title="Xác nhận xóa địa điểm"
-        message={`Bạn có chắc chắn muốn xóa địa điểm "${
-          locationToDelete?.name || ""
-        }" khỏi bản đồ? Các chuyến đi và kỷ niệm liên quan sẽ không bị xóa.`}
+        message="Bạn có chắc chắn muốn xóa địa điểm này khỏi bản đồ? Các chuyến đi và kỷ niệm liên quan sẽ không bị xóa."
         onClose={() => {
           setDeleteConfirmOpen(false);
           setLocationToDelete(null);
@@ -452,13 +450,12 @@ export function TravelMapPage() {
       {/* 6. Feedback Snackbar */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={3000}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
         <Alert
           severity={snackbar.severity}
-          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
           sx={{ borderRadius: "10px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
         >
           {snackbar.message}

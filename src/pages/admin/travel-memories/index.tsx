@@ -19,12 +19,13 @@ import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import PhotoLibraryOutlinedIcon from "@mui/icons-material/PhotoLibraryOutlined";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import type { Dayjs } from "dayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import type { ITravelMemory } from "@/types/pages/travel-memories/travelMemory";
 import { useTravelMemoryList } from "@/hooks/travel-memories/useTravelMemoryList";
+import { useDeleteTravelMemory } from "@/hooks/travel-memories/useDeleteTravelMemory";
 import { TravelMemoryCard } from "@/components/pages/travel-memories/travelMemoryCard";
 import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
 import { useCountries, type IGlobalCountry } from "@/hooks/common/useGlobalGeo";
@@ -32,6 +33,7 @@ import useTravelLocationSelection from "@/hooks/selections/useTravelLocationSele
 
 export const TravelMemoryListPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Page query parameter (1-based, required by backend API)
@@ -103,6 +105,8 @@ export const TravelMemoryListPage: React.FC = () => {
     locationId: typeof locationFilter === "number" ? locationFilter : undefined,
   });
 
+  const { deleteTravelMemory, isLoading: isDeleting } = useDeleteTravelMemory();
+
   const handlePageChange = (newPage: number) => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
@@ -160,15 +164,19 @@ export const TravelMemoryListPage: React.FC = () => {
   const [itemToDelete, setItemToDelete] = useState<ITravelMemory | null>(null);
 
   // Toast feedback state
+  const navSuccessMessage = (
+    location.state as { successMessage?: string } | null
+  )?.successMessage;
+
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
     severity: "success" | "info" | "warning" | "error";
-  }>({
-    open: false,
-    message: "",
+  }>(() => ({
+    open: Boolean(navSuccessMessage),
+    message: navSuccessMessage || "",
     severity: "success",
-  });
+  }));
 
   // Summary counts - mock con số cụ thể theo yêu cầu
   const totalTrips = 12;
@@ -210,15 +218,25 @@ export const TravelMemoryListPage: React.FC = () => {
     handlePageChange(targetPage);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!itemToDelete) return;
-    console.log("Delete Travel Memory ID:", itemToDelete.id);
-    setSnackbar({
-      open: true,
-      message: `Đã xóa chuyến đi "${itemToDelete.title}" thành công.`,
-      severity: "success",
-    });
-    setItemToDelete(null);
+    const { success, error: delError } = await deleteTravelMemory(itemToDelete.id);
+    if (success) {
+      setSnackbar({
+        open: true,
+        message: "Đã xóa chuyến đi thành công.",
+        severity: "success",
+      });
+      setItemToDelete(null);
+      await refetch();
+    } else {
+      setSnackbar({
+        open: true,
+        message: delError || "Xóa chuyến đi thất bại.",
+        severity: "error",
+      });
+      setItemToDelete(null);
+    }
   };
 
   return (
@@ -877,12 +895,8 @@ export const TravelMemoryListPage: React.FC = () => {
       <DeleteConfirmDialog
         open={Boolean(itemToDelete)}
         title="Xóa Kỷ Niệm Chuyến Đi"
-        itemName={itemToDelete?.title}
-        message={
-          itemToDelete
-            ? `Bạn có chắc chắn muốn xóa chuyến đi "${itemToDelete.title}"? Toàn bộ hình ảnh và dữ liệu liên quan của chuyến đi này sẽ bị xóa khỏi hệ thống.`
-            : undefined
-        }
+        loading={isDeleting}
+        message="Bạn có chắc chắn muốn xóa chuyến đi này? Toàn bộ hình ảnh và dữ liệu liên quan của chuyến đi sẽ bị xóa khỏi hệ thống."
         onClose={() => setItemToDelete(null)}
         onConfirm={handleConfirmDelete}
       />
@@ -890,12 +904,11 @@ export const TravelMemoryListPage: React.FC = () => {
       {/* Toast Feedback */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={3000}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
         <Alert
-          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
           severity={snackbar.severity}
           sx={{ width: "100%", borderRadius: "8px", fontWeight: 500 }}
         >

@@ -168,7 +168,7 @@ export const ItineraryListPage: React.FC = () => {
     if (success) {
       setSnackbar({
         open: true,
-        message: `Đã xóa lịch trình "${itemToDelete.title}" (mô phỏng UI).`,
+        message: "Đã xóa lịch trình thành công (mô phỏng UI).",
         severity: "success",
       });
     }
@@ -692,7 +692,7 @@ export const ItineraryListPage: React.FC = () => {
       <DeleteConfirmDialog
         open={Boolean(itemToDelete)}
         title="Xóa Lịch Trình"
-        itemName={itemToDelete?.title}
+        message="Bạn có chắc chắn muốn xóa lịch trình này? Thao tác này không thể hoàn tác."
         onClose={() => setItemToDelete(null)}
         onConfirm={handleConfirmDelete}
       />
@@ -700,12 +700,11 @@ export const ItineraryListPage: React.FC = () => {
       {/* Toast Notification */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={3000}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
         <Alert
-          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
           severity={snackbar.severity}
           sx={{ width: "100%", borderRadius: "8px", fontWeight: 500 }}
         >

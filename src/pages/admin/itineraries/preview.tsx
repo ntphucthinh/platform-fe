@@ -372,12 +372,11 @@ export const ItineraryPreviewPage: React.FC = () => {
       {/* Global Snackbar Toast Feedback */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={3000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert
-          onClose={handleCloseSnackbar}
           severity={snackbar.severity}
           variant="filled"
           sx={{ width: '100%', borderRadius: '8px', fontWeight: 600 }}

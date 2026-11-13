@@ -9,18 +9,23 @@ import {
   Collapse,
   IconButton,
   CircularProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import PhotoCameraBackOutlinedIcon from "@mui/icons-material/PhotoCameraBackOutlined";
 import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import CollectionsBookmarkOutlinedIcon from "@mui/icons-material/CollectionsBookmarkOutlined";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { useTravelMemoryDetail } from "@/hooks/travel-memories/useTravelMemoryDetail";
+import { useDeleteTravelMemory } from "@/hooks/travel-memories/useDeleteTravelMemory";
+import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
 import {
   calculateCalendarDuration,
   countTotalPhotos,
@@ -57,6 +62,43 @@ export const TravelMemoryDetailPage: React.FC = () => {
   const [collapsedDays, setCollapsedDays] = useState<Record<string, boolean>>(
     {},
   );
+
+  const location = useLocation();
+  const { deleteTravelMemory, isLoading: isDeleting } = useDeleteTravelMemory();
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+
+  const navSuccessMessage = (
+    location.state as { successMessage?: string } | null
+  )?.successMessage;
+
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>(() => ({
+    open: Boolean(navSuccessMessage),
+    message: navSuccessMessage || "",
+    severity: "success",
+  }));
+
+  const handleConfirmDelete = async () => {
+    if (!numericId || !memory) return;
+    const { success, error: delError } = await deleteTravelMemory(numericId);
+    if (success) {
+      navigate("/admin/travel-memories", {
+        state: {
+          successMessage: "Đã xóa chuyến đi thành công.",
+        },
+      });
+    } else {
+      setSnackbar({
+        open: true,
+        message: delError || "Xóa chuyến đi thất bại.",
+        severity: "error",
+      });
+      setOpenDeleteDialog(false);
+    }
+  };
 
   const toggleDayCollapse = (date: string) => {
     setCollapsedDays((prev) => ({ ...prev, [date]: !prev[date] }));
@@ -171,20 +213,36 @@ export const TravelMemoryDetailPage: React.FC = () => {
           Quay lại danh sách
         </Button>
 
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<EditOutlinedIcon />}
-          onClick={() => navigate(`/admin/travel-memories/${memory.id}/edit`)}
-          sx={{
-            borderRadius: "8px",
-            textTransform: "none",
-            fontWeight: 600,
-            boxShadow: "none",
-          }}
-        >
-          Chỉnh sửa chuyến đi
-        </Button>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<DeleteOutlinedIcon />}
+            onClick={() => setOpenDeleteDialog(true)}
+            sx={{
+              borderRadius: "8px",
+              textTransform: "none",
+              fontWeight: 600,
+            }}
+          >
+            Xóa chuyến đi
+          </Button>
+
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<EditOutlinedIcon />}
+            onClick={() => navigate(`/admin/travel-memories/${memory.id}/edit`)}
+            sx={{
+              borderRadius: "8px",
+              textTransform: "none",
+              fontWeight: 600,
+              boxShadow: "none",
+            }}
+          >
+            Chỉnh sửa chuyến đi
+          </Button>
+        </Box>
       </Box>
 
       {/* Hero Banner & Trip Overview */}
@@ -566,6 +624,31 @@ export const TravelMemoryDetailPage: React.FC = () => {
           setLightboxState((prev) => ({ ...prev, currentIndex: newIdx }))
         }
       />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        open={openDeleteDialog}
+        title="Xóa Kỷ Niệm Chuyến Đi"
+        loading={isDeleting}
+        message="Bạn có chắc chắn muốn xóa chuyến đi này? Toàn bộ hình ảnh và dữ liệu liên quan của chuyến đi sẽ bị xóa khỏi hệ thống."
+        onClose={() => setOpenDeleteDialog(false)}
+        onConfirm={handleConfirmDelete}
+      />
+
+      {/* Toast Feedback */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          severity={snackbar.severity}
+          sx={{ width: "100%", borderRadius: "8px", fontWeight: 500 }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
