@@ -256,6 +256,8 @@ export const HomestayDetailPage: React.FC = () => {
                 fontWeight: 800,
                 color: "#0F172A",
                 letterSpacing: "-0.02em",
+                fontSize: { xs: "1.5rem", sm: "2rem", md: "2.25rem" },
+                wordBreak: "break-word",
               }}
             >
               {homestay.name}
@@ -280,11 +282,11 @@ export const HomestayDetailPage: React.FC = () => {
             }}
           >
             {addressStr && (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <LocationOnIcon sx={{ color: "#2563EB", fontSize: 20 }} />
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: 0 }}>
+                <LocationOnIcon sx={{ color: "#2563EB", fontSize: 20, flexShrink: 0 }} />
                 <Typography
                   variant="body2"
-                  sx={{ color: "#475569", fontWeight: 600 }}
+                  sx={{ color: "#475569", fontWeight: 600, wordBreak: "break-word" }}
                 >
                   {addressStr}
                 </Typography>
@@ -403,7 +405,7 @@ export const HomestayDetailPage: React.FC = () => {
             <Paper
               elevation={0}
               sx={{
-                p: 3.5,
+                p: { xs: 2, sm: 3.5 },
                 borderRadius: "20px",
                 bgcolor: "#FFFFFF",
                 border: "1px solid #E2E8F0",

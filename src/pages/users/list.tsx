@@ -345,14 +345,17 @@ export function UsersList() {
       <HeaderTitle>User List</HeaderTitle>
 
       <Card
-        elevation={1}
+        elevation={0}
         sx={{
-          p: 2,
+          p: { xs: 1.25, sm: 1.5 },
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           flexWrap: "wrap",
-          gap: 2,
+          gap: 1.5,
+          borderRadius: "12px",
+          border: "1px solid #E2E8F0",
+          bgcolor: "#FFFFFF",
         }}
       >
         <TextField
@@ -372,13 +375,29 @@ export function UsersList() {
               ),
             },
           }}
-          sx={{ width: { xs: "100%", sm: 320 } }}
+          sx={{
+            width: { xs: "100%", sm: 320 },
+            "& .MuiOutlinedInput-root": {
+              height: 40,
+              borderRadius: "8px",
+              bgcolor: "#F8FAFC",
+              fontSize: "0.875rem",
+            },
+          }}
         />
         <Button
           variant="contained"
           color="primary"
           startIcon={<AddIcon />}
           onClick={() => navigate("/users/create")}
+          sx={{
+            width: { xs: "100%", sm: "auto" },
+            minHeight: 40,
+            borderRadius: "8px",
+            textTransform: "none",
+            fontWeight: 600,
+            boxShadow: "none",
+          }}
         >
           Add User
         </Button>
@@ -389,8 +408,8 @@ export function UsersList() {
         sx={{
           width: "100%",
           bgcolor: "#FFFFFF",
-          borderRadius: "10px",
-          border: "1px solid #E5E7EB",
+          borderRadius: "12px",
+          border: "1px solid #E2E8F0",
           boxShadow: "none",
           overflow: "hidden",
         }}

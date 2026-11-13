@@ -79,6 +79,7 @@ export const TravelMemoryPhotoLightbox: React.FC<
             overflow: "hidden",
             boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
             m: { xs: 1, sm: 2 },
+            width: { xs: "calc(100% - 16px)", sm: "auto" },
           },
         },
       }}
@@ -89,7 +90,7 @@ export const TravelMemoryPhotoLightbox: React.FC<
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          px: 2.5,
+          px: { xs: 1.5, sm: 2.5 },
           py: 1.5,
           borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
         }}
@@ -149,7 +150,7 @@ export const TravelMemoryPhotoLightbox: React.FC<
           alignItems: "center",
           justifyContent: "center",
           bgcolor: "#020617",
-          minHeight: { xs: 300, sm: 460 },
+          minHeight: { xs: 220, sm: 460 },
           maxHeight: "75vh",
           overflow: "hidden",
         }}
@@ -160,7 +161,7 @@ export const TravelMemoryPhotoLightbox: React.FC<
             onClick={handlePrev}
             sx={{
               position: "absolute",
-              left: 12,
+              left: { xs: 6, sm: 12 },
               top: "50%",
               transform: "translateY(-50%)",
               bgcolor: "rgba(15, 23, 42, 0.75)",
@@ -207,7 +208,7 @@ export const TravelMemoryPhotoLightbox: React.FC<
             onClick={handleNext}
             sx={{
               position: "absolute",
-              right: 12,
+              right: { xs: 6, sm: 12 },
               top: "50%",
               transform: "translateY(-50%)",
               bgcolor: "rgba(15, 23, 42, 0.75)",

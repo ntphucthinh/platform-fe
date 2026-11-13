@@ -736,7 +736,15 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
           </Box>
         </Box>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            width: { xs: "100%", sm: "auto" },
+            flexWrap: "wrap",
+          }}
+        >
           <Button
             variant="outlined"
             onClick={onCancel}
@@ -747,6 +755,8 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
               borderRadius: "8px",
               textTransform: "none",
               px: 2,
+              flex: { xs: "1 1 auto", sm: "none" },
+              minHeight: 40,
             }}
           >
             {isEdit ? "Hủy" : "Quay lại"}
@@ -762,6 +772,8 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
               borderRadius: "8px",
               textTransform: "none",
               px: 2,
+              flex: { xs: "1 1 auto", sm: "none" },
+              minHeight: 40,
             }}
           >
             Xem trước
@@ -785,6 +797,8 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
               textTransform: "none",
               px: 2.5,
               boxShadow: "none",
+              flex: { xs: "1 1 100%", sm: "none" },
+              minHeight: 40,
             }}
           >
             {isSubmitting
@@ -1709,11 +1723,13 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
           justifyContent: "flex-end",
           gap: 1.5,
           pt: 2,
+          flexDirection: { xs: "column-reverse", sm: "row" },
         }}
       >
         <Button
           variant="outlined"
           onClick={onCancel}
+          fullWidth
           sx={{
             borderColor: "#CBD5E1",
             color: "#334155",
@@ -1721,6 +1737,8 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             borderRadius: "8px",
             textTransform: "none",
             px: 3,
+            width: { xs: "100%", sm: "auto" },
+            minHeight: 42,
           }}
         >
           {isEdit ? "Hủy" : "Quay lại"}
@@ -1730,6 +1748,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
           variant="contained"
           color="primary"
           disabled={isSubmitting}
+          fullWidth
           startIcon={
             isSubmitting ? (
               <CircularProgress size={18} color="inherit" />
@@ -1744,6 +1763,8 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             textTransform: "none",
             px: 3.5,
             boxShadow: "none",
+            width: { xs: "100%", sm: "auto" },
+            minHeight: 42,
           }}
         >
           {isSubmitting
@@ -1760,7 +1781,15 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
         onClose={() => setActivityModal((prev) => ({ ...prev, open: false }))}
         maxWidth="sm"
         fullWidth
-        slotProps={{ paper: { sx: { borderRadius: "16px" } } }}
+        slotProps={{
+          paper: {
+            sx: {
+              borderRadius: "16px",
+              m: { xs: 1, sm: 2 },
+              width: { xs: "calc(100% - 16px)", sm: "auto" },
+            },
+          },
+        }}
       >
         <DialogTitle
           component="div"
@@ -2006,12 +2035,25 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
           </Box>
         </DialogContent>
 
-        <DialogActions sx={{ px: 3, py: 2 }}>
+        <DialogActions
+          sx={{
+            px: { xs: 2, sm: 3 },
+            py: 2,
+            gap: 1,
+            flexDirection: { xs: "column-reverse", sm: "row" },
+          }}
+        >
           <Button
             onClick={() =>
               setActivityModal((prev) => ({ ...prev, open: false }))
             }
-            sx={{ textTransform: "none", color: "#64748B" }}
+            fullWidth
+            sx={{
+              textTransform: "none",
+              color: "#64748B",
+              width: { xs: "100%", sm: "auto" },
+              minHeight: 42,
+            }}
           >
             Hủy
           </Button>
@@ -2020,12 +2062,15 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             color="primary"
             onClick={handleSaveActivity}
             disabled={!activityModal.title.trim() || !activityModal.time.trim()}
+            fullWidth
             sx={{
               borderRadius: "8px",
               textTransform: "none",
               fontWeight: 600,
               boxShadow: "none",
               px: 2.5,
+              width: { xs: "100%", sm: "auto" },
+              minHeight: 42,
             }}
           >
             Xác nhận
@@ -2039,7 +2084,15 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
         onClose={() => setDayToDelete(null)}
         maxWidth="xs"
         fullWidth
-        slotProps={{ paper: { sx: { borderRadius: "14px" } } }}
+        slotProps={{
+          paper: {
+            sx: {
+              borderRadius: "14px",
+              m: { xs: 1.5, sm: 2 },
+              width: { xs: "calc(100% - 24px)", sm: "auto" },
+            },
+          },
+        }}
       >
         <DialogTitle
           sx={{
@@ -2048,21 +2101,35 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             display: "flex",
             alignItems: "center",
             gap: 1,
+            px: { xs: 2, sm: 3 },
           }}
         >
           <WarningAmberOutlinedIcon color="error" />
           Xóa ngày lịch trình?
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
           <Typography variant="body2" sx={{ color: "#475569" }}>
             Bạn có chắc chắn muốn xóa Ngày {(dayToDelete ?? 0) + 1}? Tất cả các
             hoạt động bên trong ngày này sẽ bị xóa bỏ.
           </Typography>
         </DialogContent>
-        <DialogActions sx={{ px: 2.5, pb: 2 }}>
+        <DialogActions
+          sx={{
+            px: { xs: 2, sm: 2.5 },
+            pb: 2,
+            gap: 1,
+            flexDirection: { xs: "column-reverse", sm: "row" },
+          }}
+        >
           <Button
             onClick={() => setDayToDelete(null)}
-            sx={{ textTransform: "none", color: "#64748B" }}
+            fullWidth
+            sx={{
+              textTransform: "none",
+              color: "#64748B",
+              width: { xs: "100%", sm: "auto" },
+              minHeight: 42,
+            }}
           >
             Hủy bỏ
           </Button>
@@ -2070,11 +2137,14 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             variant="contained"
             color="error"
             onClick={handleConfirmDeleteDay}
+            fullWidth
             sx={{
               borderRadius: "8px",
               textTransform: "none",
               fontWeight: 600,
               boxShadow: "none",
+              width: { xs: "100%", sm: "auto" },
+              minHeight: 42,
             }}
           >
             Xóa ngày

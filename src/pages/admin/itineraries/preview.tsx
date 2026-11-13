@@ -243,6 +243,7 @@ export const ItineraryPreviewPage: React.FC = () => {
               borderRadius: '8px',
               textTransform: 'none',
               px: 2,
+              minHeight: 40,
               '&:hover': {
                 borderColor: '#94A3B8',
                 bgcolor: '#F8FAFC',
@@ -263,6 +264,7 @@ export const ItineraryPreviewPage: React.FC = () => {
               borderRadius: '8px',
               textTransform: 'none',
               px: 2.5,
+              minHeight: 40,
               boxShadow: 'none',
             }}
           >

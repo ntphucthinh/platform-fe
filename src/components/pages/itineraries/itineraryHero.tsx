@@ -40,7 +40,7 @@ export const ItineraryHero: React.FC<ItineraryHeroProps> = ({
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        p: { xs: 2.5, sm: 3.5, md: 4 },
+        p: { xs: 2, sm: 3.5, md: 4 },
       }}
     >
       {/* Background Image */}
@@ -102,7 +102,7 @@ export const ItineraryHero: React.FC<ItineraryHeroProps> = ({
           sx={{
             fontWeight: 800,
             color: '#FFFFFF',
-            fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.5rem' },
+            fontSize: { xs: '1.4rem', sm: '1.9rem', md: '2.5rem' },
             letterSpacing: '-0.02em',
             lineHeight: 1.2,
             textShadow: '0 2px 10px rgba(0,0,0,0.5)',

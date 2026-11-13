@@ -146,12 +146,12 @@ export const HomestayCard: React.FC<HomestayCardProps> = ({ homestay }) => {
         }}
       >
         {/* Location */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.8 }}>
-          <LocationOnIcon sx={{ color: "#2563EB", fontSize: 18 }} />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.8, minWidth: 0 }}>
+          <LocationOnIcon sx={{ color: "#2563EB", fontSize: 18, flexShrink: 0 }} />
           <Typography
             variant="caption"
             noWrap
-            sx={{ color: "#64748B", fontWeight: 600, fontSize: "0.825rem" }}
+            sx={{ color: "#64748B", fontWeight: 600, fontSize: "0.825rem", minWidth: 0 }}
           >
             {homestay.location}
           </Typography>
@@ -171,6 +171,7 @@ export const HomestayCard: React.FC<HomestayCardProps> = ({ homestay }) => {
             WebkitLineClamp: 1,
             WebkitBoxOrient: "vertical",
             overflow: "hidden",
+            wordBreak: "break-word",
           }}
         >
           {homestay.name}
@@ -205,6 +206,8 @@ export const HomestayCard: React.FC<HomestayCardProps> = ({ homestay }) => {
             pt: 1.5,
             borderTop: "1px solid #F1F5F9",
             mt: "auto",
+            minWidth: 0,
+            gap: 1,
           }}
         >
           {(() => {
@@ -215,16 +218,17 @@ export const HomestayCard: React.FC<HomestayCardProps> = ({ homestay }) => {
             const hasPrice = displayPrice !== "Chưa cập nhật giá";
 
             return hasPrice ? (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <AttachMoneyIcon sx={{ color: "primary.main", fontSize: 18 }} />
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: 0, flexShrink: 1 }}>
+                <AttachMoneyIcon sx={{ color: "primary.main", fontSize: 18, flexShrink: 0 }} />
                 <Typography
                   component="span"
-                  noWrap
                   sx={{
                     fontWeight: 800,
                     fontSize: "0.95rem",
                     color: "primary.main",
-                    maxWidth: 160,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {displayPrice}

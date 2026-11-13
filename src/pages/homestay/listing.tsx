@@ -128,7 +128,7 @@ export const HomestayListingPage: React.FC = () => {
               component="h1"
               sx={{
                 fontWeight: 800,
-                fontSize: { xs: "2.25rem", sm: "3rem", md: "3.5rem" },
+                fontSize: { xs: "1.65rem", sm: "2.5rem", md: "3.5rem" },
                 letterSpacing: "-0.03em",
                 lineHeight: 1.15,
                 mb: 2,

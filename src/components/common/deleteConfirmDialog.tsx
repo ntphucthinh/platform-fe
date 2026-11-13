@@ -70,11 +70,13 @@ export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
           sx: {
             borderRadius: "14px",
             p: 1,
+            m: { xs: 1.5, sm: 2 },
+            width: { xs: "calc(100% - 24px)", sm: "auto" },
           },
         },
       }}
     >
-      <DialogTitle component="div" sx={{ pb: 1 }}>
+      <DialogTitle component="div" sx={{ pb: 1, px: { xs: 2, sm: 3 } }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <Box
             sx={{
@@ -91,12 +93,16 @@ export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
           >
             <WarningAmberIcon fontSize="small" />
           </Box>
-          <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
+          <Typography
+            variant="h6"
+            component="h2"
+            sx={{ fontWeight: 600, fontSize: { xs: "1.05rem", sm: "1.25rem" } }}
+          >
             {title}
           </Typography>
         </Box>
       </DialogTitle>
-      <DialogContent sx={{ pt: 1, pb: 2 }}>
+      <DialogContent sx={{ pt: 1, pb: 2, px: { xs: 2, sm: 3 } }}>
         <DialogContentText
           component="div"
           sx={{ color: "text.secondary", fontSize: "0.95rem" }}
@@ -104,19 +110,28 @@ export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
           {message || defaultMessage}
         </DialogContentText>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
+      <DialogActions
+        sx={{
+          px: { xs: 2, sm: 3 },
+          pb: 2,
+          gap: 1,
+          flexDirection: { xs: "column-reverse", sm: "row" },
+        }}
+      >
         <Button
           variant="outlined"
           color="inherit"
           onClick={onClose}
           disabled={isLoading}
+          fullWidth
           sx={{
             borderColor: "divider",
             color: "text.primary",
             textTransform: "none",
             fontWeight: 500,
             borderRadius: "8px",
-            minHeight: 38,
+            minHeight: 42,
+            width: { xs: "100%", sm: "auto" },
             px: 2,
             "&:focus-visible": {
               outline: "2px solid #1976D2",
@@ -131,6 +146,7 @@ export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
           color="error"
           onClick={handleConfirm}
           disabled={isLoading}
+          fullWidth
           startIcon={
             isLoading ? (
               <CircularProgress size={16} color="inherit" />
@@ -141,7 +157,8 @@ export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
             fontWeight: 600,
             boxShadow: "none",
             borderRadius: "8px",
-            minHeight: 38,
+            minHeight: 42,
+            width: { xs: "100%", sm: "auto" },
             px: 2,
             "&:hover": {
               boxShadow: "none",

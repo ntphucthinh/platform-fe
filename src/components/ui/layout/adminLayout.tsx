@@ -43,8 +43,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <Box
           sx={{
             flex: 1,
-            p: { xs: 2, sm: 3, md: 4 },
+            p: { xs: 1.5, sm: 2.5, md: 3 },
+            pb: {
+              xs: 'calc(16px + env(safe-area-inset-bottom, 0px))',
+              sm: 2.5,
+              md: 3,
+            },
             maxWidth: '100%',
+            overflowX: 'hidden',
           }}
         >
           {children || <Outlet />}

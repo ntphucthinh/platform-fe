@@ -883,7 +883,7 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
         ref={mapContainerRef}
         sx={{
           width: "100%",
-          height: { xs: 340, sm: 420, md: 450 },
+          height: { xs: 240, sm: 360, md: 450 },
           bgcolor: "#E2E8F0",
           cursor: "crosshair !important",
           "& .leaflet-container": {
@@ -1370,8 +1370,8 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          px: 3,
-          pt: 2.5,
+          px: { xs: 2, sm: 3 },
+          pt: { xs: 2, sm: 2.5 },
           pb: 1.5,
           borderBottom: "1px solid #F1F5F9",
         }}
@@ -1421,7 +1421,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ px: 3, pt: "14px !important", pb: 2.5 }}>
+      <DialogContent sx={{ px: { xs: 2, sm: 3 }, pt: "14px !important", pb: 2.5 }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {/* BỘ CHỌN 2 TRƯỜNG CÙNG HÀNG: QUỐC GIA & TÊN ĐIỂM ĐẾN */}
           <Box
@@ -1978,11 +1978,20 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, py: 2, borderTop: "1px solid #F1F5F9" }}>
+      <DialogActions
+        sx={{
+          px: { xs: 2, sm: 3 },
+          py: 2,
+          borderTop: "1px solid #F1F5F9",
+          gap: 1,
+          flexDirection: { xs: "column-reverse", sm: "row" },
+        }}
+      >
         <Button
           variant="outlined"
           onClick={onClose}
           disabled={isSubmitting}
+          fullWidth
           sx={{
             borderRadius: "8px",
             textTransform: "none",
@@ -1990,6 +1999,8 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
             color: "#64748B",
             borderColor: "#CBD5E1",
             px: 2.5,
+            width: { xs: "100%", sm: "auto" },
+            minHeight: 42,
           }}
         >
           Hủy
@@ -1999,6 +2010,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
           color="primary"
           onClick={handleSave}
           disabled={isSubmitting}
+          fullWidth
           startIcon={
             isSubmitting ? <CircularProgress size={16} color="inherit" /> : null
           }
@@ -2008,6 +2020,8 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
             fontWeight: 600,
             px: 3.5,
             boxShadow: "none",
+            width: { xs: "100%", sm: "auto" },
+            minHeight: 42,
           }}
         >
           {isSubmitting ? "Đang lưu..." : isEdit ? "Cập nhật" : "Lưu điểm đến"}
@@ -2034,8 +2048,9 @@ export const LocationFormDialog: React.FC<LocationFormDialogProps> = ({
         paper: {
           sx: {
             borderRadius: "16px",
-            maxHeight: "92vh",
-            width: "100%",
+            maxHeight: { xs: "96vh", sm: "92vh" },
+            m: { xs: 1, sm: 2 },
+            width: { xs: "calc(100% - 16px)", sm: "100%" },
           },
         },
       }}

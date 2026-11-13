@@ -66,7 +66,13 @@ export const HomestayDetailDialog: React.FC<HomestayDetailDialogProps> = ({
       fullWidth
       slotProps={{
         paper: {
-          sx: { borderRadius: "16px", p: 1 },
+          sx: {
+            borderRadius: "14px",
+            p: 1,
+            m: { xs: 1, sm: 2 },
+            width: { xs: "calc(100% - 16px)", sm: "100%" },
+            maxHeight: { xs: "calc(100% - 16px)", sm: "calc(100% - 64px)" },
+          },
         },
       }}
     >
@@ -77,13 +83,28 @@ export const HomestayDetailDialog: React.FC<HomestayDetailDialogProps> = ({
           justifyContent: "space-between",
           alignItems: "center",
           pb: 1,
+          px: { xs: 2, sm: 3 },
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.25,
+            flexWrap: "wrap",
+            minWidth: 0,
+            pr: 1,
+          }}
+        >
           <Typography
             variant="h6"
             component="h2"
-            sx={{ fontWeight: 700, color: "#172033" }}
+            sx={{
+              fontWeight: 700,
+              color: "#172033",
+              fontSize: { xs: "1.05rem", sm: "1.25rem" },
+              wordBreak: "break-word",
+            }}
           >
             {homestay.name}
           </Typography>
@@ -195,8 +216,18 @@ export const HomestayDetailDialog: React.FC<HomestayDetailDialogProps> = ({
         </Grid>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose} variant="contained" color="primary">
+      <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 2 }}>
+        <Button
+          onClick={onClose}
+          variant="contained"
+          color="primary"
+          fullWidth
+          sx={{
+            width: { xs: "100%", sm: "auto" },
+            minHeight: 42,
+            borderRadius: "8px",
+          }}
+        >
           Đóng Xem Trước
         </Button>
       </DialogActions>

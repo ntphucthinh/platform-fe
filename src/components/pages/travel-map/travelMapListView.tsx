@@ -7,14 +7,12 @@ import {
   CardMedia,
   Chip,
   Button,
-  IconButton,
   useTheme,
   useMediaQuery,
 } from "@mui/material";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import CollectionsBookmarkOutlinedIcon from "@mui/icons-material/CollectionsBookmarkOutlined";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import SearchOffOutlinedIcon from "@mui/icons-material/SearchOffOutlined";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
@@ -41,15 +39,10 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
   onResetFilters,
   filters,
 }) => {
-
-  // Responsive Breakpoint logic:
-  // Desktop (lg+): 5 columns x 2 rows = 10 items max (5 5 giống memory)
-  // Tablet (sm-md): 2 columns x 2 rows = 4 items max
-  // Mobile (xs): 1 column x 2 rows = 2 items max
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "lg"));
-  const itemsPerGroup = isMobile ? 2 : isTablet ? 4 : 10;
+  const itemsPerGroup = isMobile ? 4 : isTablet ? 6 : 10;
   const prefersReducedMotion = useMediaQuery(
     "@media (prefers-reduced-motion: reduce)",
   );
@@ -114,18 +107,12 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
     }
   };
 
-  const handleGoToGroup = (targetGroup: number) => {
-    if (targetGroup === currentGroup) return;
-    setSlideDirection(targetGroup > currentGroup ? "next" : "prev");
-    setCurrentGroup(targetGroup);
-  };
-
   if (locations.length === 0) {
     return (
       <Card
         elevation={0}
         sx={{
-          borderRadius: "16px",
+          borderRadius: "14px",
           border: "1px dashed #CBD5E1",
           bgcolor: "#F8FAFC",
           p: { xs: 4, sm: 6 },
@@ -134,8 +121,8 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
       >
         <Box
           sx={{
-            width: 56,
-            height: 56,
+            width: 52,
+            height: 52,
             borderRadius: "50%",
             bgcolor: "#EFF6FF",
             color: "#1976D2",
@@ -146,20 +133,20 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
             mb: 2,
           }}
         >
-          <SearchOffOutlinedIcon sx={{ fontSize: 32 }} />
+          <SearchOffOutlinedIcon sx={{ fontSize: 28 }} />
         </Box>
         <Typography
           variant="h6"
-          sx={{ fontWeight: 700, color: "#0F172A", mb: 0.5 }}
+          sx={{ fontWeight: 700, color: "#0F172A", mb: 0.5, fontSize: "1.1rem" }}
         >
           Không tìm thấy địa điểm nào
         </Typography>
         <Typography
           variant="body2"
-          sx={{ color: "#64748B", maxWidth: 460, mx: "auto", mb: 2.5 }}
+          sx={{ color: "#64748B", maxWidth: 440, mx: "auto", mb: 2.5 }}
         >
-          Không có địa điểm nào phù hợp với từ khóa hoặc bộ lọc đã chọn. Hãy thử
-          thay đổi từ khóa tìm kiếm hoặc làm mới bộ lọc.
+          Không có địa điểm nào phù hợp với bộ lọc hiện tại. Hãy thử chọn quốc gia
+          khác hoặc làm mới bộ lọc.
         </Typography>
         <Button
           variant="outlined"
@@ -174,119 +161,30 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
   }
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5, width: "100%" }}>
-      {/* List Header & Navigation Controls */}
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, width: "100%" }}>
+      {/* List Header */}
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 1.5,
+          minHeight: 28,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-          <Typography
-            variant="subtitle1"
-            sx={{
-              fontWeight: 700,
-              color: "text.primary",
-              fontSize: "1.05rem",
-            }}
-          >
-            Danh sách địa điểm
-          </Typography>
-          <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            ({totalLocations} địa điểm · Đang xem {startItem}–{endItem})
-          </Typography>
-        </Box>
-
-        {/* Navigation Controls: Previous / Next buttons */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Typography
-            variant="caption"
-            sx={{
-              color: "text.secondary",
-              fontWeight: 600,
-              display: { xs: "none", sm: "block" },
-            }}
-          >
-            Nhóm {currentGroup + 1} / {totalGroups}
-          </Typography>
-
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-            <IconButton
-              size="small"
-              onClick={handlePrevGroup}
-              disabled={currentGroup === 0 || totalGroups <= 1}
-              aria-label="Nhóm trước"
-              sx={{
-                border: "1px solid",
-                borderColor:
-                  currentGroup === 0 || totalGroups <= 1
-                    ? "#E2E8F0"
-                    : "#CBD5E1",
-                bgcolor: "#FFFFFF",
-                borderRadius: "8px",
-                width: 36,
-                height: 36,
-                color:
-                  currentGroup === 0 || totalGroups <= 1
-                    ? "action.disabled"
-                    : "text.primary",
-                transition: "all 0.15s ease-in-out",
-                "&:hover": {
-                  bgcolor: "#F8FAFC",
-                  borderColor: "primary.main",
-                  color: "primary.main",
-                },
-                "&.Mui-disabled": {
-                  borderColor: "#E2E8F0",
-                  bgcolor: "#F8FAFC",
-                },
-              }}
-            >
-              <ChevronLeftRoundedIcon fontSize="small" />
-            </IconButton>
-
-            <IconButton
-              size="small"
-              onClick={handleNextGroup}
-              disabled={currentGroup >= totalGroups - 1 || totalGroups <= 1}
-              aria-label="Nhóm tiếp theo"
-              sx={{
-                border: "1px solid",
-                borderColor:
-                  currentGroup >= totalGroups - 1 || totalGroups <= 1
-                    ? "#E2E8F0"
-                    : "#CBD5E1",
-                bgcolor: "#FFFFFF",
-                borderRadius: "8px",
-                width: 36,
-                height: 36,
-                color:
-                  currentGroup >= totalGroups - 1 || totalGroups <= 1
-                    ? "action.disabled"
-                    : "text.primary",
-                transition: "all 0.15s ease-in-out",
-                "&:hover": {
-                  bgcolor: "#F8FAFC",
-                  borderColor: "primary.main",
-                  color: "primary.main",
-                },
-                "&.Mui-disabled": {
-                  borderColor: "#E2E8F0",
-                  bgcolor: "#F8FAFC",
-                },
-              }}
-            >
-              <ChevronRightRoundedIcon fontSize="small" />
-            </IconButton>
-          </Box>
-        </Box>
+        <Typography
+          variant="subtitle1"
+          sx={{
+            fontWeight: 700,
+            color: "text.primary",
+            fontSize: "1rem",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          Danh sách địa điểm ({totalLocations})
+        </Typography>
       </Box>
 
-      {/* Grid: 4 cols Desktop, 2 cols Tablet, 1 col Mobile */}
+      {/* Grid: 5 cols Desktop, 2 cols Tablet, 1 col Mobile */}
       <Box
         key={currentGroup}
         sx={{
@@ -294,16 +192,17 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
           gridTemplateColumns: {
             xs: "1fr",
             sm: "repeat(2, 1fr)",
+            md: "repeat(3, 1fr)",
             lg: "repeat(5, 1fr)",
           },
           gap: 2,
           animation: prefersReducedMotion
             ? "none"
-            : `${slideDirection === "next" ? "slideNext" : "slidePrev"} 240ms cubic-bezier(0.22, 1, 0.36, 1)`,
+            : `${slideDirection === "next" ? "slideNext" : "slidePrev"} 220ms cubic-bezier(0.22, 1, 0.36, 1)`,
           "@keyframes slideNext": {
             "0%": {
               opacity: 0,
-              transform: "translateX(16px)",
+              transform: "translateX(12px)",
             },
             "100%": {
               opacity: 1,
@@ -313,7 +212,7 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
           "@keyframes slidePrev": {
             "0%": {
               opacity: 0,
-              transform: "translateX(-16px)",
+              transform: "translateX(-12px)",
             },
             "100%": {
               opacity: 1,
@@ -340,7 +239,7 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                 }
               }}
               sx={{
-                borderRadius: "16px",
+                borderRadius: "14px",
                 border: isSelected
                   ? "2px solid #1976D2"
                   : "1px solid #E2E8F0",
@@ -349,13 +248,13 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                 display: "flex",
                 flexDirection: "column",
                 height: "100%",
-                transition: "all 0.2s ease-in-out",
+                transition: "all 0.18s ease-in-out",
                 boxShadow: isSelected
-                  ? "0 4px 16px rgba(25, 118, 210, 0.15)"
+                  ? "0 4px 14px rgba(25, 118, 210, 0.14)"
                   : "none",
                 "&:hover": {
-                  transform: "translateY(-3px)",
-                  boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 6px 16px rgba(0,0,0,0.06)",
                   borderColor: isSelected ? "primary.main" : "#CBD5E1",
                 },
                 "&:focus-visible": {
@@ -379,7 +278,7 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                   component="img"
                   loading="lazy"
                   decoding="async"
-                  height="145"
+                  height="140"
                   image={loc.coverImage || DEFAULT_NO_IMAGE}
                   alt={loc.locationName || loc.name}
                   onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -405,33 +304,34 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                   size="small"
                   sx={{
                     position: "absolute",
-                    top: 12,
-                    right: 12,
+                    top: 10,
+                    right: 10,
                     bgcolor: isVisited ? "#059669" : "#D97706",
                     color: "#FFFFFF",
                     fontWeight: 700,
-                    fontSize: "0.75rem",
+                    fontSize: "0.725rem",
                     borderRadius: "6px",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.18)",
+                    height: 22,
                   }}
                 />
               </Box>
 
               <CardContent
                 sx={{
-                  p: 2,
+                  p: 1.75,
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "space-between",
                 }}
               >
-                <Box sx={{ mb: 1.5 }}>
+                <Box sx={{ mb: 1.25 }}>
                   <Box
                     sx={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 1,
+                      gap: 0.75,
                       mb: 0.5,
                       minWidth: 0,
                     }}
@@ -440,8 +340,8 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                       <Box
                         component="img"
                         loading="lazy"
-                        width="20"
-                        height="13"
+                        width="18"
+                        height="12"
                         src={`https://flagcdn.com/${loc.countryCode.toLowerCase()}.svg`}
                         alt={loc.countryCode}
                         onError={(e) => {
@@ -461,7 +361,7 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                       sx={{
                         fontWeight: 700,
                         color: "#0F172A",
-                        fontSize: { xs: "0.95rem", sm: "1rem" },
+                        fontSize: "0.95rem",
                         lineHeight: 1.35,
                         minWidth: 0,
                       }}
@@ -476,18 +376,18 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                       alignItems: "center",
                       gap: 0.5,
                       color: "#64748B",
-                      fontSize: "0.85rem",
-                      mb: 1.25,
+                      fontSize: "0.825rem",
+                      mb: 1,
                       minWidth: 0,
                     }}
                   >
                     <LocationOnOutlinedIcon
-                      sx={{ fontSize: 16, color: "#94A3B8", flexShrink: 0 }}
+                      sx={{ fontSize: 15, color: "#94A3B8", flexShrink: 0 }}
                     />
                     <Typography
                       variant="body2"
                       noWrap
-                      sx={{ color: "#64748B", fontSize: "0.825rem", minWidth: 0 }}
+                      sx={{ color: "#64748B", fontSize: "0.8rem", minWidth: 0 }}
                     >
                       {loc.address}
                     </Typography>
@@ -498,7 +398,7 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                       variant="body2"
                       sx={{
                         color: "#475569",
-                        fontSize: "0.85rem",
+                        fontSize: "0.825rem",
                         lineHeight: 1.45,
                         display: "-webkit-box",
                         WebkitLineClamp: 2,
@@ -511,80 +411,62 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                   )}
                 </Box>
 
-                {/* Bottom stats row */}
+                {/* Bottom stats row (without redundant button) */}
                 <Box
                   sx={{
-                    pt: 1.5,
+                    pt: 1.25,
                     borderTop: "1px solid #F1F5F9",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    gap: 0.5,
+                    gap: 0.75,
                   }}
                 >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                      color: "#0F172A",
+                      fontSize: "0.8rem",
+                      fontWeight: 600,
+                      minWidth: 0,
+                    }}
+                  >
+                    <CollectionsBookmarkOutlinedIcon
+                      sx={{ fontSize: 15, color: "#1976D2", flexShrink: 0 }}
+                    />
+                    <Typography
+                      variant="caption"
+                      noWrap
+                      sx={{ color: "#0F172A", fontWeight: 600, fontSize: "0.775rem" }}
+                    >
+                      {loc.visitCount > 0
+                        ? `${loc.visitCount} chuyến`
+                        : "Chưa có chuyến"}
+                    </Typography>
+                  </Box>
+
+                  {loc.latestVisitDate && (
                     <Box
                       sx={{
                         display: "flex",
                         alignItems: "center",
-                        gap: 0.5,
-                        color: "#0F172A",
-                        fontSize: "0.8rem",
-                        fontWeight: 600,
-                        minWidth: 0,
+                        gap: 0.25,
+                        color: "#64748B",
+                        fontSize: "0.75rem",
+                        flexShrink: 0,
                       }}
                     >
-                      <CollectionsBookmarkOutlinedIcon
-                        sx={{ fontSize: 15, color: "#1976D2", flexShrink: 0 }}
-                      />
+                      <CalendarMonthOutlinedIcon sx={{ fontSize: 13 }} />
                       <Typography
                         variant="caption"
-                        noWrap
-                        sx={{ color: "#0F172A", fontWeight: 600, fontSize: "0.8rem" }}
+                        sx={{ color: "#64748B", fontSize: "0.75rem" }}
                       >
-                        {loc.visitCount > 0
-                          ? `${loc.visitCount} chuyến`
-                          : "Chưa có chuyến"}
+                        {dayjs(loc.latestVisitDate).format("MM/YYYY")}
                       </Typography>
                     </Box>
-
-                    {loc.latestVisitDate && (
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 0.25,
-                          color: "#64748B",
-                          fontSize: "0.75rem",
-                          flexShrink: 0,
-                        }}
-                      >
-                        <CalendarMonthOutlinedIcon sx={{ fontSize: 13 }} />
-                        <Typography variant="caption" sx={{ color: "#64748B", fontSize: "0.75rem" }}>
-                          {dayjs(loc.latestVisitDate).format("MM/YYYY")}
-                        </Typography>
-                      </Box>
-                    )}
-                  </Box>
-
-                  <Button
-                    size="small"
-                    endIcon={<ArrowForwardIcon sx={{ fontSize: 13 }} />}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectLocation(loc.id);
-                    }}
-                    sx={{
-                      textTransform: "none",
-                      fontWeight: 600,
-                      fontSize: "0.8rem",
-                      p: 0,
-                      minWidth: "auto",
-                      flexShrink: 0,
-                    }}
-                  >
-                    Chi tiết
-                  </Button>
+                  )}
                 </Box>
               </CardContent>
             </Card>
@@ -592,78 +474,95 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
         })}
       </Box>
 
-      {/* Progress Info & Dots Indicator */}
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 1.5,
-          mt: 0.5,
-        }}
-      >
-        {/* Progress dots if multiple groups with accessible touch targets */}
-        {totalGroups > 1 && totalGroups <= 12 && (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-            {Array.from({ length: totalGroups }).map((_, idx) => (
-              <Box
-                key={idx}
-                onClick={() => handleGoToGroup(idx)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    handleGoToGroup(idx);
-                  }
-                }}
-                aria-label={`Chuyển đến nhóm ${idx + 1}`}
-                sx={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minHeight: 32,
-                  minWidth: idx === currentGroup ? 32 : 24,
-                  px: 0.5,
-                  cursor: "pointer",
-                  borderRadius: "4px",
-                  "&:focus-visible": {
-                    outline: "2px solid",
-                    outlineColor: "primary.main",
-                    outlineOffset: 2,
-                  },
-                }}
-              >
-                <Box
-                  sx={{
-                    width: idx === currentGroup ? 24 : 8,
-                    height: 8,
-                    borderRadius: "4px",
-                    bgcolor:
-                      idx === currentGroup ? "primary.main" : "text.disabled",
-                    transition: "all 0.25s cubic-bezier(0.22, 1, 0.36, 1)",
-                    "&:hover": {
-                      bgcolor:
-                        idx === currentGroup
-                          ? "primary.main"
-                          : "text.secondary",
-                    },
-                  }}
-                />
-              </Box>
-            ))}
-          </Box>
-        )}
-
-        {/* Progress text indicator */}
-        <Typography
-          variant="body2"
-          sx={{ color: "text.secondary", fontWeight: 500 }}
+      {/* Unified Bottom Pagination */}
+      {totalGroups > 1 && (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            pt: 2,
+            borderTop: "1px solid #E2E8F0",
+            flexWrap: "wrap",
+            gap: 1.5,
+            mt: 0.5,
+          }}
         >
-          Đang xem {startItem}–{endItem} trong {totalLocations} địa điểm
-        </Typography>
-      </Box>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              fontSize: "0.85rem",
+              fontWeight: 500,
+              width: { xs: "100%", sm: "auto" },
+            }}
+          >
+            Đang xem {startItem}–{endItem} trong {totalLocations} địa điểm
+          </Typography>
+
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              width: { xs: "100%", sm: "auto" },
+              justifyContent: { xs: "space-between", sm: "flex-end" },
+            }}
+          >
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<ChevronLeftRoundedIcon />}
+              disabled={currentGroup === 0}
+              onClick={handlePrevGroup}
+              sx={{
+                borderRadius: "8px",
+                textTransform: "none",
+                fontWeight: 600,
+                fontSize: "0.825rem",
+                borderColor: "#CBD5E1",
+                color: "text.primary",
+                minHeight: 36,
+                "&:hover": { borderColor: "primary.main", bgcolor: "#F8FAFC" },
+              }}
+            >
+              Trước
+            </Button>
+
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 600,
+                color: "text.secondary",
+                px: 1,
+                fontSize: "0.825rem",
+              }}
+            >
+              Trang {currentGroup + 1} / {totalGroups}
+            </Typography>
+
+            <Button
+              size="small"
+              variant="outlined"
+              endIcon={<ChevronRightRoundedIcon />}
+              disabled={currentGroup >= totalGroups - 1}
+              onClick={handleNextGroup}
+              sx={{
+                borderRadius: "8px",
+                textTransform: "none",
+                fontWeight: 600,
+                fontSize: "0.825rem",
+                borderColor: "#CBD5E1",
+                color: "text.primary",
+                minHeight: 36,
+                "&:hover": { borderColor: "primary.main", bgcolor: "#F8FAFC" },
+              }}
+            >
+              Sau
+            </Button>
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 };

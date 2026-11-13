@@ -226,15 +226,30 @@ export const TravelMapDetailPage: React.FC = () => {
           >
             Bản đồ hành trình
           </Button>
-          <Typography sx={{ color: "#94A3B8" }}>/</Typography>
+          <Typography sx={{ color: "#94A3B8", flexShrink: 0 }}>/</Typography>
           <Typography
-            sx={{ fontWeight: 600, color: "#0F172A", fontSize: "0.95rem" }}
+            sx={{
+              fontWeight: 600,
+              color: "#0F172A",
+              fontSize: "0.95rem",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              maxWidth: { xs: 150, sm: 300, md: 500 },
+            }}
           >
             {details.locationName || details.name}
           </Typography>
         </Box>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            width: { xs: "100%", sm: "auto" },
+          }}
+        >
           <Button
             variant="outlined"
             startIcon={<EditOutlinedIcon fontSize="small" />}
@@ -247,10 +262,12 @@ export const TravelMapDetailPage: React.FC = () => {
               color: "#334155",
               px: 2,
               bgcolor: "#FFFFFF",
+              flex: { xs: 1, sm: "initial" },
+              minHeight: 40,
               "&:hover": { bgcolor: "#F8FAFC", borderColor: "#94A3B8" },
             }}
           >
-            Chỉnh sửa địa điểm
+            Chỉnh sửa
           </Button>
 
           <Button
@@ -264,6 +281,8 @@ export const TravelMapDetailPage: React.FC = () => {
               fontWeight: 600,
               px: 2.25,
               boxShadow: "none",
+              flex: { xs: 1, sm: "initial" },
+              minHeight: 40,
             }}
           >
             Xem trên bản đồ
@@ -414,6 +433,7 @@ export const TravelMapDetailPage: React.FC = () => {
                   fontSize: { xs: "1.75rem", sm: "2.35rem", md: "2.75rem" },
                   letterSpacing: "-0.02em",
                   textShadow: "0 2px 10px rgba(0,0,0,0.4)",
+                  wordBreak: "break-word",
                 }}
               >
                 {details.locationName || details.name}
@@ -429,8 +449,13 @@ export const TravelMapDetailPage: React.FC = () => {
                 fontSize: { xs: "0.9rem", sm: "1rem" },
               }}
             >
-              <LocationOnOutlinedIcon sx={{ fontSize: 20, color: "#93C5FD" }} />
-              <Typography variant="body1" sx={{ color: "inherit" }}>
+              <LocationOnOutlinedIcon
+                sx={{ fontSize: 20, color: "#93C5FD", flexShrink: 0 }}
+              />
+              <Typography
+                variant="body1"
+                sx={{ color: "inherit", wordBreak: "break-word" }}
+              >
                 {details.address}
               </Typography>
             </Box>
@@ -493,25 +518,18 @@ export const TravelMapDetailPage: React.FC = () => {
           display: "grid",
           gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" },
           gap: 2,
+          p: 2.5,
+          bgcolor: "#FFFFFF",
+          borderRadius: "14px",
+          border: "1px solid #E2E8F0",
         }}
       >
-        <Card
-          elevation={0}
-          sx={{
-            borderRadius: "16px",
-            border: "1px solid #E2E8F0",
-            bgcolor: "#FFFFFF",
-            p: 3,
-            display: "flex",
-            alignItems: "center",
-            gap: 2.5,
-          }}
-        >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Box
             sx={{
-              width: 52,
-              height: 52,
-              borderRadius: "12px",
+              width: 44,
+              height: 44,
+              borderRadius: "10px",
               bgcolor: "#EFF6FF",
               border: "1px solid #BFDBFE",
               color: "#1976D2",
@@ -521,58 +539,40 @@ export const TravelMapDetailPage: React.FC = () => {
               flexShrink: 0,
             }}
           >
-            <FlightTakeoffRoundedIcon sx={{ fontSize: 28 }} />
+            <FlightTakeoffRoundedIcon sx={{ fontSize: 22 }} />
           </Box>
           <Box>
-            <Typography
-              variant="caption"
-              sx={{
-                color: "#64748B",
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.04em",
-              }}
-            >
+            <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 500 }}>
               Lần ghé thăm
             </Typography>
             <Typography
-              variant="h4"
+              variant="h5"
               sx={{
-                fontWeight: 800,
+                fontWeight: 700,
                 color: "text.primary",
-                lineHeight: 1.1,
-                my: 0.25,
+                lineHeight: 1.2,
                 fontVariantNumeric: "tabular-nums",
               }}
             >
               {details.visitCount}
             </Typography>
-            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              {details.visitCount > 0
-                ? "Chuyến đi đã hoàn thành"
-                : "Chưa có chuyến đi nào"}
-            </Typography>
           </Box>
-        </Card>
+        </Box>
 
-        <Card
-          elevation={0}
+        <Box
           sx={{
-            borderRadius: "16px",
-            border: "1px solid",
-            borderColor: "divider",
-            bgcolor: "background.paper",
-            p: 3,
             display: "flex",
             alignItems: "center",
-            gap: 2.5,
+            gap: 2,
+            borderLeft: { sm: "1px solid #E2E8F0" },
+            pl: { sm: 2.5 },
           }}
         >
           <Box
             sx={{
-              width: 52,
-              height: 52,
-              borderRadius: "12px",
+              width: 44,
+              height: 44,
+              borderRadius: "10px",
               bgcolor: "#ECFDF5",
               border: "1px solid #A7F3D0",
               color: "#059669",
@@ -582,58 +582,40 @@ export const TravelMapDetailPage: React.FC = () => {
               flexShrink: 0,
             }}
           >
-            <PhotoCameraBackOutlinedIcon sx={{ fontSize: 28 }} />
+            <PhotoCameraBackOutlinedIcon sx={{ fontSize: 22 }} />
           </Box>
           <Box>
-            <Typography
-              variant="caption"
-              sx={{
-                color: "text.secondary",
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.04em",
-              }}
-            >
+            <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 500 }}>
               Ảnh kỷ niệm
             </Typography>
             <Typography
-              variant="h4"
+              variant="h5"
               sx={{
-                fontWeight: 800,
+                fontWeight: 700,
                 color: "text.primary",
-                lineHeight: 1.1,
-                my: 0.25,
+                lineHeight: 1.2,
                 fontVariantNumeric: "tabular-nums",
               }}
             >
               {details.totalPhotos}
             </Typography>
-            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              {details.totalPhotos > 0
-                ? "Khoảnh khắc được lưu lại"
-                : "0 ảnh lưu giữ"}
-            </Typography>
           </Box>
-        </Card>
+        </Box>
 
-        <Card
-          elevation={0}
+        <Box
           sx={{
-            borderRadius: "16px",
-            border: "1px solid",
-            borderColor: "divider",
-            bgcolor: "background.paper",
-            p: 3,
             display: "flex",
             alignItems: "center",
-            gap: 2.5,
+            gap: 2,
+            borderLeft: { sm: "1px solid #E2E8F0" },
+            pl: { sm: 2.5 },
           }}
         >
           <Box
             sx={{
-              width: 52,
-              height: 52,
-              borderRadius: "12px",
+              width: 44,
+              height: 44,
+              borderRadius: "10px",
               bgcolor: "#FFFBEB",
               border: "1px solid #FDE68A",
               color: "#D97706",
@@ -643,27 +625,18 @@ export const TravelMapDetailPage: React.FC = () => {
               flexShrink: 0,
             }}
           >
-            <CalendarMonthOutlinedIcon sx={{ fontSize: 28 }} />
+            <CalendarMonthOutlinedIcon sx={{ fontSize: 22 }} />
           </Box>
           <Box>
-            <Typography
-              variant="caption"
-              sx={{
-                color: "text.secondary",
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.04em",
-              }}
-            >
+            <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 500 }}>
               Lần gần nhất
             </Typography>
             <Typography
               variant="h5"
               sx={{
-                fontWeight: 800,
+                fontWeight: 700,
                 color: "text.primary",
                 lineHeight: 1.2,
-                my: 0.5,
               }}
             >
               {details.latestVisitDate
@@ -673,11 +646,8 @@ export const TravelMapDetailPage: React.FC = () => {
                   )
                 : "Chưa có dữ liệu"}
             </Typography>
-            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              {details.latestVisitDate ? "Thời điểm ghé thăm" : "—"}
-            </Typography>
           </Box>
-        </Card>
+        </Box>
       </Box>
 
       {/* 4. History of Visits (Các chuyến đi đã thực hiện) */}

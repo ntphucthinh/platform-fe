@@ -100,7 +100,8 @@ export const Header = ({ onToggleSidebar }: HeaderProps) => {
       <Toolbar
         sx={{
           justifyContent: "space-between",
-          px: { xs: 2, sm: 3 },
+          px: { xs: 1.5, sm: 3 },
+          minHeight: { xs: 56, sm: 64 },
           zIndex: 1,
           position: "relative",
         }}
@@ -110,7 +111,12 @@ export const Header = ({ onToggleSidebar }: HeaderProps) => {
             aria-label="toggle sidebar"
             onClick={onToggleSidebar}
             edge="start"
-            sx={{ color: "#FFFFFF", flexShrink: 0 }}
+            sx={{
+              color: "#FFFFFF",
+              flexShrink: 0,
+              width: 40,
+              height: 40,
+            }}
           >
             <MenuIcon />
           </IconButton>
@@ -142,6 +148,8 @@ export const Header = ({ onToggleSidebar }: HeaderProps) => {
                   gap: 0.5,
                   borderRadius: "24px",
                   color: "#FFFFFF",
+                  minWidth: 40,
+                  minHeight: 40,
                   "&:hover": {
                     bgcolor: "rgba(255, 255, 255, 0.14)",
                   },

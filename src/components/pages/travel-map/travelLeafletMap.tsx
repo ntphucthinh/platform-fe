@@ -160,7 +160,7 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
       const isVisited = loc.status === LocationStatus.Visited;
 
       // SVG Icon Pin
-      const pinColor = isVisited ? "#1976D2" : "#D97706";
+      const pinColor = isVisited ? "#059669" : "#D97706";
       const badgeText =
         isVisited && loc.visitCount > 1 ? `${loc.visitCount}` : "";
 
@@ -192,7 +192,7 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
             justify-content: center;
             box-shadow: ${
               isSelected
-                ? `0 0 0 3px rgba(25, 118, 210, 0.3), 0 4px 10px rgba(0,0,0,0.25)`
+                ? `0 0 0 3px ${isVisited ? "rgba(5, 150, 105, 0.35)" : "rgba(217, 119, 6, 0.35)"}, 0 4px 10px rgba(0,0,0,0.25)`
                 : `0 2px 5px rgba(0,0,0,0.2)`
             };
             transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -522,7 +522,7 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
               width: 12,
               height: 12,
               borderRadius: "50%",
-              bgcolor: "#1976D2",
+              bgcolor: "#059669",
             }}
           />
           <Typography variant="caption" sx={{ fontWeight: 600, color: "#334155" }}>

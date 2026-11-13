@@ -126,7 +126,7 @@ export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: Si
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: '#FFFFFF' }}>
       <Box
         sx={{
-          height: 64,
+          height: { xs: 56, sm: 64 },
           display: 'flex',
           alignItems: 'center',
           px: isCollapsed && !isMobile ? 2 : 3,
@@ -249,7 +249,7 @@ export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: Si
                             selected={isSubSelected}
                             onClick={() => handleSubItemClick(subItem.path)}
                             sx={{
-                              minHeight: 38,
+                              minHeight: { xs: 44, sm: 38 },
                               pl: 6.5,
                               pr: 2,
                               borderRadius: '8px',
@@ -300,7 +300,15 @@ export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: Si
         open={mobileOpen}
         onClose={onMobileClose}
         ModalProps={{ keepMounted: true }}
-        sx={{ '& .MuiDrawer-paper': { boxSizing: 'border-box', width: SIDEBAR_WIDTH, bgcolor: '#FFFFFF', borderRight: '1px solid #E7ECF2' } }}
+        sx={{
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: { xs: 260, sm: SIDEBAR_WIDTH },
+            maxWidth: '85vw',
+            bgcolor: '#FFFFFF',
+            borderRight: '1px solid #E7ECF2',
+          },
+        }}
       >
         {drawerContent}
       </Drawer>

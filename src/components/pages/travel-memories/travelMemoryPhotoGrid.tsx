@@ -238,8 +238,8 @@ export const TravelMemoryPhotoGrid: React.FC<TravelMemoryPhotoGridProps> = ({
                       ? "primary.main"
                       : "rgba(15, 23, 42, 0.55)",
                     color: "#FFFFFF",
-                    width: { xs: 32, sm: 28 },
-                    height: { xs: 32, sm: 28 },
+                    width: { xs: 36, sm: 28 },
+                    height: { xs: 36, sm: 28 },
                     p: 0,
                     "&:hover": {
                       bgcolor: isSelected

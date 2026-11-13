@@ -3,7 +3,6 @@ import {
   Box,
   Typography,
   Card,
-  CardContent,
   Button,
   IconButton,
   Snackbar,
@@ -16,7 +15,8 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import CollectionsBookmarkOutlinedIcon from "@mui/icons-material/CollectionsBookmarkOutlined";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
-import PhotoLibraryOutlinedIcon from "@mui/icons-material/PhotoLibraryOutlined";
+import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
@@ -194,6 +194,19 @@ export const TravelMemoryListPage: React.FC = () => {
     });
   };
 
+  const isFiltered = Boolean(parsedYear) || Boolean(countryParam) || Boolean(locationParam);
+
+  const handleResetFilters = () => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("page", "1");
+      next.delete("year");
+      next.delete("country");
+      next.delete("locationId");
+      return next;
+    });
+  };
+
   // Delete modal state
   const [itemToDelete, setItemToDelete] = useState<ITravelMemory | null>(null);
 
@@ -300,365 +313,339 @@ export const TravelMemoryListPage: React.FC = () => {
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3, pb: 4 }}>
       <HeaderTitle>Kỷ niệm chuyến đi</HeaderTitle>
 
-      {/* 5.1 Page Header */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: { xs: "flex-start", sm: "center" },
-          flexDirection: { xs: "column", sm: "row" },
-          gap: 2,
-        }}
-      >
-        <Box>
-          <Typography
-            variant="h5"
-            component="h1"
-            sx={{
-              fontWeight: 700,
-              color: "text.primary",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            Kỷ niệm chuyến đi
-          </Typography>
-          <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
-            Lưu giữ những hành trình và khoảnh khắc đáng nhớ.
-          </Typography>
-        </Box>
-
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={() => navigate("/admin/travel-memories/create")}
-          sx={{
-            textTransform: "none",
-            fontWeight: 600,
-            borderRadius: "8px",
-            boxShadow: "none",
-            alignSelf: { xs: "stretch", sm: "auto" },
-          }}
-        >
-          Thêm chuyến đi
-        </Button>
-      </Box>
-
-      {/* 5.2 Summary Cards */}
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            sm: "repeat(3, 1fr)",
-          },
-          gap: { xs: 1.25, sm: 1.5 },
-        }}
-      >
-        {[
-          {
-            title: "Tổng chuyến đi",
-            value: totalTrips,
-            subtitle: "Hành trình đã ghi lại",
-            icon: (
-              <CollectionsBookmarkOutlinedIcon
-                sx={{ fontSize: { xs: 20, sm: 22 }, color: "#1976D2" }}
-              />
-            ),
-            bgColor: "#EFF6FF",
-            borderColor: "#BFDBFE",
-          },
-          {
-            title: "Tổng địa điểm",
-            value: uniqueDestinationsCount,
-            subtitle: "Điểm đến trên khắp cả nước",
-            icon: (
-              <LocationOnOutlinedIcon
-                sx={{ fontSize: { xs: 20, sm: 22 }, color: "#059669" }}
-              />
-            ),
-            bgColor: "#ECFDF5",
-            borderColor: "#A7F3D0",
-          },
-          {
-            title: "Tổng hình ảnh",
-            value: totalPhotosCount,
-            subtitle: "Khoảnh khắc lưu giữ",
-            icon: (
-              <PhotoLibraryOutlinedIcon
-                sx={{ fontSize: { xs: 20, sm: 22 }, color: "#D97706" }}
-              />
-            ),
-            bgColor: "#FFFBEB",
-            borderColor: "#FDE68A",
-          },
-        ].map((c) => (
-          <Card
-            key={c.title}
-            elevation={0}
-            sx={{
-              borderRadius: "12px",
-              border: "1px solid",
-              borderColor: "divider",
-              bgcolor: "background.paper",
-              minHeight: { xs: 70, sm: 75 },
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              transition: "transform 0.15s ease, box-shadow 0.15s ease",
-              "&:hover": {
-                transform: "translateY(-2px)",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-              },
-            }}
-          >
-            <CardContent
-              sx={{
-                py: { xs: 1.25, sm: 1.6 },
-                px: { xs: 1.5, sm: 2 },
-                "&:last-child": { pb: { xs: 1.25, sm: 1.6 } },
-                display: "flex",
-                alignItems: "center",
-                gap: { xs: 1.25, sm: 1.75 },
-              }}
-            >
-              <Box
-                sx={{
-                  width: { xs: 36, sm: 44 },
-                  height: { xs: 36, sm: 44 },
-                  borderRadius: "10px",
-                  bgcolor: c.bgColor,
-                  border: `1px solid ${c.borderColor}`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                {c.icon}
-              </Box>
-
-              <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography
-                  variant="caption"
-                  noWrap
-                  sx={{
-                    display: "block",
-                    fontWeight: 700,
-                    color: "text.secondary",
-                    textTransform: "uppercase",
-                    letterSpacing: { xs: "0.01em", sm: "0.03em" },
-                    fontSize: { xs: "0.62rem", sm: "0.72rem" },
-                    lineHeight: 1.3,
-                    mb: 0.35,
-                  }}
-                >
-                  {c.title}
-                </Typography>
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: { xs: "column", sm: "row" },
-                    alignItems: { xs: "flex-start", sm: "baseline" },
-                    gap: { xs: 0.1, sm: 0.75 },
-                  }}
-                >
-                  <Typography
-                    component="span"
-                    sx={{
-                      fontWeight: 800,
-                      color: "text.primary",
-                      fontSize: { xs: "1.15rem", sm: "1.42rem" },
-                      lineHeight: 1.1,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                  >
-                    {c.value}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    noWrap
-                    sx={{
-                      color: "text.secondary",
-                      fontSize: { xs: "0.68rem", sm: "0.76rem" },
-                      lineHeight: 1.2,
-                      maxWidth: "100%",
-                    }}
-                  >
-                    {c.subtitle}
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        ))}
-      </Box>
-
-      {/* 5.3 Filters Bar */}
+      {/* 5.1 Distilled Control Bar (40px Uniform Controls) */}
       <Card
-        elevation={1}
+        elevation={0}
         sx={{
-          p: 2,
+          p: { xs: 1.25, sm: 1.25 },
           display: "flex",
           alignItems: "center",
+          justifyContent: "space-between",
           flexWrap: "wrap",
-          gap: 2,
+          gap: 1.25,
           borderRadius: "12px",
-          border: "1px solid",
-          borderColor: "divider",
-          bgcolor: "background.paper",
+          border: "1px solid #E2E8F0",
+          bgcolor: "#FFFFFF",
         }}
       >
-        {/* Year Filter (DatePicker chỉ chọn năm) */}
-        <DatePicker
-          views={["year"]}
-          openTo="year"
-          label="Năm"
-          format="YYYY"
-          value={selectedYear}
-          onChange={handleYearChange}
-          sx={{ width: 160 }}
-          slotProps={{
-            field: { clearable: true },
-            actionBar: {
-              actions: ["clear", "accept"],
-            },
-            textField: {
-              size: "small",
-              sx: { width: 160 },
-            },
+        {/* Left Filters */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.25,
+            flexWrap: "wrap",
+            flex: 1,
+            minWidth: 0,
           }}
-        />
+        >
+          {/* Year Filter */}
+          <DatePicker
+            views={["year"]}
+            openTo="year"
+            format="YYYY"
+            value={selectedYear}
+            onChange={handleYearChange}
+            slotProps={{
+              field: { clearable: true },
+              actionBar: { actions: ["clear", "accept"] },
+              textField: {
+                size: "small",
+                sx: {
+                  width: { xs: "100%", sm: 110 },
+                  "& .MuiOutlinedInput-root": {
+                    height: 40,
+                    boxSizing: "border-box",
+                    borderRadius: "8px",
+                    bgcolor: "#F8FAFC",
+                    fontSize: "0.875rem",
+                    "& fieldset": { borderColor: "#CBD5E1" },
+                    "&:hover fieldset": { borderColor: "primary.main" },
+                    "&.Mui-focused fieldset": { borderColor: "primary.main" },
+                    "& .MuiOutlinedInput-input": {
+                      py: "0 !important",
+                      fontSize: "0.875rem",
+                    },
+                  },
+                },
+              },
+            }}
+          />
 
-        {/* Country Filter */}
-        <Autocomplete<IGlobalCountry, false, false, false>
-          size="small"
-          options={countries}
-          getOptionLabel={(option) =>
-            option.vietnameseName !== option.name
-              ? `${option.vietnameseName} (${option.name})`
-              : option.name
-          }
-          value={selectedCountry}
-          isOptionEqualToValue={(option, value) => option.iso2 === value.iso2}
-          onChange={(_, newValue) => {
-            handleCountryChange(newValue ? newValue.iso2 : "");
-          }}
-          sx={{ width: { xs: "100%", sm: 300 } }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Quốc gia"
-              placeholder="Tất cả quốc gia"
-              size="small"
-              slotProps={{
-                ...params.slotProps,
-                input: {
-                  ...params.slotProps?.input,
-                  startAdornment: selectedCountry ? (
-                    <Box
+          {/* Country Filter */}
+          <Autocomplete<IGlobalCountry, false, false, false>
+            size="small"
+            options={countries}
+            getOptionLabel={(option) =>
+              option.vietnameseName !== option.name
+                ? `${option.vietnameseName} (${option.name})`
+                : option.name
+            }
+            value={selectedCountry}
+            isOptionEqualToValue={(option, value) => option.iso2 === value.iso2}
+            onChange={(_, newValue) => {
+              handleCountryChange(newValue ? newValue.iso2 : "");
+            }}
+            sx={{
+              width: { xs: "100%", sm: 220, md: 230 },
+              flexShrink: 0,
+              "& .MuiOutlinedInput-root": {
+                height: 40,
+                boxSizing: "border-box",
+                borderRadius: "8px",
+                bgcolor: "#F8FAFC",
+                fontSize: "0.875rem",
+                "& fieldset": { borderColor: "#CBD5E1" },
+                "&:hover fieldset": { borderColor: "primary.main" },
+                "&.Mui-focused fieldset": { borderColor: "primary.main" },
+                "& .MuiOutlinedInput-input": {
+                  py: "0 !important",
+                  fontSize: "0.875rem",
+                },
+                "& .MuiAutocomplete-input": {
+                  py: "0 !important",
+                  fontSize: "0.875rem",
+                },
+              },
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                placeholder="Tất cả quốc gia..."
+                size="small"
+                slotProps={{
+                  ...params.slotProps,
+                  input: {
+                    ...params.slotProps?.input,
+                    startAdornment: selectedCountry ? (
+                      <Box sx={{ display: "flex", alignItems: "center", pl: 0.25, pr: 0.5 }}>
+                        <Box
+                          component="img"
+                          width="20"
+                          height="14"
+                          src={selectedCountry.flagUrl}
+                          alt={selectedCountry.iso2}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = "none";
+                          }}
+                          sx={{
+                            borderRadius: "2px",
+                            objectFit: "cover",
+                            border: "1px solid #CBD5E1",
+                            flexShrink: 0,
+                          }}
+                        />
+                        {params.slotProps?.input?.startAdornment}
+                      </Box>
+                    ) : (
+                      <Box sx={{ display: "flex", alignItems: "center", pl: 0.25, pr: 0.5, color: "#94A3B8" }}>
+                        <PublicOutlinedIcon sx={{ fontSize: 18, mr: 0.5 }} />
+                        {params.slotProps?.input?.startAdornment}
+                      </Box>
+                    ),
+                  },
+                }}
+              />
+            )}
+            renderOption={(props, option) => {
+              const { key, ...rest } = props;
+              return (
+                <Box
+                  key={key}
+                  component="li"
+                  {...rest}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.25,
+                    py: 0.75,
+                  }}
+                >
+                  <Box
+                    component="img"
+                    loading="lazy"
+                    width="20"
+                    height="14"
+                    src={option.flagUrl}
+                    alt={option.iso2}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                    sx={{
+                      borderRadius: "2px",
+                      objectFit: "cover",
+                      border: "1px solid #CBD5E1",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                    <Typography
                       sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        pl: 0.5,
-                        pr: 0.5,
+                        fontWeight: 600,
+                        fontSize: "13.5px",
+                        color: "#0F172A",
                       }}
                     >
-                      <Box
-                        component="img"
-                        width="22"
-                        height="15"
-                        src={selectedCountry.flagUrl}
-                        alt={selectedCountry.iso2}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = "none";
-                        }}
-                        sx={{
-                          borderRadius: "2px",
-                          objectFit: "cover",
-                          border: "1px solid #CBD5E1",
-                          flexShrink: 0,
-                        }}
-                      />
-                      {params.slotProps?.input?.startAdornment}
-                    </Box>
-                  ) : (
-                    params.slotProps?.input?.startAdornment
-                  ),
-                },
-              }}
-            />
-          )}
-          renderOption={(props, option) => {
-            const { key, ...rest } = props;
-            return (
-              <Box
-                key={key}
-                component="li"
-                {...rest}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1.25,
-                  py: 0.75,
-                }}
-              >
-                <Box
-                  component="img"
-                  loading="lazy"
-                  width="22"
-                  height="15"
-                  src={option.flagUrl}
-                  alt={option.iso2}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                  sx={{
-                    borderRadius: "2px",
-                    objectFit: "cover",
-                    border: "1px solid #CBD5E1",
-                    flexShrink: 0,
-                  }}
-                />
-                <Typography variant="body2" sx={{ fontSize: "0.875rem" }}>
-                  {option.vietnameseName !== option.name
-                    ? `${option.vietnameseName} (${option.name})`
-                    : option.name}
-                </Typography>
-              </Box>
-            );
-          }}
-        />
+                      {option.vietnameseName}
+                    </Typography>
+                    {option.vietnameseName !== option.name && (
+                      <Typography sx={{ fontSize: "11.5px", color: "#64748B" }}>
+                        {option.name}
+                      </Typography>
+                    )}
+                  </Box>
+                  <Typography
+                    sx={{
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      color: "#64748B",
+                      fontFamily: "monospace",
+                      bgcolor: "#F1F5F9",
+                      px: 0.75,
+                      py: 0.25,
+                      borderRadius: "4px",
+                    }}
+                  >
+                    {option.iso2}
+                  </Typography>
+                </Box>
+              );
+            }}
+          />
 
-        {/* Location Filter */}
-        <Autocomplete<
-          { label: string; value: string | number },
-          false,
-          false,
-          false
-        >
-          size="small"
-          options={travelLocationsSelections}
-          getOptionLabel={(option) => option.label}
-          value={selectedLocation}
-          isOptionEqualToValue={(option, value) =>
-            Number(option.value) === Number(value.value)
-          }
-          onChange={(_, newValue) => {
-            handleLocationChange(newValue ? Number(newValue.value) : "");
-          }}
-          sx={{ width: { xs: "100%", sm: 300 } }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Địa điểm"
-              placeholder="Chọn địa điểm..."
+          {/* Location Filter */}
+          <Autocomplete<{ label: string; value: string | number }, false, false, false>
+            size="small"
+            options={travelLocationsSelections}
+            getOptionLabel={(option) => option.label}
+            value={selectedLocation}
+            isOptionEqualToValue={(option, value) =>
+              Number(option.value) === Number(value.value)
+            }
+            onChange={(_, newValue) => {
+              handleLocationChange(newValue ? Number(newValue.value) : "");
+            }}
+            sx={{
+              width: { xs: "100%", sm: 220, md: 230 },
+              flexShrink: 0,
+              "& .MuiOutlinedInput-root": {
+                height: 40,
+                boxSizing: "border-box",
+                borderRadius: "8px",
+                bgcolor: "#F8FAFC",
+                fontSize: "0.875rem",
+                "& fieldset": { borderColor: "#CBD5E1" },
+                "&:hover fieldset": { borderColor: "primary.main" },
+                "&.Mui-focused fieldset": { borderColor: "primary.main" },
+                "& .MuiOutlinedInput-input": {
+                  py: "0 !important",
+                  fontSize: "0.875rem",
+                },
+                "& .MuiAutocomplete-input": {
+                  py: "0 !important",
+                  fontSize: "0.875rem",
+                },
+              },
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                placeholder="Tất cả địa điểm..."
+                size="small"
+                slotProps={{
+                  ...params.slotProps,
+                  input: {
+                    ...params.slotProps?.input,
+                    startAdornment: (
+                      <Box sx={{ display: "flex", alignItems: "center", pl: 0.25, pr: 0.5, color: "#94A3B8" }}>
+                        <LocationOnOutlinedIcon sx={{ fontSize: 18, mr: 0.5 }} />
+                        {params.slotProps?.input?.startAdornment}
+                      </Box>
+                    ),
+                  },
+                }}
+              />
+            )}
+          />
+
+          {/* Reset Filter Button */}
+          {isFiltered && (
+            <Button
               size="small"
-            />
+              variant="text"
+              startIcon={<RestartAltIcon sx={{ fontSize: 17 }} />}
+              onClick={handleResetFilters}
+              sx={{
+                height: 40,
+                borderRadius: "8px",
+                textTransform: "none",
+                color: "#64748B",
+                fontWeight: 600,
+                fontSize: "0.875rem",
+                px: 1.25,
+                "&:hover": { color: "#0F172A", bgcolor: "#F1F5F9" },
+              }}
+            >
+              Xóa lọc
+            </Button>
           )}
-        />
+        </Box>
+
+        {/* Right Action & Stats */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.25,
+            ml: { xs: 0, sm: "auto" },
+            width: { xs: "100%", sm: "auto" },
+            justifyContent: { xs: "stretch", sm: "flex-end" },
+          }}
+        >
+          <Box
+            sx={{
+              display: { xs: "none", md: "flex" },
+              alignItems: "center",
+              gap: 0.75,
+              px: 1.5,
+              height: 40,
+              borderRadius: "8px",
+              bgcolor: "#F8FAFC",
+              border: "1px solid #E2E8F0",
+              color: "#475569",
+              fontSize: "0.8125rem",
+              fontWeight: 600,
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span>{totalTrips} chuyến đi</span>
+            <span style={{ color: "#94A3B8" }}>•</span>
+            <span>{uniqueDestinationsCount} địa điểm</span>
+            <span style={{ color: "#94A3B8" }}>•</span>
+            <span>{totalPhotosCount} ảnh</span>
+          </Box>
+
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon sx={{ fontSize: 19 }} />}
+            onClick={() => navigate("/admin/travel-memories/create")}
+            sx={{
+              height: 40,
+              borderRadius: "8px",
+              textTransform: "none",
+              fontWeight: 600,
+              fontSize: "0.875rem",
+              px: 2,
+              boxShadow: "none",
+              whiteSpace: "nowrap",
+              flex: { xs: 1, sm: "initial" },
+              width: { xs: "100%", sm: "auto" },
+            }}
+          >
+            Thêm chuyến đi
+          </Button>
+        </Box>
       </Card>
 
       {/* 5.4 List Header & Group Navigation */}

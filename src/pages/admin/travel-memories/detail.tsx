@@ -232,6 +232,8 @@ export const TravelMemoryDetailPage: React.FC = () => {
             fontWeight: 600,
             borderColor: "divider",
             color: "text.secondary",
+            width: { xs: "100%", sm: "auto" },
+            minHeight: 40,
             "&:focus-visible": {
               outline: "2px solid #1976D2",
               outlineOffset: 2,
@@ -241,7 +243,14 @@ export const TravelMemoryDetailPage: React.FC = () => {
           Quay lại danh sách
         </Button>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            width: { xs: "100%", sm: "auto" },
+          }}
+        >
           <Button
             variant="outlined"
             color="error"
@@ -251,6 +260,8 @@ export const TravelMemoryDetailPage: React.FC = () => {
               borderRadius: "8px",
               textTransform: "none",
               fontWeight: 600,
+              flex: { xs: 1, sm: "initial" },
+              minHeight: 40,
               "&:focus-visible": {
                 outline: "2px solid #DC2626",
                 outlineOffset: 2,
@@ -270,6 +281,8 @@ export const TravelMemoryDetailPage: React.FC = () => {
               textTransform: "none",
               fontWeight: 600,
               boxShadow: "none",
+              flex: { xs: 1, sm: "initial" },
+              minHeight: 40,
               "&:focus-visible": {
                 outline: "2px solid #1976D2",
                 outlineOffset: 2,
@@ -395,6 +408,7 @@ export const TravelMemoryDetailPage: React.FC = () => {
                 fontSize: { xs: "1.5rem", sm: "2.1rem" },
                 lineHeight: 1.25,
                 mb: 1.5,
+                wordBreak: "break-word",
               }}
             >
               {memory.title}
@@ -410,18 +424,18 @@ export const TravelMemoryDetailPage: React.FC = () => {
                 fontSize: "0.92rem",
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.8, minWidth: 0 }}>
                 <LocationOnOutlinedIcon
-                  sx={{ fontSize: 20, color: "#60A5FA" }}
+                  sx={{ fontSize: 20, color: "#60A5FA", flexShrink: 0 }}
                 />
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, wordBreak: "break-word" }}>
                   {memory.destination}
                 </Typography>
               </Box>
 
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
                 <CalendarMonthOutlinedIcon
-                  sx={{ fontSize: 19, color: "#93C5FD" }}
+                  sx={{ fontSize: 19, color: "#93C5FD", flexShrink: 0 }}
                 />
                 <Typography variant="body2">{dateRangeLabel}</Typography>
               </Box>
@@ -451,6 +465,7 @@ export const TravelMemoryDetailPage: React.FC = () => {
                 lineHeight: 1.7,
                 fontSize: "0.98rem",
                 whiteSpace: "pre-line",
+                wordBreak: "break-word",
               }}
             >
               {memory.description}

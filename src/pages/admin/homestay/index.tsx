@@ -441,15 +441,17 @@ export const AdminHomestayPage: React.FC = () => {
 
       {/* Control Bar Card (Search & Create Button & Refresh) */}
       <Card
-        elevation={1}
+        elevation={0}
         sx={{
-          p: 2,
+          p: { xs: 1.25, sm: 1.5 },
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           flexWrap: "wrap",
-          gap: 2,
+          gap: 1.5,
           borderRadius: "12px",
+          border: "1px solid #E2E8F0",
+          bgcolor: "#FFFFFF",
         }}
       >
         <TextField
@@ -474,10 +476,26 @@ export const AdminHomestayPage: React.FC = () => {
               ),
             },
           }}
-          sx={{ width: { xs: "100%", sm: 360 } }}
+          sx={{
+            width: { xs: "100%", sm: 360 },
+            "& .MuiOutlinedInput-root": {
+              height: 40,
+              borderRadius: "8px",
+              bgcolor: "#F8FAFC",
+              fontSize: "0.875rem",
+            },
+          }}
         />
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            width: { xs: "100%", sm: "auto" },
+            justifyContent: { xs: "space-between", sm: "flex-end" },
+          }}
+        >
           <Tooltip title="Tải lại dữ liệu">
             <Button
               variant="outlined"
@@ -501,7 +519,13 @@ export const AdminHomestayPage: React.FC = () => {
             color="primary"
             startIcon={<AddIcon />}
             onClick={handleOpenCreate}
-            sx={{ textTransform: "none", fontWeight: 600, borderRadius: "8px" }}
+            sx={{
+              textTransform: "none",
+              fontWeight: 600,
+              borderRadius: "8px",
+              flex: { xs: 1, sm: "initial" },
+              minHeight: 40,
+            }}
           >
             Thêm Homestay Mới
           </Button>
@@ -515,7 +539,7 @@ export const AdminHomestayPage: React.FC = () => {
           width: "100%",
           bgcolor: "#FFFFFF",
           borderRadius: "12px",
-          border: "1px solid #E5E7EB",
+          border: "1px solid #E2E8F0",
           overflow: "hidden",
         }}
       >

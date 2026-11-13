@@ -59,7 +59,7 @@ export const UserForm: React.FC<UserFormProps> = ({
     <Card
       elevation={0}
       sx={{
-        p: { xs: 2.5, sm: 3.5 },
+        p: { xs: 2, sm: 3.5 },
         bgcolor: "#FFFFFF",
         borderRadius: "12px",
         border: "1px solid #E5E7EB",
@@ -169,6 +169,7 @@ export const UserForm: React.FC<UserFormProps> = ({
             gap: 1.5,
             pt: 1,
             borderTop: "1px solid #F1F5F9",
+            flexDirection: { xs: "column-reverse", sm: "row" },
           }}
         >
           {onCancel && (
@@ -176,6 +177,7 @@ export const UserForm: React.FC<UserFormProps> = ({
               variant="outlined"
               onClick={onCancel}
               disabled={isSubmitting}
+              fullWidth
               sx={{
                 borderRadius: "8px",
                 px: 2.5,
@@ -183,6 +185,8 @@ export const UserForm: React.FC<UserFormProps> = ({
                 borderColor: "#CBD5E1",
                 textTransform: "none",
                 fontWeight: 600,
+                width: { xs: "100%", sm: "auto" },
+                minHeight: 42,
                 "&:hover": {
                   borderColor: "#94A3B8",
                   bgcolor: "#F8FAFC",
@@ -197,12 +201,15 @@ export const UserForm: React.FC<UserFormProps> = ({
             type="submit"
             variant="contained"
             disabled={isSubmitting}
+            fullWidth
             sx={{
               borderRadius: "8px",
               px: 3,
               textTransform: "none",
               fontWeight: 600,
               boxShadow: "0 2px 4px rgba(37, 99, 235, 0.15)",
+              width: { xs: "100%", sm: "auto" },
+              minHeight: 42,
             }}
           >
             {isSubmitting

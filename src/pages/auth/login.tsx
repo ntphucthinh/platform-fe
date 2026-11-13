@@ -80,16 +80,16 @@ export const Login: React.FC = () => {
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: "#F8FAFC",
-        py: { xs: 4, sm: 6 },
-        px: 2,
+        py: { xs: 3, sm: 6 },
+        px: { xs: 1.5, sm: 2 },
       }}
     >
       <Paper
         elevation={0}
         sx={{
-          width: { xs: "calc(100% - 32px)", sm: 420 },
+          width: "100%",
           maxWidth: 420,
-          p: { xs: 3.5, sm: 4.5 },
+          p: { xs: 2.5, sm: 4.5 },
           borderRadius: "16px",
           border: "1px solid #E5E7EB",
           bgcolor: "#FFFFFF",

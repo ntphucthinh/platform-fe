@@ -177,7 +177,8 @@ export const PublicHeader: React.FC = () => {
       >
         <Box
           sx={{
-            width: 280,
+            width: { xs: 260, sm: 280 },
+            maxWidth: "85vw",
             p: 2,
             display: "flex",
             flexDirection: "column",
@@ -207,7 +208,7 @@ export const PublicHeader: React.FC = () => {
                     navigate(item.path);
                     setMobileOpen(false);
                   }}
-                  sx={{ borderRadius: "8px" }}
+                  sx={{ borderRadius: "8px", minHeight: 44 }}
                 >
                   <ListItemText primary={item.label} />
                 </ListItemButton>

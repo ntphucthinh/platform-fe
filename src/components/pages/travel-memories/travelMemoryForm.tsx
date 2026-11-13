@@ -612,7 +612,14 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
           </Typography>
         </Box>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            width: { xs: "100%", sm: "auto" },
+          }}
+        >
           <Button
             variant="outlined"
             color="inherit"
@@ -624,6 +631,8 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
               borderRadius: "8px",
               borderColor: "divider",
               color: "text.secondary",
+              flex: { xs: 1, sm: "none" },
+              minHeight: 40,
               "&:focus-visible": {
                 outline: "2px solid #1976D2",
                 outlineOffset: 2,
@@ -650,6 +659,8 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
               fontWeight: 600,
               borderRadius: "8px",
               boxShadow: "none",
+              flex: { xs: 1, sm: "none" },
+              minHeight: 40,
               "&:focus-visible": {
                 outline: "2px solid #1976D2",
                 outlineOffset: 2,
@@ -1543,12 +1554,14 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
           alignItems: "center",
           gap: 2,
           pt: 1,
+          flexDirection: { xs: "column-reverse", sm: "row" },
         }}
       >
         <Button
           variant="outlined"
           color="inherit"
           onClick={onCancel}
+          fullWidth
           sx={{
             textTransform: "none",
             fontWeight: 600,
@@ -1557,6 +1570,7 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
             color: "text.secondary",
             px: 3,
             height: 42,
+            width: { xs: "100%", sm: "auto" },
             "&:focus-visible": {
               outline: "2px solid #1976D2",
               outlineOffset: 2,
@@ -1571,6 +1585,7 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
           variant="contained"
           color="primary"
           disabled={isLoading}
+          fullWidth
           startIcon={
             isLoading ? (
               <CircularProgress size={18} color="inherit" />
@@ -1585,6 +1600,7 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
             boxShadow: "none",
             px: 3.5,
             height: 42,
+            width: { xs: "100%", sm: "auto" },
           }}
         >
           {isLoading

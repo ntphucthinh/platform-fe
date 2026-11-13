@@ -151,6 +151,7 @@ export const TravelMemoryCard: React.FC<TravelMemoryCardProps> = ({
             WebkitLineClamp: 2,
             WebkitBoxOrient: "vertical",
             overflow: "hidden",
+            wordBreak: "break-word",
             cursor: "pointer",
             "&:hover": { color: "primary.main" },
             "&:focus-visible": {
@@ -170,13 +171,18 @@ export const TravelMemoryCard: React.FC<TravelMemoryCardProps> = ({
           {memory.title}
         </Typography>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.8, minWidth: 0 }}>
           <LocationOnOutlinedIcon
-            sx={{ fontSize: 16, color: "primary.main" }}
+            sx={{ fontSize: 16, color: "primary.main", flexShrink: 0 }}
           />
           <Typography
             variant="body2"
-            sx={{ fontWeight: 600, color: "text.primary", fontSize: "0.82rem" }}
+            sx={{
+              fontWeight: 600,
+              color: "text.primary",
+              fontSize: "0.82rem",
+              minWidth: 0,
+            }}
             noWrap
           >
             {memory.destination}

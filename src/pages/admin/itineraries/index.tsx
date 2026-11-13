@@ -3,7 +3,6 @@ import {
   Box,
   Typography,
   Card,
-  CardContent,
   TextField,
   InputAdornment,
   Button,
@@ -24,9 +23,6 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
-import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
-import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
-import ExploreOutlinedIcon from "@mui/icons-material/ExploreOutlined";
 import { useNavigate } from "react-router-dom";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { tableSx } from "@/components/ui/table/tableStyles";
@@ -363,290 +359,184 @@ export const ItineraryListPage: React.FC = () => {
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       <HeaderTitle>Lịch trình du lịch</HeaderTitle>
 
-      {/* 5.1 Page Header & Action */}
-      <Box
+      {/* 5.1 Unified Distilled Control Bar */}
+      <Card
+        elevation={0}
         sx={{
+          p: { xs: 1.25, sm: 1.5 },
           display: "flex",
+          alignItems: "center",
           justifyContent: "space-between",
-          alignItems: { xs: "flex-start", sm: "center" },
-          flexDirection: { xs: "column", sm: "row" },
-          gap: 2,
+          flexWrap: "wrap",
+          gap: 1.5,
+          borderRadius: "12px",
+          border: "1px solid #E2E8F0",
+          bgcolor: "#FFFFFF",
         }}
       >
-        <Box>
-          <Typography
-            variant="h5"
-            component="h1"
-            sx={{
-              fontWeight: 700,
-              color: "text.primary",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            Lịch trình du lịch
-          </Typography>
-          <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
-            Quản lý các lịch trình khám phá và hoạt động theo từng ngày.
-          </Typography>
-        </Box>
-
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={handleCreate}
+        {/* Left Filters */}
+        <Box
           sx={{
-            textTransform: "none",
-            fontWeight: 600,
-            borderRadius: "8px",
-            boxShadow: "none",
-            alignSelf: { xs: "stretch", sm: "auto" },
+            display: "flex",
+            alignItems: "center",
+            gap: 1.25,
+            flexWrap: "wrap",
+            flex: 1,
+            minWidth: 0,
           }}
         >
-          Tạo lịch trình
-        </Button>
-      </Box>
-
-      {/* 5.2 Summary Cards */}
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            sm: "repeat(3, 1fr)",
-          },
-          gap: { xs: 1.25, sm: 1.5 },
-        }}
-      >
-        {[
-          {
-            title: "Tổng lịch trình",
-            value: totalCount,
-            subtitle: "Đang quản lý trên hệ thống",
-            icon: (
-              <MapOutlinedIcon
-                sx={{ fontSize: { xs: 20, sm: 22 }, color: "#1976D2" }}
-              />
-            ),
-            bgColor: "#EFF6FF",
-            borderColor: "#BFDBFE",
-          },
-          {
-            title: "Điểm đến",
-            value: uniqueDestinations.length,
-            subtitle: "Khu vực khám phá",
-            icon: (
-              <LocationOnOutlinedIcon
-                sx={{ fontSize: { xs: 20, sm: 22 }, color: "#0284C7" }}
-              />
-            ),
-            bgColor: "#F0F9FF",
-            borderColor: "#BAE6FD",
-          },
-          {
-            title: "Tổng hoạt động",
-            value: totalActivitiesCount,
-            subtitle: "Trải nghiệm được thiết kế",
-            icon: (
-              <ExploreOutlinedIcon
-                sx={{ fontSize: { xs: 20, sm: 22 }, color: "#059669" }}
-              />
-            ),
-            bgColor: "#ECFDF5",
-            borderColor: "#A7F3D0",
-          },
-        ].map((c) => (
-          <Card
-            key={c.title}
-            elevation={0}
+          <TextField
+            placeholder="Tìm theo tên lịch trình hoặc địa điểm..."
+            size="small"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon
+                      fontSize="small"
+                      sx={{ color: "text.secondary" }}
+                    />
+                  </InputAdornment>
+                ),
+              },
+            }}
             sx={{
-              borderRadius: "12px",
-              border: "1px solid",
-              borderColor: "divider",
-              bgcolor: "background.paper",
-              minHeight: { xs: 70, sm: 75 },
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              transition: "transform 0.15s ease, box-shadow 0.15s ease",
-              "&:hover": {
-                transform: "translateY(-2px)",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+              minWidth: 220,
+              flex: { xs: "1 1 100%", sm: "0 1 280px" },
+              "& .MuiOutlinedInput-root": {
+                height: 40,
+                borderRadius: "8px",
+                bgcolor: "#F8FAFC",
+                fontSize: "0.875rem",
+              },
+            }}
+          />
+
+          {/* Destination Filter */}
+          <FormControl
+            size="small"
+            sx={{
+              minWidth: { xs: "100%", sm: 160 },
+              "& .MuiOutlinedInput-root": {
+                height: 40,
+                borderRadius: "8px",
+                bgcolor: "#F8FAFC",
+                fontSize: "0.875rem",
               },
             }}
           >
-            <CardContent
-              sx={{
-                py: { xs: 1.25, sm: 1.6 },
-                px: { xs: 1.5, sm: 2 },
-                "&:last-child": { pb: { xs: 1.25, sm: 1.6 } },
-                display: "flex",
-                alignItems: "center",
-                gap: { xs: 1.25, sm: 1.75 },
-              }}
+            <InputLabel id="destination-filter-label">Địa điểm</InputLabel>
+            <Select
+              labelId="destination-filter-label"
+              value={destinationFilter}
+              label="Địa điểm"
+              onChange={(e) => setDestinationFilter(e.target.value)}
             >
-              <Box
-                sx={{
-                  width: { xs: 36, sm: 44 },
-                  height: { xs: 36, sm: 44 },
-                  borderRadius: "10px",
-                  bgcolor: c.bgColor,
-                  border: `1px solid ${c.borderColor}`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                {c.icon}
-              </Box>
+              <MenuItem value="ALL">Tất cả địa điểm</MenuItem>
+              {uniqueDestinations.map((dest) => (
+                <MenuItem key={dest} value={dest}>
+                  {dest}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-              <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography
-                  variant="caption"
-                  noWrap
-                  sx={{
-                    display: "block",
-                    fontWeight: 700,
-                    color: "text.secondary",
-                    textTransform: "uppercase",
-                    letterSpacing: { xs: "0.01em", sm: "0.03em" },
-                    fontSize: { xs: "0.62rem", sm: "0.72rem" },
-                    lineHeight: 1.3,
-                    mb: 0.35,
-                  }}
-                >
-                  {c.title}
-                </Typography>
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: { xs: "column", sm: "row" },
-                    alignItems: { xs: "flex-start", sm: "baseline" },
-                    gap: { xs: 0.1, sm: 0.75 },
-                  }}
-                >
-                  <Typography
-                    component="span"
-                    sx={{
-                      fontWeight: 800,
-                      color: "text.primary",
-                      fontSize: { xs: "1.15rem", sm: "1.42rem" },
-                      lineHeight: 1.1,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                  >
-                    {c.value}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    noWrap
-                    sx={{
-                      color: "text.secondary",
-                      fontSize: { xs: "0.68rem", sm: "0.76rem" },
-                      lineHeight: 1.2,
-                      maxWidth: "100%",
-                    }}
-                  >
-                    {c.subtitle}
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        ))}
-      </Box>
-
-      {/* 5.3 Search & Filters Bar */}
-      <Card
-        elevation={1}
-        sx={{
-          p: 2,
-          display: "flex",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 2,
-          borderRadius: "12px",
-          border: "1px solid #E2E8F0",
-        }}
-      >
-        <TextField
-          placeholder="Tìm theo tên lịch trình hoặc địa điểm..."
-          size="small"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon
-                    fontSize="small"
-                    sx={{ color: "text.secondary" }}
-                  />
-                </InputAdornment>
-              ),
-            },
-          }}
-          sx={{ flex: { xs: "1 1 100%", md: "1 1 260px" }, minWidth: 220 }}
-        />
-
-        {/* Destination Filter */}
-        <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 160 } }}>
-          <InputLabel id="destination-filter-label">Địa điểm</InputLabel>
-          <Select
-            labelId="destination-filter-label"
-            value={destinationFilter}
-            label="Địa điểm"
-            onChange={(e) => setDestinationFilter(e.target.value)}
-          >
-            <MenuItem value="ALL">Tất cả địa điểm</MenuItem>
-            {uniqueDestinations.map((dest) => (
-              <MenuItem key={dest} value={dest}>
-                {dest}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* Duration Filter */}
-        <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 150 } }}>
-          <InputLabel id="duration-filter-label">Thời lượng</InputLabel>
-          <Select
-            labelId="duration-filter-label"
-            value={durationFilter}
-            label="Thời lượng"
-            onChange={(e) => setDurationFilter(e.target.value)}
-          >
-            <MenuItem value="ALL">Tất cả thời lượng</MenuItem>
-            <MenuItem value="1">1 ngày</MenuItem>
-            <MenuItem value="2">2 ngày</MenuItem>
-            <MenuItem value="3">3 ngày</MenuItem>
-            <MenuItem value="4+">4 ngày trở lên</MenuItem>
-          </Select>
-        </FormControl>
-
-
-        {/* Reset button */}
-        {isFiltered && (
-          <Button
-            variant="outlined"
-            color="inherit"
+          {/* Duration Filter */}
+          <FormControl
             size="small"
-            startIcon={<FilterAltOffIcon />}
-            onClick={handleResetFilters}
             sx={{
-              borderRadius: "8px",
-              textTransform: "none",
-              borderColor: "#CBD5E1",
-              color: "#475569",
-              height: 40,
+              minWidth: { xs: "100%", sm: 150 },
+              "& .MuiOutlinedInput-root": {
+                height: 40,
+                borderRadius: "8px",
+                bgcolor: "#F8FAFC",
+                fontSize: "0.875rem",
+              },
             }}
           >
-            Đặt lại bộ lọc
+            <InputLabel id="duration-filter-label">Thời lượng</InputLabel>
+            <Select
+              labelId="duration-filter-label"
+              value={durationFilter}
+              label="Thời lượng"
+              onChange={(e) => setDurationFilter(e.target.value)}
+            >
+              <MenuItem value="ALL">Tất cả thời lượng</MenuItem>
+              <MenuItem value="1">1 ngày</MenuItem>
+              <MenuItem value="2">2 ngày</MenuItem>
+              <MenuItem value="3">3 ngày</MenuItem>
+              <MenuItem value="4+">4 ngày trở lên</MenuItem>
+            </Select>
+          </FormControl>
+
+          {/* Reset button */}
+          {isFiltered && (
+            <Button
+              variant="text"
+              size="small"
+              startIcon={<FilterAltOffIcon sx={{ fontSize: 17 }} />}
+              onClick={handleResetFilters}
+              sx={{
+                height: 40,
+                borderRadius: "8px",
+                textTransform: "none",
+                color: "#64748B",
+                fontWeight: 600,
+                fontSize: "0.875rem",
+                px: 1.25,
+                "&:hover": { color: "#0F172A", bgcolor: "#F1F5F9" },
+              }}
+            >
+              Xóa lọc
+            </Button>
+          )}
+        </Box>
+
+        {/* Right: Quick Stat & Create Action */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            flexShrink: 0,
+            width: { xs: "100%", md: "auto" },
+            justifyContent: { xs: "space-between", md: "flex-end" },
+          }}
+        >
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600,
+              fontSize: "0.85rem",
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {totalCount} lịch trình ({totalActivitiesCount} hoạt động)
+          </Typography>
+
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={handleCreate}
+            sx={{
+              height: 40,
+              borderRadius: "8px",
+              textTransform: "none",
+              fontWeight: 600,
+              fontSize: "0.875rem",
+              px: 2.25,
+              boxShadow: "none",
+              whiteSpace: "nowrap",
+              flex: { xs: 1, sm: "initial" },
+            }}
+          >
+            Tạo lịch trình
           </Button>
-        )}
+        </Box>
       </Card>
 
       {/* 5.4 DataGrid */}

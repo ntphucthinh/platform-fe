@@ -25,7 +25,6 @@ import FlightTakeoffRoundedIcon from "@mui/icons-material/FlightTakeoffRounded";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 import AddIcon from "@mui/icons-material/Add";
 import NotesOutlinedIcon from "@mui/icons-material/NotesOutlined";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import type { ILocationWithDetails } from "@/types/pages/travel-map/travelMap";
@@ -543,6 +542,23 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
           />
 
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+            <Tooltip title="Xem trang đầy đủ">
+              <IconButton
+                size="small"
+                aria-label="Xem trang đầy đủ"
+                onClick={() => navigate(`/admin/travel-map/${location.id}`)}
+                sx={{
+                  width: { xs: 36, sm: 32 },
+                  height: { xs: 36, sm: 32 },
+                  bgcolor: "rgba(255,255,255,0.9)",
+                  color: "text.primary",
+                  "&:hover": { bgcolor: "background.paper", color: "primary.main" },
+                }}
+              >
+                <OpenInNewIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+
             <Tooltip title="Chỉnh sửa">
               <IconButton
                 size="small"
@@ -655,6 +671,7 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
                 fontWeight: 700,
                 color: "#0F172A",
                 fontSize: "1.35rem",
+                wordBreak: "break-word",
               }}
             >
               {location.locationName || location.name}
@@ -674,7 +691,10 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
             <LocationOnOutlinedIcon
               sx={{ fontSize: 18, color: "#94A3B8", mt: 0.25, flexShrink: 0 }}
             />
-            <Typography variant="body2" sx={{ color: "#64748B" }}>
+            <Typography
+              variant="body2"
+              sx={{ color: "#64748B", wordBreak: "break-word" }}
+            >
               {location.address}
             </Typography>
           </Box>
@@ -726,96 +746,48 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
             )}
           </Box>
 
-          {/* Button: Xem chi tiết địa điểm */}
-          <Button
-            fullWidth
-            variant="contained"
-            color="primary"
-            endIcon={<ArrowForwardIcon fontSize="small" />}
-            onClick={() => navigate(`/admin/travel-map/${location.id}`)}
-            sx={{
-              mt: 1.5,
-              py: 1,
-              borderRadius: "8px",
-              textTransform: "none",
-              fontWeight: 700,
-              fontSize: "0.875rem",
-              boxShadow: "none",
-            }}
-          >
-            Xem chi tiết địa điểm
-          </Button>
         </Box>
 
-        {/* Overview 3 Metrics Box */}
+        {/* Compact Metrics Strip */}
         <Box
           sx={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
+            display: "flex",
+            alignItems: "center",
             gap: 1.5,
-            p: 2,
+            flexWrap: "wrap",
+            p: 1.25,
             bgcolor: "#F8FAFC",
-            borderRadius: "12px",
+            borderRadius: "8px",
             border: "1px solid #E2E8F0",
-            textAlign: "center",
           }}
         >
-          <Box>
-            <Typography
-              variant="h6"
-              sx={{ fontWeight: 800, color: "#1976D2", lineHeight: 1.2 }}
-            >
-              {location.visitCount}
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ color: "#64748B", fontWeight: 500 }}
-            >
-              Lần ghé thăm
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+            <FlightTakeoffRoundedIcon sx={{ fontSize: 16, color: "#1976D2" }} />
+            <Typography variant="body2" sx={{ fontSize: "0.825rem", fontWeight: 600, color: "#0F172A" }}>
+              {location.visitCount > 0 ? `${location.visitCount} lần ghé thăm` : "Chưa ghé thăm"}
             </Typography>
           </Box>
 
-          <Box
-            sx={{
-              borderLeft: "1px solid #E2E8F0",
-              borderRight: "1px solid #E2E8F0",
-            }}
-          >
-            <Typography
-              variant="h6"
-              sx={{ fontWeight: 800, color: "#059669", lineHeight: 1.2 }}
-            >
-              {location.totalPhotos}
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ color: "#64748B", fontWeight: 500 }}
-            >
-              Ảnh lưu giữ
+          <Box sx={{ width: "1px", height: 16, bgcolor: "#CBD5E1" }} />
+
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+            <PhotoCameraBackOutlinedIcon sx={{ fontSize: 16, color: "#059669" }} />
+            <Typography variant="body2" sx={{ fontSize: "0.825rem", fontWeight: 600, color: "#0F172A" }}>
+              {location.totalPhotos} ảnh
             </Typography>
           </Box>
 
-          <Box>
-            <Typography
-              variant="subtitle2"
-              sx={{
-                fontWeight: 700,
-                color: "#0F172A",
-                lineHeight: 1.2,
-                fontSize: "0.85rem",
-              }}
-            >
-              {location.latestVisitDate
-                ? dayjs(location.latestVisitDate).format("MM/YYYY")
-                : "—"}
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ color: "#64748B", fontWeight: 500 }}
-            >
-              Gần đây nhất
-            </Typography>
-          </Box>
+          {location.latestVisitDate && (
+            <>
+              <Box sx={{ width: "1px", height: 16, bgcolor: "#CBD5E1" }} />
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <CalendarMonthOutlinedIcon sx={{ fontSize: 14, color: "#64748B" }} />
+                <Typography variant="caption" sx={{ fontSize: "0.775rem", color: "#64748B", fontWeight: 500 }}>
+                  Gần nhất: {dayjs(location.latestVisitDate).format("MM/YYYY")}
+                </Typography>
+              </Box>
+            </>
+          )}
         </Box>
 
         {/* Description & Notes */}
@@ -831,7 +803,11 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
                 </Typography>
                 <Typography
                   variant="body2"
-                  sx={{ color: "#475569", lineHeight: 1.6 }}
+                  sx={{
+                    color: "#475569",
+                    lineHeight: 1.6,
+                    wordBreak: "break-word",
+                  }}
                 >
                   {location.description}
                 </Typography>
@@ -858,7 +834,7 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
                     flexShrink: 0,
                   }}
                 />
-                <Box>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
                   <Typography
                     variant="caption"
                     sx={{
@@ -872,7 +848,11 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
                   </Typography>
                   <Typography
                     variant="body2"
-                    sx={{ color: "#78350F", fontSize: "0.85rem" }}
+                    sx={{
+                      color: "#78350F",
+                      fontSize: "0.85rem",
+                      wordBreak: "break-word",
+                    }}
                   >
                     {location.notes}
                   </Typography>
@@ -1057,34 +1037,15 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
                         sx={{
                           display: "flex",
                           alignItems: "center",
-                          justifyContent: "space-between",
+                          gap: 0.5,
+                          color: "#1976D2",
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
                           mt: 1,
                         }}
                       >
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 0.5,
-                            color: "#1976D2",
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                          }}
-                        >
-                          <PhotoCameraBackOutlinedIcon sx={{ fontSize: 14 }} />
-                          {photosCount} ảnh
-                        </Box>
-
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: "#1976D2",
-                            fontWeight: 600,
-                            fontSize: "0.75rem",
-                          }}
-                        >
-                          Xem chi tiết →
-                        </Typography>
+                        <PhotoCameraBackOutlinedIcon sx={{ fontSize: 14 }} />
+                        {photosCount} ảnh
                       </Box>
                     </CardContent>
                   </Card>
@@ -1153,13 +1114,6 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
                       </Typography>
                     </Box>
                   </Box>
-
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "#1976D2", fontWeight: 600 }}
-                  >
-                    Xem lịch trình →
-                  </Typography>
                 </Card>
               ))}
             </Box>

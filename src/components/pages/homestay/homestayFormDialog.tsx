@@ -598,6 +598,9 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
             sx: {
               borderRadius: "16px",
               p: 1,
+              m: { xs: 1, sm: 2 },
+              width: { xs: "calc(100% - 16px)", sm: "100%" },
+              maxHeight: { xs: "calc(100% - 16px)", sm: "calc(100% - 64px)" },
             },
           },
         }}
@@ -609,12 +612,17 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
             justifyContent: "space-between",
             alignItems: "center",
             pb: 1,
+            px: { xs: 2, sm: 3 },
           }}
         >
           <Typography
             variant="h6"
             component="h2"
-            sx={{ fontWeight: 700, color: "#172033" }}
+            sx={{
+              fontWeight: 700,
+              color: "#172033",
+              fontSize: { xs: "1.05rem", sm: "1.25rem" },
+            }}
           >
             {isEdit ? "Chỉnh Sửa Homestay" : "Thêm Homestay Mới"}
           </Typography>
@@ -1476,12 +1484,25 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
             </Box>
           </DialogContent>
 
-          <DialogActions sx={{ px: 3, py: 2 }}>
+          <DialogActions
+            sx={{
+              px: { xs: 2, sm: 3 },
+              py: 2,
+              gap: 1,
+              flexDirection: { xs: "column-reverse", sm: "row" },
+            }}
+          >
             <Button
               onClick={onClose}
               variant="outlined"
               color="inherit"
               disabled={isSubmittingAsync}
+              fullWidth
+              sx={{
+                width: { xs: "100%", sm: "auto" },
+                minHeight: 42,
+                borderRadius: "8px",
+              }}
             >
               Hủy Bỏ
             </Button>
@@ -1490,11 +1511,17 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
               variant="contained"
               color="primary"
               disabled={isSubmittingAsync}
+              fullWidth
               startIcon={
                 isSubmittingAsync ? (
                   <CircularProgress size={16} color="inherit" />
                 ) : null
               }
+              sx={{
+                width: { xs: "100%", sm: "auto" },
+                minHeight: 42,
+                borderRadius: "8px",
+              }}
             >
               {isSubmittingAsync
                 ? uploadProgress && uploadProgress.total > 0

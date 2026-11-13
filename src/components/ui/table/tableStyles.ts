@@ -18,6 +18,9 @@ export const tableSx: SxProps<Theme> = {
   '& .MuiDataGrid-columnHeader': {
     bgcolor: '#F8FAFC',
     px: '16px',
+    '@media (max-width: 600px)': {
+      px: '10px',
+    },
     '&:focus': { outline: 'none' },
     '&:focus-visible': {
       outline: '2px solid #1976D2',
@@ -112,6 +115,9 @@ export const tableSx: SxProps<Theme> = {
     py: 0,
     display: 'flex',
     alignItems: 'center',
+    '@media (max-width: 600px)': {
+      px: '10px',
+    },
     '&:focus': { outline: 'none' },
     '&:focus-visible': {
       outline: '2px solid #1976D2',
@@ -122,6 +128,7 @@ export const tableSx: SxProps<Theme> = {
   // ── Virtual scroller ────────────────────────────────────────────────────────
   '& .MuiDataGrid-virtualScroller': {
     overflowX: 'auto',
+    WebkitOverflowScrolling: 'touch',
   },
 
   // ── Footer / pagination ─────────────────────────────────────────────────────
@@ -131,6 +138,9 @@ export const tableSx: SxProps<Theme> = {
     minHeight: '48px',
     height: '48px',
     px: '8px',
+    '@media (max-width: 600px)': {
+      px: '4px',
+    },
   },
   '& .MuiTablePagination-root': {
     color: '#64748B',
@@ -139,12 +149,24 @@ export const tableSx: SxProps<Theme> = {
     minHeight: '48px',
     paddingLeft: '8px',
     paddingRight: '4px',
+    '@media (max-width: 600px)': {
+      paddingLeft: '4px',
+      paddingRight: '2px',
+    },
   },
   '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
     fontSize: '13px',
     color: '#64748B',
     fontWeight: 500,
     margin: 0,
+  },
+  '@media (max-width: 500px)': {
+    '& .MuiTablePagination-selectLabel': {
+      display: 'none',
+    },
+    '& .MuiTablePagination-input': {
+      display: 'none',
+    },
   },
   '& .MuiTablePagination-select': {
     fontSize: '13px',
@@ -155,11 +177,19 @@ export const tableSx: SxProps<Theme> = {
   },
   '& .MuiTablePagination-actions': {
     marginLeft: '8px',
+    '@media (max-width: 600px)': {
+      marginLeft: '4px',
+    },
   },
   '& .MuiTablePagination-actions .MuiIconButton-root': {
     color: '#64748B',
     borderRadius: '6px',
     padding: '4px',
+    '@media (max-width: 600px)': {
+      width: '36px',
+      height: '36px',
+      padding: '6px',
+    },
     '&:hover': { bgcolor: '#F1F5F9' },
     '&.Mui-disabled': { color: '#CBD5E1' },
   },

@@ -43,11 +43,13 @@ export const TravelMemoryDateConfirmDialog: React.FC<
           sx: {
             borderRadius: "14px",
             p: 1,
+            m: { xs: 1.5, sm: 2 },
+            width: { xs: "calc(100% - 24px)", sm: "auto" },
           },
         },
       }}
     >
-      <DialogTitle component="div" sx={{ pb: 1 }}>
+      <DialogTitle component="div" sx={{ pb: 1, px: { xs: 2, sm: 3 } }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <Box
             sx={{
@@ -173,18 +175,27 @@ export const TravelMemoryDateConfirmDialog: React.FC<
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
+      <DialogActions
+        sx={{
+          px: { xs: 2, sm: 3 },
+          pb: 2,
+          gap: 1,
+          flexDirection: { xs: "column-reverse", sm: "row" },
+        }}
+      >
         <Button
           variant="outlined"
           color="inherit"
           onClick={onCancel}
+          fullWidth
           sx={{
             borderColor: "divider",
             color: "text.secondary",
             textTransform: "none",
             fontWeight: 600,
             borderRadius: "8px",
-            minHeight: 38,
+            minHeight: 42,
+            width: { xs: "100%", sm: "auto" },
             px: 2,
             "&:focus-visible": {
               outline: "2px solid #1976D2",
@@ -198,12 +209,14 @@ export const TravelMemoryDateConfirmDialog: React.FC<
           variant="contained"
           color="error"
           onClick={onConfirm}
+          fullWidth
           sx={{
             textTransform: "none",
             fontWeight: 600,
             borderRadius: "8px",
             boxShadow: "none",
-            minHeight: 38,
+            minHeight: 42,
+            width: { xs: "100%", sm: "auto" },
             px: 2,
             "&:focus-visible": {
               outline: "2px solid #DC2626",

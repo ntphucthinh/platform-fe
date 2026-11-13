@@ -9,7 +9,6 @@ import {
 } from "@mui/material";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { TravelMapHeader } from "@/components/pages/travel-map/travelMapHeader";
-import { TravelMapFilters } from "@/components/pages/travel-map/travelMapFilters";
 import { TravelLeafletMap } from "@/components/pages/travel-map/travelLeafletMap";
 import { TravelMapListView } from "@/components/pages/travel-map/travelMapListView";
 import { LocationDetailPanel } from "@/components/pages/travel-map/locationDetailPanel";
@@ -21,7 +20,7 @@ import { useCreateTravelLocation } from "@/hooks/travel-map/useCreateTravelLocat
 import { useUpdateTravelLocation } from "@/hooks/travel-map/useUpdateTravelLocation";
 import { useDeleteTravelLocation } from "@/hooks/travel-map/useDeleteTravelLocation";
 import { filterLocations } from "@/utils/travelMapUtils";
-import { LocationStatus, MOCK_TRAVEL_MAP_SUMMARY } from "@/constants/travelMap";
+import { LocationStatus } from "@/constants/travelMap";
 import { useSearchParams } from "react-router-dom";
 import type {
   ILocation,
@@ -128,8 +127,20 @@ export function TravelMapPage() {
     severity: "success",
   });
 
-  // 4. Computed Derived Data: Giữ data mock cho 4 card thống kê theo yêu cầu (chờ API riêng sau này)
-  const summary = MOCK_TRAVEL_MAP_SUMMARY;
+  // 4. Computed Derived Data: Thống kê trực tiếp từ danh sách địa điểm thực tế
+  const counts = useMemo(() => {
+    let visited = 0;
+    let wishlist = 0;
+    for (const loc of locations) {
+      if (loc.status === LocationStatus.Visited) visited++;
+      else if (loc.status === LocationStatus.Wishlist) wishlist++;
+    }
+    return {
+      total: locations.length,
+      visited,
+      wishlist,
+    };
+  }, [locations]);
 
   // Filtered locations (client-side fallback / local filter)
   const filteredLocations = useMemo(
@@ -273,29 +284,26 @@ export function TravelMapPage() {
       sx={{
         display: "flex",
         flexDirection: "column",
-        gap: 2.5,
+        gap: 2,
         width: "100%",
-        pb: 6,
+        pb: 4,
       }}
     >
       <HeaderTitle>Bản đồ hành trình</HeaderTitle>
 
-      {/* 1. Page Header & 4 Metrics */}
+      {/* 1. Unified Distilled Toolbar */}
       <TravelMapHeader
-        summary={summary}
+        totalLocations={counts.total}
+        visitedLocations={counts.visited}
+        wishlistLocations={counts.wishlist}
+        selectedStatus={filters.status}
+        selectedCountryCode={selectedCountryCode}
+        onStatusChange={(status) => setFilters({ status })}
+        onSelectCountry={setSelectedCountryCode}
+        onResetFilters={handleResetFilters}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onOpenCreate={handleOpenCreate}
-      />
-
-      {/* 2. Search & Filters Bar (Chỉ giữ lọc quốc gia và trạng thái theo backend API) */}
-      <TravelMapFilters
-        filters={filters}
-        totalLocations={filteredLocations.length}
-        selectedCountryCode={selectedCountryCode}
-        onFilterChange={setFilters}
-        onSelectCountry={setSelectedCountryCode}
-        onResetFilters={handleResetFilters}
       />
 
       {/* Error state if fetch failed */}
@@ -321,14 +329,14 @@ export function TravelMapPage() {
           <CircularProgress size={36} />
         </Box>
       ) : viewMode === "map" ? (
-        /* 3. Main Workspace Area: Map or List View */
+        /* 2. Main Workspace Area: Map or List View */
         <Box
           sx={{
             display: "flex",
             flexDirection: { xs: "column", md: "row" },
             gap: 2.5,
-            height: { xs: "auto", md: "calc(100vh - 350px)" },
-            minHeight: { xs: 480, md: 620 },
+            height: { xs: "auto", md: "calc(100vh - 215px)" },
+            minHeight: { xs: 520, md: 660 },
             position: "relative",
           }}
         >
