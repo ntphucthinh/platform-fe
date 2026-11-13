@@ -9,9 +9,7 @@ import { LocationStatus } from "@/constants/travelMap";
 import { mapApiLocationToItem } from "@/utils/travelMapUtils";
 
 export interface UseTravelLocationListOptions {
-  search?: string;
   status?: LocationStatus;
-  year?: number;
   countryCode?: string;
 }
 
@@ -37,11 +35,7 @@ export function useTravelLocationList(
     },
     meta: {
       queryParams: {
-        ...(options?.search?.trim() ? { search: options.search.trim() } : {}),
         ...(options?.status ? { status: options.status } : {}),
-        ...(options?.year !== undefined && options?.year !== null
-          ? { year: options.year }
-          : {}),
         ...(options?.countryCode?.trim()
           ? { countryCode: options.countryCode.trim().toUpperCase() }
           : {}),

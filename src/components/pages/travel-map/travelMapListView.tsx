@@ -64,9 +64,9 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
     setCurrentGroup(0);
   }
 
-  // Reset to first group when search/filter state changes
+  // Reset to first group when filter state changes
   const filterKey = filters
-    ? `${filters.search}_${filters.status}_${filters.year}`
+    ? `${filters.countryCode ?? ""}_${filters.status ?? ""}`
     : "";
   const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
   if (filterKey !== prevFilterKey) {

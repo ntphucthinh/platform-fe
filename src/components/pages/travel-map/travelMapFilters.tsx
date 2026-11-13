@@ -2,17 +2,11 @@ import React, { useMemo } from "react";
 import {
   Box,
   TextField,
-  InputAdornment,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
   Button,
   Chip,
   Typography,
   Autocomplete,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
@@ -20,9 +14,15 @@ import type { ILocationFilterState } from "@/types/pages/travel-map/travelMap";
 import { LocationStatus } from "@/constants/travelMap";
 import { useCountries, type IGlobalCountry } from "@/hooks/common/useGlobalGeo";
 
+const STATUS_OPTIONS = [
+  { value: LocationStatus.Visited, label: "Đã ghé thăm" },
+  { value: LocationStatus.Wishlist, label: "Muốn đến (Wishlist)" },
+] as const;
+
+type StatusOption = (typeof STATUS_OPTIONS)[number];
+
 interface TravelMapFiltersProps {
   filters: ILocationFilterState;
-  availableYears: number[];
   totalLocations: number;
   selectedCountryCode?: string | null;
   onFilterChange: (
@@ -34,7 +34,6 @@ interface TravelMapFiltersProps {
 
 export const TravelMapFilters: React.FC<TravelMapFiltersProps> = ({
   filters,
-  availableYears,
   totalLocations,
   selectedCountryCode,
   onFilterChange,
@@ -48,11 +47,12 @@ export const TravelMapFilters: React.FC<TravelMapFiltersProps> = ({
     return countries.find((c) => c.iso2 === selectedCountryCode) ?? null;
   }, [countries, selectedCountryCode]);
 
-  const isFiltered =
-    Boolean(filters.search.trim()) ||
-    Boolean(filters.status) ||
-    filters.year !== undefined ||
-    Boolean(selectedCountryCode);
+  const selectedStatusOption = useMemo(() => {
+    if (!filters.status) return null;
+    return STATUS_OPTIONS.find((opt) => opt.value === filters.status) ?? null;
+  }, [filters.status]);
+
+  const isFiltered = Boolean(filters.status) || Boolean(selectedCountryCode);
 
   return (
     <Box
@@ -68,7 +68,7 @@ export const TravelMapFilters: React.FC<TravelMapFiltersProps> = ({
         gap: 2,
       }}
     >
-      {/* Search Input & Selectors */}
+      {/* Selectors: Country & Status only */}
       <Box
         sx={{
           display: "flex",
@@ -79,33 +79,6 @@ export const TravelMapFilters: React.FC<TravelMapFiltersProps> = ({
           flexWrap: { xs: "nowrap", sm: "wrap" },
         }}
       >
-        {/* Search */}
-        <TextField
-          size="small"
-          placeholder="Tìm theo tên địa điểm, tỉnh thành hoặc địa chỉ..."
-          value={filters.search}
-          onChange={(e) =>
-            onFilterChange((prev) => ({ ...prev, search: e.target.value }))
-          }
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ color: "#94A3B8", fontSize: 20 }} />
-                </InputAdornment>
-              ),
-            },
-          }}
-          sx={{
-            flex: { xs: "1 1 auto", sm: "1 1 240px", md: "1 1 280px" },
-            width: { xs: "100%", sm: "auto" },
-            "& .MuiOutlinedInput-root": {
-              borderRadius: "10px",
-              bgcolor: "#F8FAFC",
-            },
-          }}
-        />
-
         {/* Country Selector: Nhảy đến quốc gia & highlight ranh giới */}
         <Autocomplete<IGlobalCountry, false, false, false>
           size="small"
@@ -248,75 +221,61 @@ export const TravelMapFilters: React.FC<TravelMapFiltersProps> = ({
             );
           }}
           sx={{
-            minWidth: { xs: "100%", sm: 260, md: 280 },
-            width: { xs: "100%", sm: 260, md: 280 },
+            minWidth: { xs: "100%", sm: 260, md: 300 },
+            width: { xs: "100%", sm: 260, md: 300 },
           }}
         />
 
-        {/* Status Filter */}
-        <FormControl
+        {/* Status Selector: Dùng Autocomplete đồng bộ giao diện & close icon với Quốc gia */}
+        <Autocomplete<StatusOption, false, false, false>
           size="small"
-          sx={{
-            minWidth: { xs: "100%", sm: 260, md: 280 },
-            width: { xs: "100%", sm: 260, md: 280 },
+          options={STATUS_OPTIONS}
+          getOptionLabel={(option) => option.label}
+          value={selectedStatusOption}
+          isOptionEqualToValue={(option, value) => option.value === value.value}
+          onChange={(_, newValue) =>
+            onFilterChange((prev) => ({
+              ...prev,
+              status: newValue ? newValue.value : undefined,
+            }))
+          }
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Trạng thái"
+              placeholder="Chọn trạng thái..."
+              size="small"
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "10px",
+                  bgcolor: "#F8FAFC",
+                },
+              }}
+            />
+          )}
+          renderOption={(props, option) => {
+            const { key, ...rest } = props;
+            return (
+              <Box
+                key={key}
+                component="li"
+                {...rest}
+                sx={{
+                  fontWeight: 500,
+                  fontSize: "13.5px",
+                  color: "#0F172A",
+                  py: 0.75,
+                }}
+              >
+                {option.label}
+              </Box>
+            );
           }}
-        >
-          <InputLabel id="travel-map-status-label">Trạng thái</InputLabel>
-          <Select<LocationStatus | "">
-            labelId="travel-map-status-label"
-            label="Trạng thái"
-            value={filters.status ?? ""}
-            onChange={(e) => {
-              const val = e.target.value;
-              onFilterChange((prev) => ({
-                ...prev,
-                status: val ? (val as LocationStatus) : undefined,
-              }));
-            }}
-            sx={{ borderRadius: "10px", bgcolor: "#F8FAFC" }}
-          >
-            <MenuItem value="">
-              <em>Không chọn</em>
-            </MenuItem>
-            <MenuItem value={LocationStatus.Visited}>Đã ghé thăm</MenuItem>
-            <MenuItem value={LocationStatus.Wishlist}>
-              Muốn đến (Wishlist)
-            </MenuItem>
-          </Select>
-        </FormControl>
-
-        {/* Year Filter */}
-        <FormControl
-          size="small"
           sx={{
-            minWidth: { xs: "100%", sm: 260, md: 280 },
-            width: { xs: "100%", sm: 260, md: 280 },
+            minWidth: { xs: "100%", sm: 220, md: 240 },
+            width: { xs: "100%", sm: 220, md: 240 },
           }}
-        >
-          <InputLabel id="travel-map-year-label">Năm chuyến đi</InputLabel>
-          <Select<number | "">
-            labelId="travel-map-year-label"
-            label="Năm chuyến đi"
-            value={filters.year ?? ""}
-            onChange={(e) => {
-              const val = e.target.value;
-              onFilterChange((prev) => ({
-                ...prev,
-                year: val === "" ? undefined : Number(val),
-              }));
-            }}
-            sx={{ borderRadius: "10px", bgcolor: "#F8FAFC" }}
-          >
-            <MenuItem value="">
-              <em>Không chọn</em>
-            </MenuItem>
-            {availableYears.map((yr) => (
-              <MenuItem key={yr} value={yr}>
-                Năm {yr}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        />
       </Box>
 
       {/* Right side: Count & Reset Action */}

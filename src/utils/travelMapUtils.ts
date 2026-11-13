@@ -82,39 +82,18 @@ export function filterLocations(
   locations: ILocationWithDetails[],
   filters: ILocationFilterState,
 ): ILocationWithDetails[] {
-  const searchLower = filters.search.trim().toLowerCase();
-
   return locations.filter((loc) => {
-    // 1. Search locationName, name, or address
-    if (searchLower) {
-      const matchName = (loc.locationName || loc.name || "")
-        .toLowerCase()
-        .includes(searchLower);
-      const matchAddress = (loc.address || "")
-        .toLowerCase()
-        .includes(searchLower);
-      const matchCountry = (loc.countryName || "")
-        .toLowerCase()
-        .includes(searchLower);
-      if (!matchName && !matchAddress && !matchCountry) {
-        return false;
-      }
-    }
-
-    // 2. Status filter
+    // 1. Status filter
     if (filters.status && loc.status !== filters.status) {
       return false;
     }
 
-    // 3. Year filter
-    if (filters.year !== undefined && filters.year !== null) {
-      const yearNum = Number(filters.year);
-      if (loc.latestVisitDate) {
-        const visitYear = new Date(loc.latestVisitDate).getFullYear();
-        if (visitYear !== yearNum) return false;
-      } else {
-        return false;
-      }
+    // 2. Country Code filter
+    if (
+      filters.countryCode &&
+      loc.countryCode?.toUpperCase() !== filters.countryCode.toUpperCase()
+    ) {
+      return false;
     }
 
     return true;

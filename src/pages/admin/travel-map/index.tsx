@@ -20,10 +20,7 @@ import { useTravelLocationDetail } from "@/hooks/travel-map/useTravelLocationDet
 import { useCreateTravelLocation } from "@/hooks/travel-map/useCreateTravelLocation";
 import { useUpdateTravelLocation } from "@/hooks/travel-map/useUpdateTravelLocation";
 import { useDeleteTravelLocation } from "@/hooks/travel-map/useDeleteTravelLocation";
-import {
-  getAvailableVisitYears,
-  filterLocations,
-} from "@/utils/travelMapUtils";
+import { filterLocations } from "@/utils/travelMapUtils";
 import { LocationStatus, MOCK_TRAVEL_MAP_SUMMARY } from "@/constants/travelMap";
 import { useSearchParams } from "react-router-dom";
 import type {
@@ -42,7 +39,6 @@ export function TravelMapPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const initialViewMode = searchParams.get("view") === "list" ? "list" : "map";
-  const initialSearch = searchParams.get("q") || "";
   const rawStatus = searchParams.get("status");
   const initialStatus: LocationStatus | undefined =
     rawStatus === LocationStatus.Visited ||
@@ -51,9 +47,6 @@ export function TravelMapPage() {
     rawStatus?.toLowerCase() === LocationStatus.Wishlist
       ? (rawStatus.toLowerCase() as LocationStatus)
       : undefined;
-  const rawYear = searchParams.get("year");
-  const initialYear: number | undefined =
-    rawYear && !Number.isNaN(Number(rawYear)) ? Number(rawYear) : undefined;
   const rawCountry = searchParams.get("country");
   const initialCountry = rawCountry ? rawCountry.toUpperCase() : null;
 
@@ -62,11 +55,9 @@ export function TravelMapPage() {
     initialCountry,
   );
 
-  // 1. Filters State
+  // 1. Filters State (Chỉ giữ lọc quốc gia và trạng thái theo backend API)
   const [filters, setFilters] = useState<ILocationFilterState>({
-    search: initialSearch,
     status: initialStatus,
-    year: initialYear,
   });
 
   // 2. Data Hooks: Fetch locations list (hỗ trợ lọc trực tiếp từ backend khi có filter)
@@ -76,9 +67,7 @@ export function TravelMapPage() {
     error: locationsError,
     refetch: refetchLocations,
   } = useTravelLocationList({
-    search: filters.search.trim() || undefined,
     status: filters.status,
-    year: filters.year,
     countryCode: selectedCountryCode || undefined,
   });
 
@@ -103,10 +92,7 @@ export function TravelMapPage() {
   useEffect(() => {
     const params = new URLSearchParams();
     if (viewMode !== "map") params.set("view", viewMode);
-    if (filters.search.trim()) params.set("q", filters.search.trim());
     if (filters.status) params.set("status", filters.status);
-    if (filters.year !== undefined && filters.year !== null)
-      params.set("year", String(filters.year));
     if (selectedCountryCode) params.set("country", selectedCountryCode);
     if (selectedLocationId !== null)
       params.set("selected", String(selectedLocationId));
@@ -114,7 +100,7 @@ export function TravelMapPage() {
     setSearchParams(params, { replace: true });
   }, [
     viewMode,
-    filters,
+    filters.status,
     selectedCountryCode,
     selectedLocationId,
     setSearchParams,
@@ -144,15 +130,15 @@ export function TravelMapPage() {
 
   // 4. Computed Derived Data: Giữ data mock cho 4 card thống kê theo yêu cầu (chờ API riêng sau này)
   const summary = MOCK_TRAVEL_MAP_SUMMARY;
-  const availableYears = useMemo(() => {
-    const years = getAvailableVisitYears(locations);
-    return years.length > 0 ? years : [2026, 2025, 2024, 2023, 2022];
-  }, [locations]);
 
-  // Filtered locations
+  // Filtered locations (client-side fallback / local filter)
   const filteredLocations = useMemo(
-    () => filterLocations(locations, filters),
-    [locations, filters],
+    () =>
+      filterLocations(locations, {
+        status: filters.status,
+        countryCode: selectedCountryCode || undefined,
+      }),
+    [locations, filters.status, selectedCountryCode],
   );
 
   // Selected Location with details: merge target from locations list and detailData
@@ -277,9 +263,7 @@ export function TravelMapPage() {
 
   const handleResetFilters = () => {
     setFilters({
-      search: "",
       status: undefined,
-      year: undefined,
     });
     setSelectedCountryCode(null);
   };
@@ -304,11 +288,10 @@ export function TravelMapPage() {
         onOpenCreate={handleOpenCreate}
       />
 
-      {/* 2. Search & Filters Bar */}
+      {/* 2. Search & Filters Bar (Chỉ giữ lọc quốc gia và trạng thái theo backend API) */}
       <TravelMapFilters
         filters={filters}
-        availableYears={availableYears}
-        totalLocations={locations.length}
+        totalLocations={filteredLocations.length}
         selectedCountryCode={selectedCountryCode}
         onFilterChange={setFilters}
         onSelectCountry={setSelectedCountryCode}
@@ -406,7 +389,10 @@ export function TravelMapPage() {
               selectedLocationId={selectedLocationId}
               onSelectLocation={handleSelectLocation}
               onResetFilters={handleResetFilters}
-              filters={filters}
+              filters={{
+                ...filters,
+                countryCode: selectedCountryCode || undefined,
+              }}
             />
           </Box>
 

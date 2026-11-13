@@ -50,9 +50,8 @@ export interface ILocationFormData {
 }
 
 export interface ILocationFilterState {
-  search: string;
   status?: LocationStatus;
-  year?: number;
+  countryCode?: string;
 }
 
 export interface ITravelMapSummary {
