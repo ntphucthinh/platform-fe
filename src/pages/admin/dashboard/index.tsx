@@ -870,6 +870,8 @@ export function DashboardPage() {
                     alignItems: "center",
                     gap: 1.5,
                     overflow: "hidden",
+                    minWidth: 0,
+                    flex: 1,
                   }}
                 >
                   <Chip

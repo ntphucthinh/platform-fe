@@ -95,7 +95,7 @@ export const ItineraryPreviewPage: React.FC = () => {
 
   // Calculate total activities dynamically from record data
   const totalActivities = itinerary
-    ? itinerary.days.reduce(
+    ? (itinerary.days || []).reduce(
         (acc: number, day: IItineraryDay) =>
           acc + (day.activities?.length || 0),
         0,
@@ -108,7 +108,7 @@ export const ItineraryPreviewPage: React.FC = () => {
     const match = activeTab.match(/day-(\d+)/)
     if (!match) return null
     const dayNumber = parseInt(match[1], 10)
-    return itinerary.days.find((d: IItineraryDay) => d.dayNumber === dayNumber) || null
+    return (itinerary.days || []).find((d: IItineraryDay) => d.dayNumber === dayNumber) || null
   })()
 
   if (!itinerary) {
@@ -141,9 +141,9 @@ export const ItineraryPreviewPage: React.FC = () => {
 
   const durationLabel =
     itinerary.duration ||
-    `${itinerary.durationDays || itinerary.days.length} ngày ${
+    `${itinerary.durationDays || (itinerary.days?.length ?? 1)} ngày ${
       itinerary.durationNights ??
-      Math.max(0, (itinerary.durationDays || itinerary.days.length) - 1)
+      Math.max(0, (itinerary.durationDays || (itinerary.days?.length ?? 1)) - 1)
     } đêm`
 
   return (
@@ -314,7 +314,7 @@ export const ItineraryPreviewPage: React.FC = () => {
         <ItineraryDayTabs
           activeTab={activeTab}
           onSelectTab={setActiveTab}
-          dayCount={itinerary.days.length}
+          dayCount={itinerary.days?.length || 0}
         />
       </Box>
 

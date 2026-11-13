@@ -196,12 +196,12 @@ export const TravelMemoryDetailPage: React.FC = () => {
   );
 
   const allCollapsed =
-    memory.days.length > 0 &&
-    memory.days.every((day) => collapsedDays[day.date] === true);
+    (memory.days || []).length > 0 &&
+    (memory.days || []).every((day) => collapsedDays[day.date] === true);
 
   const toggleAllDays = () => {
     const nextState: Record<string, boolean> = {};
-    memory.days.forEach((day) => {
+    (memory.days || []).forEach((day) => {
       nextState[day.date] = !allCollapsed;
     });
     setCollapsedDays(nextState);

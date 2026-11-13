@@ -8,9 +8,9 @@ interface ItineraryTimelineProps {
 }
 
 export const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ day }) => {
-  // Ensure activities are sorted chronologically by time
-  const sortedActivities = [...day.activities].sort((a, b) =>
-    a.time.localeCompare(b.time),
+  // Ensure activities are sorted chronologically by time with safe fallbacks
+  const sortedActivities = [...(day.activities || [])].sort((a, b) =>
+    (a.time || '').localeCompare(b.time || ''),
   )
 
   return (
@@ -96,13 +96,30 @@ export const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ day }) => 
 
       {/* Timeline Activities List */}
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-        {sortedActivities.map((activity, index) => (
-          <ItineraryActivityCard
-            key={activity.id}
-            activity={activity}
-            isLast={index === sortedActivities.length - 1}
-          />
-        ))}
+        {sortedActivities.length === 0 ? (
+          <Box
+            sx={{
+              py: 5,
+              px: 3,
+              textAlign: 'center',
+              bgcolor: '#F8FAFC',
+              borderRadius: '12px',
+              border: '1px dashed #CBD5E1',
+            }}
+          >
+            <Typography variant="body2" sx={{ color: '#64748B', fontWeight: 500 }}>
+              Chưa có hoạt động nào được thêm cho ngày này.
+            </Typography>
+          </Box>
+        ) : (
+          sortedActivities.map((activity, index) => (
+            <ItineraryActivityCard
+              key={activity.id}
+              activity={activity}
+              isLast={index === sortedActivities.length - 1}
+            />
+          ))
+        )}
       </Box>
     </Box>
   )

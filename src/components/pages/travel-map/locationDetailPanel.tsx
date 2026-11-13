@@ -121,6 +121,8 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
   const handleDragStart = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       if (!effectiveIsMobile || e.button !== 0) return;
+      // Prevent a second touch from hijacking or corrupting an active drag
+      if (dragStateRef.current.isDragging) return;
 
       try {
         e.currentTarget.setPointerCapture(e.pointerId);
@@ -298,9 +300,31 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
     }
   }, [open]);
 
-  // Clean up timers on unmount
+  // Clean up timers on unmount and handle window blur during gestures
   useEffect(() => {
+    const handleWindowBlur = () => {
+      if (dragStateRef.current.isDragging) {
+        dragStateRef.current.isDragging = false;
+        dragStateRef.current.pointerId = null;
+        if (rafDragRef.current) {
+          cancelAnimationFrame(rafDragRef.current);
+          rafDragRef.current = null;
+        }
+        if (mobileSheetRef.current) {
+          mobileSheetRef.current.style.transform = "";
+          mobileSheetRef.current.style.transition = "";
+          mobileSheetRef.current.style.opacity = "";
+        }
+        if (backdropRef.current) {
+          backdropRef.current.style.opacity = "";
+          backdropRef.current.style.transition = "";
+        }
+      }
+    };
+
+    window.addEventListener("blur", handleWindowBlur);
     return () => {
+      window.removeEventListener("blur", handleWindowBlur);
       if (rafDragRef.current) {
         cancelAnimationFrame(rafDragRef.current);
       }
@@ -393,6 +417,7 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
             onPointerMove={handleDragMove}
             onPointerUp={handleDragEnd}
             onPointerCancel={handleDragEnd}
+            onLostPointerCapture={handleDragEnd}
             role="slider"
             aria-label="Kéo xuống để đóng"
             aria-valuemin={0}
@@ -670,7 +695,10 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
               variant="caption"
               sx={{ color: "#64748B", fontFamily: "monospace" }}
             >
-              {location.latitude !== null && location.longitude !== null
+              {typeof location.latitude === "number" &&
+              !isNaN(location.latitude) &&
+              typeof location.longitude === "number" &&
+              !isNaN(location.longitude)
                 ? `${location.latitude.toFixed(
                     4,
                   )}, ${location.longitude.toFixed(4)}`

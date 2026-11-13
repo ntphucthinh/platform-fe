@@ -18,6 +18,7 @@ import {
   DialogContent,
   DialogActions,
   Autocomplete,
+  CircularProgress,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SaveIcon from "@mui/icons-material/Save";
@@ -118,7 +119,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     control,
     setValue,
     handleSubmit: handleFormSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<IItineraryFormData>({
     resolver: yupResolver(itinerarySchema),
     defaultValues: {
@@ -769,7 +770,14 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
           <Button
             variant="contained"
             color="primary"
-            startIcon={<SaveIcon />}
+            disabled={isSubmitting}
+            startIcon={
+              isSubmitting ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : (
+                <SaveIcon />
+              )
+            }
             onClick={handleSave}
             sx={{
               fontWeight: 600,
@@ -779,7 +787,11 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
               boxShadow: "none",
             }}
           >
-            {isEdit ? "Lưu thay đổi" : "Lưu bản nháp"}
+            {isSubmitting
+              ? "Đang lưu..."
+              : isEdit
+              ? "Lưu thay đổi"
+              : "Lưu bản nháp"}
           </Button>
         </Box>
       </Box>
@@ -1502,17 +1514,23 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                           </Box>
 
                           {/* Activity Info */}
-                          <Box>
+                          <Box sx={{ minWidth: 0, flex: 1 }}>
                             <Box
                               sx={{
                                 display: "flex",
                                 alignItems: "center",
                                 gap: 1,
+                                flexWrap: "wrap",
+                                minWidth: 0,
                               }}
                             >
                               <Typography
                                 variant="subtitle2"
-                                sx={{ fontWeight: 700, color: "#0F172A" }}
+                                sx={{
+                                  fontWeight: 700,
+                                  color: "#0F172A",
+                                  wordBreak: "break-word",
+                                }}
                               >
                                 {act.title}
                               </Typography>
@@ -1711,7 +1729,14 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
         <Button
           variant="contained"
           color="primary"
-          startIcon={<SaveIcon />}
+          disabled={isSubmitting}
+          startIcon={
+            isSubmitting ? (
+              <CircularProgress size={18} color="inherit" />
+            ) : (
+              <SaveIcon />
+            )
+          }
           onClick={handleSave}
           sx={{
             fontWeight: 600,
@@ -1721,7 +1746,11 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             boxShadow: "none",
           }}
         >
-          {isEdit ? "Lưu thay đổi" : "Lưu bản nháp"}
+          {isSubmitting
+            ? "Đang lưu..."
+            : isEdit
+            ? "Lưu thay đổi"
+            : "Lưu bản nháp"}
         </Button>
       </Box>
 
@@ -1813,6 +1842,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
               onChange={(e) =>
                 setActivityModal((prev) => ({ ...prev, title: e.target.value }))
               }
+              slotProps={{ htmlInput: { maxLength: 200 } }}
               required
               fullWidth
             />

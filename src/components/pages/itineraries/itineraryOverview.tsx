@@ -156,12 +156,21 @@ export const ItineraryOverview: React.FC<ItineraryOverviewProps> = ({
         </Typography>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {itinerary.days.map((day) => {
+          {(itinerary.days || []).map((day) => {
             const dayKey = `day-${day.dayNumber}` as ItineraryTabKey
             return (
               <Card
                 key={day.dayNumber}
                 elevation={0}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    onSelectDay(dayKey)
+                  }
+                }}
+                onClick={() => onSelectDay(dayKey)}
                 sx={{
                   p: { xs: 2, sm: 2.5 },
                   borderRadius: '14px',
@@ -175,8 +184,11 @@ export const ItineraryOverview: React.FC<ItineraryOverviewProps> = ({
                     boxShadow: '0 4px 16px rgba(25, 118, 210, 0.08)',
                     transform: 'translateY(-1px)',
                   },
+                  '&:focus-visible': {
+                    outline: '2px solid #1976D2',
+                    outlineOffset: 2,
+                  },
                 }}
-                onClick={() => onSelectDay(dayKey)}
               >
                 <Box
                   sx={{
@@ -251,7 +263,7 @@ export const ItineraryOverview: React.FC<ItineraryOverviewProps> = ({
 
                       <Chip
                         icon={<AccessTimeOutlinedIcon sx={{ fontSize: '14px !important' }} />}
-                        label={`${day.activities.length} hoạt động`}
+                        label={`${day.activities?.length || 0} hoạt động`}
                         size="small"
                         sx={{
                           bgcolor: '#EFF6FF',

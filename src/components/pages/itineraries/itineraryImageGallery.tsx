@@ -71,52 +71,83 @@ export const ItineraryImageGallery: React.FC<ItineraryImageGalleryProps> = ({
           )}
         </Box>
 
-        {/* 2x2 Image Grid */}
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: 1.5,
-          }}
-        >
-          {images.map((img) => (
-            <Box
-              key={img.id}
-              onClick={() => setSelectedImage(img)}
-              sx={{
-                position: 'relative',
-                width: '100%',
-                paddingTop: '75%', // 4:3 Aspect Ratio
-                borderRadius: '10px',
-                overflow: 'hidden',
-                cursor: 'pointer',
-                bgcolor: '#F1F5F9',
-                border: '1px solid #E2E8F0',
-                '&:hover img': {
-                  transform: 'scale(1.06)',
-                },
-              }}
-            >
+        {/* 2x2 Image Grid or Empty State */}
+        {images.length === 0 ? (
+          <Box
+            sx={{
+              py: 3.5,
+              px: 2,
+              textAlign: 'center',
+              bgcolor: '#F8FAFC',
+              borderRadius: '10px',
+              border: '1px dashed #CBD5E1',
+            }}
+          >
+            <Typography variant="body2" sx={{ color: '#64748B', fontWeight: 500 }}>
+              Chưa có hình ảnh nổi bật nào.
+            </Typography>
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: 1.5,
+            }}
+          >
+            {images.map((img) => (
               <Box
-                component="img"
-                src={img.url}
-                alt={img.title}
-                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                  e.currentTarget.src = DEFAULT_NO_IMAGE
+                key={img.id}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    setSelectedImage(img)
+                  }
                 }}
+                onClick={() => setSelectedImage(img)}
                 sx={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
+                  position: 'relative',
                   width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  transition: 'transform 0.3s ease',
+                  paddingTop: '75%', // 4:3 Aspect Ratio
+                  borderRadius: '10px',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  bgcolor: '#F1F5F9',
+                  border: '1px solid #E2E8F0',
+                  '&:hover img': {
+                    transform: 'scale(1.06)',
+                  },
+                  '&:focus-visible': {
+                    outline: '2px solid #1976D2',
+                    outlineOffset: 2,
+                  },
                 }}
-              />
-            </Box>
-          ))}
-        </Box>
+              >
+                <Box
+                  component="img"
+                  loading="lazy"
+                  decoding="async"
+                  src={img.url || DEFAULT_NO_IMAGE}
+                  alt={img.caption || img.title || 'Ảnh nổi bật'}
+                  onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                    e.currentTarget.src = DEFAULT_NO_IMAGE
+                  }}
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    transition: 'transform 0.3s ease',
+                  }}
+                />
+              </Box>
+            ))}
+          </Box>
+        )}
       </Card>
 
       {/* Lightbox Preview Modal */}

@@ -166,21 +166,27 @@ export const ItineraryInfoPanel: React.FC<ItineraryInfoPanelProps> = ({
               Chủ đề
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
-              {themes.map((theme) => (
-                <Chip
-                  key={theme}
-                  label={theme}
-                  size="small"
-                  sx={{
-                    bgcolor: '#F1F5F9',
-                    color: '#334155',
-                    fontWeight: 600,
-                    fontSize: '0.78rem',
-                    borderRadius: '8px',
-                    border: '1px solid #E2E8F0',
-                  }}
-                />
-              ))}
+              {(themes || []).length === 0 ? (
+                <Typography variant="caption" sx={{ color: '#94A3B8', fontStyle: 'italic' }}>
+                  Chưa phân loại
+                </Typography>
+              ) : (
+                themes.map((theme) => (
+                  <Chip
+                    key={theme}
+                    label={theme}
+                    size="small"
+                    sx={{
+                      bgcolor: '#F1F5F9',
+                      color: '#334155',
+                      fontWeight: 600,
+                      fontSize: '0.78rem',
+                      borderRadius: '8px',
+                      border: '1px solid #E2E8F0',
+                    }}
+                  />
+                ))
+              )}
             </Box>
           </Box>
         </Box>

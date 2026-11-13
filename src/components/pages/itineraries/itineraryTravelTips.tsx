@@ -45,33 +45,43 @@ export const ItineraryTravelTips: React.FC<ItineraryTravelTipsProps> = ({ tips }
         </Typography>
       </Box>
 
-      <Box
-        component="ul"
-        sx={{
-          m: 0,
-          pl: 2.5,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 1.25,
-        }}
-      >
-        {tips.map((tip, idx) => (
-          <Box
-            component="li"
-            key={idx}
-            sx={{
-              color: '#334155',
-              fontSize: '0.86rem',
-              lineHeight: 1.55,
-              '&::marker': {
-                color: 'primary.main',
-              },
-            }}
-          >
-            {tip}
-          </Box>
-        ))}
-      </Box>
+      {tips.length === 0 ? (
+        <Typography
+          variant="body2"
+          sx={{ color: '#64748B', fontStyle: 'italic', fontSize: '0.86rem' }}
+        >
+          Chưa có lưu ý đặc biệt nào cho chuyến đi này.
+        </Typography>
+      ) : (
+        <Box
+          component="ul"
+          sx={{
+            m: 0,
+            pl: 2.5,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1.25,
+          }}
+        >
+          {tips.map((tip, idx) => (
+            <Box
+              component="li"
+              key={idx}
+              sx={{
+                color: '#334155',
+                fontSize: '0.86rem',
+                lineHeight: 1.55,
+                wordBreak: 'break-word',
+                '&::marker': {
+                  color: 'primary.main',
+                },
+              }}
+            >
+              {tip}
+            </Box>
+          ))}
+        </Box>
+      )}
     </Card>
   )
 }

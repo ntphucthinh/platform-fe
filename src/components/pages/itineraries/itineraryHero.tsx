@@ -18,7 +18,13 @@ export const ItineraryHero: React.FC<ItineraryHeroProps> = ({
   duration,
   description,
 }) => {
-  const [imgSrc, setImgSrc] = useState(coverImage)
+  const [prevCover, setPrevCover] = useState(coverImage)
+  const [imgSrc, setImgSrc] = useState(coverImage || DEFAULT_NO_IMAGE)
+
+  if (coverImage !== prevCover) {
+    setPrevCover(coverImage)
+    setImgSrc(coverImage || DEFAULT_NO_IMAGE)
+  }
 
   return (
     <Box
@@ -100,6 +106,7 @@ export const ItineraryHero: React.FC<ItineraryHeroProps> = ({
             letterSpacing: '-0.02em',
             lineHeight: 1.2,
             textShadow: '0 2px 10px rgba(0,0,0,0.5)',
+            wordBreak: 'break-word',
           }}
         >
           {title}
@@ -115,6 +122,7 @@ export const ItineraryHero: React.FC<ItineraryHeroProps> = ({
             mt: 0.5,
             mb: 1.5,
             textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+            wordBreak: 'break-word',
           }}
         >
           {duration}
@@ -128,6 +136,7 @@ export const ItineraryHero: React.FC<ItineraryHeroProps> = ({
             lineHeight: 1.6,
             maxWidth: '620px',
             textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+            wordBreak: 'break-word',
           }}
         >
           {description}

@@ -366,7 +366,10 @@ export const TravelMapDetailPage: React.FC = () => {
                   borderRadius: "6px",
                 }}
               >
-                {details.latitude !== null && details.longitude !== null
+                {typeof details.latitude === "number" &&
+                !isNaN(details.latitude) &&
+                typeof details.longitude === "number" &&
+                !isNaN(details.longitude)
                   ? `${details.latitude.toFixed(
                       4,
                     )}, ${details.longitude.toFixed(4)}`

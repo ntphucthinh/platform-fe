@@ -43,13 +43,13 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
 }) => {
 
   // Responsive Breakpoint logic:
-  // Desktop (lg+): 4 columns x 2 rows = 8 items max
+  // Desktop (lg+): 5 columns x 2 rows = 10 items max (5 5 giống memory)
   // Tablet (sm-md): 2 columns x 2 rows = 4 items max
   // Mobile (xs): 1 column x 2 rows = 2 items max
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "lg"));
-  const itemsPerGroup = isMobile ? 2 : isTablet ? 4 : 8;
+  const itemsPerGroup = isMobile ? 2 : isTablet ? 4 : 10;
   const prefersReducedMotion = useMediaQuery(
     "@media (prefers-reduced-motion: reduce)",
   );
@@ -294,9 +294,9 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
           gridTemplateColumns: {
             xs: "1fr",
             sm: "repeat(2, 1fr)",
-            lg: "repeat(4, 1fr)",
+            lg: "repeat(5, 1fr)",
           },
-          gap: 2.5,
+          gap: 2,
           animation: prefersReducedMotion
             ? "none"
             : `${slideDirection === "next" ? "slideNext" : "slidePrev"} 240ms cubic-bezier(0.22, 1, 0.36, 1)`,
@@ -379,13 +379,13 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                   component="img"
                   loading="lazy"
                   decoding="async"
-                  height="160"
+                  height="145"
                   image={loc.coverImage || DEFAULT_NO_IMAGE}
                   alt={loc.locationName || loc.name}
                   onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                     e.currentTarget.src = DEFAULT_NO_IMAGE;
                     e.currentTarget.style.objectFit = "contain";
-                    e.currentTarget.style.padding = "24px";
+                    e.currentTarget.style.padding = "20px";
                     e.currentTarget.style.backgroundColor = "#F8FAFC";
                   }}
                   sx={{
@@ -395,7 +395,7 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                         : "cover",
                     p:
                       !loc.coverImage || loc.coverImage === DEFAULT_NO_IMAGE
-                        ? 2.5
+                        ? 2
                         : 0,
                     boxSizing: "border-box",
                   }}
@@ -419,20 +419,21 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
 
               <CardContent
                 sx={{
-                  p: 2.25,
+                  p: 2,
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "space-between",
                 }}
               >
-                <Box sx={{ mb: 2 }}>
+                <Box sx={{ mb: 1.5 }}>
                   <Box
                     sx={{
                       display: "flex",
                       alignItems: "center",
                       gap: 1,
                       mb: 0.5,
+                      minWidth: 0,
                     }}
                   >
                     {loc.countryCode && (
@@ -460,8 +461,9 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                       sx={{
                         fontWeight: 700,
                         color: "#0F172A",
-                        fontSize: "1.05rem",
-                        lineHeight: 1.3,
+                        fontSize: { xs: "0.95rem", sm: "1rem" },
+                        lineHeight: 1.35,
+                        minWidth: 0,
                       }}
                     >
                       {loc.locationName || loc.name}
@@ -476,6 +478,7 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                       color: "#64748B",
                       fontSize: "0.85rem",
                       mb: 1.25,
+                      minWidth: 0,
                     }}
                   >
                     <LocationOnOutlinedIcon
@@ -484,7 +487,7 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                     <Typography
                       variant="body2"
                       noWrap
-                      sx={{ color: "#64748B", fontSize: "0.825rem" }}
+                      sx={{ color: "#64748B", fontSize: "0.825rem", minWidth: 0 }}
                     >
                       {loc.address}
                     </Typography>
@@ -511,30 +514,38 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                 {/* Bottom stats row */}
                 <Box
                   sx={{
-                    pt: 1.75,
+                    pt: 1.5,
                     borderTop: "1px solid #F1F5F9",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
+                    gap: 0.5,
                   }}
                 >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
                     <Box
                       sx={{
                         display: "flex",
                         alignItems: "center",
                         gap: 0.5,
                         color: "#0F172A",
-                        fontSize: "0.825rem",
+                        fontSize: "0.8rem",
                         fontWeight: 600,
+                        minWidth: 0,
                       }}
                     >
                       <CollectionsBookmarkOutlinedIcon
-                        sx={{ fontSize: 15, color: "#1976D2" }}
+                        sx={{ fontSize: 15, color: "#1976D2", flexShrink: 0 }}
                       />
-                      {loc.visitCount > 0
-                        ? `${loc.visitCount} chuyến đi`
-                        : "Chưa có chuyến"}
+                      <Typography
+                        variant="caption"
+                        noWrap
+                        sx={{ color: "#0F172A", fontWeight: 600, fontSize: "0.8rem" }}
+                      >
+                        {loc.visitCount > 0
+                          ? `${loc.visitCount} chuyến`
+                          : "Chưa có chuyến"}
+                      </Typography>
                     </Box>
 
                     {loc.latestVisitDate && (
@@ -542,20 +553,23 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                         sx={{
                           display: "flex",
                           alignItems: "center",
-                          gap: 0.5,
+                          gap: 0.25,
                           color: "#64748B",
-                          fontSize: "0.775rem",
+                          fontSize: "0.75rem",
+                          flexShrink: 0,
                         }}
                       >
-                        <CalendarMonthOutlinedIcon sx={{ fontSize: 14 }} />
-                        {dayjs(loc.latestVisitDate).format("MM/YYYY")}
+                        <CalendarMonthOutlinedIcon sx={{ fontSize: 13 }} />
+                        <Typography variant="caption" sx={{ color: "#64748B", fontSize: "0.75rem" }}>
+                          {dayjs(loc.latestVisitDate).format("MM/YYYY")}
+                        </Typography>
                       </Box>
                     )}
                   </Box>
 
                   <Button
                     size="small"
-                    endIcon={<ArrowForwardIcon fontSize="small" />}
+                    endIcon={<ArrowForwardIcon sx={{ fontSize: 13 }} />}
                     onClick={(e) => {
                       e.stopPropagation();
                       onSelectLocation(loc.id);
@@ -563,8 +577,10 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
                     sx={{
                       textTransform: "none",
                       fontWeight: 600,
-                      fontSize: "0.825rem",
+                      fontSize: "0.8rem",
                       p: 0,
+                      minWidth: "auto",
+                      flexShrink: 0,
                     }}
                   >
                     Chi tiết

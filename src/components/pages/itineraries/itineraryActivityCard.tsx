@@ -26,7 +26,13 @@ export const ItineraryActivityCard: React.FC<ItineraryActivityCardProps> = ({
   isLast = false,
 }) => {
   const [expanded, setExpanded] = useState(false)
-  const [imgSrc, setImgSrc] = useState(activity.image)
+  const [prevImage, setPrevImage] = useState(activity.image)
+  const [imgSrc, setImgSrc] = useState(activity.image || DEFAULT_NO_IMAGE)
+
+  if (activity.image !== prevImage) {
+    setPrevImage(activity.image)
+    setImgSrc(activity.image || DEFAULT_NO_IMAGE)
+  }
 
   const colors = ITINERARY_CATEGORY_COLORS[activity.type] || {
     bg: '#F1F5F9',
@@ -160,6 +166,7 @@ export const ItineraryActivityCard: React.FC<ItineraryActivityCardProps> = ({
                   fontWeight: 700,
                   color: '#0F172A',
                   fontSize: { xs: '0.95rem', sm: '1rem' },
+                  wordBreak: 'break-word',
                 }}
               >
                 {activity.title}
