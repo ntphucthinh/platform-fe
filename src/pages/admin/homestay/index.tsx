@@ -421,7 +421,7 @@ export const AdminHomestayPage: React.FC = () => {
   ];
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: 1.5, sm: 2 } }}>
       <HeaderTitle>Quản Lý Homestay</HeaderTitle>
 
       {/* Error Banner if fetch failed */}

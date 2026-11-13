@@ -17,7 +17,7 @@ export function UsersCreate() {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 1.5, sm: 2 } }}>
       <HeaderTitle>User Create/Edit</HeaderTitle>
       <UserForm
         mode="create"

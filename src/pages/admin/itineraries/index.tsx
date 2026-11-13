@@ -356,7 +356,7 @@ export const ItineraryListPage: React.FC = () => {
   ];
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: 1.5, sm: 2 } }}>
       <HeaderTitle>Lịch trình du lịch</HeaderTitle>
 
       {/* 5.1 Unified Distilled Control Bar */}

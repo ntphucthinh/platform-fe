@@ -310,7 +310,7 @@ export const TravelMemoryListPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 3, pb: 4 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: 1.5, sm: 2 }, pb: { xs: 2, sm: 3 } }}>
       <HeaderTitle>Kỷ niệm chuyến đi</HeaderTitle>
 
       {/* 5.1 Distilled Control Bar (40px Uniform Controls) */}

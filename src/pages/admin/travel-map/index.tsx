@@ -340,9 +340,9 @@ export function TravelMapPage() {
             flex: 1,
             minHeight: { xs: 360, sm: 550, md: 660 },
             height: {
-              xs: "calc(100dvh - 230px - env(safe-area-inset-bottom, 0px))",
-              sm: "calc(100dvh - 250px)",
-              md: "calc(100vh - 215px)",
+              xs: "calc(100dvh - 215px - env(safe-area-inset-bottom, 0px))",
+              sm: "calc(100dvh - 235px)",
+              md: "calc(100vh - 185px)",
             },
             position: "relative",
           }}

@@ -208,7 +208,7 @@ export const TravelMemoryDetailPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 3, pb: 6 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: 1.5, sm: 2 }, pb: { xs: 3, sm: 4 } }}>
       <HeaderTitle>{memory.title}</HeaderTitle>
 
       {/* Top Navigation & Actions */}

@@ -172,7 +172,7 @@ export function DashboardPage() {
   ];
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 3.5, pb: 6 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: 2, sm: 2.5 }, pb: { xs: 3, sm: 4 } }}>
       <HeaderTitle>Dashboard</HeaderTitle>
 
       {/* SECTION A: Welcome Header */}

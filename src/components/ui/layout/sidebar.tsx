@@ -126,10 +126,10 @@ export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: Si
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: '#FFFFFF' }}>
       <Box
         sx={{
-          height: { xs: 56, sm: 64 },
+          height: { xs: 50, sm: 56 },
           display: 'flex',
           alignItems: 'center',
-          px: isCollapsed && !isMobile ? 2 : 3,
+          px: isCollapsed && !isMobile ? 2 : 2.5,
           justifyContent: isCollapsed && !isMobile ? 'center' : 'flex-start',
           gap: 1.5,
           borderBottom: '1px solid',

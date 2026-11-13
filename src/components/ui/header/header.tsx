@@ -100,8 +100,8 @@ export const Header = ({ onToggleSidebar }: HeaderProps) => {
       <Toolbar
         sx={{
           justifyContent: "space-between",
-          px: { xs: 1.5, sm: 3 },
-          minHeight: { xs: 56, sm: 64 },
+          px: { xs: 1.5, sm: 2.5 },
+          minHeight: { xs: 50, sm: 56 },
           zIndex: 1,
           position: "relative",
         }}

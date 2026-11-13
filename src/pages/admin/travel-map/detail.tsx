@@ -188,9 +188,9 @@ export const TravelMapDetailPage: React.FC = () => {
       sx={{
         display: "flex",
         flexDirection: "column",
-        gap: 3,
+        gap: { xs: 1.5, sm: 2 },
         width: "100%",
-        pb: 8,
+        pb: { xs: 3, sm: 4 },
       }}
     >
       <HeaderTitle>{`Chi tiết: ${
