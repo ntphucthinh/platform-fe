@@ -23,7 +23,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', width: '100%', bgcolor: 'background.default' }}>
+    <Box sx={{ display: 'flex', minHeight: { xs: '100dvh', md: '100vh' }, width: '100%', bgcolor: 'background.default' }}>
       <Sidebar
         isMobile={isMobile}
         mobileOpen={mobileOpen}
@@ -35,6 +35,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         sx={{
           flex: 1,
           minWidth: 0,
+          minHeight: 0,
           display: 'flex',
           flexDirection: 'column',
         }}
@@ -43,6 +44,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <Box
           sx={{
             flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: 0,
             p: { xs: 1.5, sm: 2.5, md: 3 },
             pb: {
               xs: 'calc(16px + env(safe-area-inset-bottom, 0px))',

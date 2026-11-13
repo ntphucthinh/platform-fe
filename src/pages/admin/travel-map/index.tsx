@@ -284,9 +284,11 @@ export function TravelMapPage() {
       sx={{
         display: "flex",
         flexDirection: "column",
-        gap: 2,
+        gap: { xs: 1.25, sm: 2 },
         width: "100%",
-        pb: 4,
+        flex: 1,
+        minHeight: 0,
+        pb: viewMode === "map" ? { xs: 0, sm: 4 } : { xs: 2, sm: 4 },
       }}
     >
       <HeaderTitle>Bản đồ hành trình</HeaderTitle>
@@ -335,8 +337,13 @@ export function TravelMapPage() {
             display: "flex",
             flexDirection: { xs: "column", md: "row" },
             gap: 2.5,
-            height: { xs: "auto", md: "calc(100vh - 215px)" },
-            minHeight: { xs: 520, md: 660 },
+            flex: 1,
+            minHeight: { xs: 360, sm: 550, md: 660 },
+            height: {
+              xs: "calc(100dvh - 230px - env(safe-area-inset-bottom, 0px))",
+              sm: "calc(100dvh - 250px)",
+              md: "calc(100vh - 215px)",
+            },
             position: "relative",
           }}
         >
@@ -351,6 +358,8 @@ export function TravelMapPage() {
                 : "100%",
               minWidth: 0,
               height: "100%",
+              display: "flex",
+              flexDirection: "column",
               transition: prefersReducedMotion
                 ? "none"
                 : "width 320ms cubic-bezier(0.22, 1, 0.36, 1), flex 320ms cubic-bezier(0.22, 1, 0.36, 1)",

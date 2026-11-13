@@ -116,7 +116,12 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
 
     mapInstanceRef.current = map;
 
+    const initialResizeTimer = setTimeout(() => {
+      map.invalidateSize();
+    }, 150);
+
     return () => {
+      clearTimeout(initialResizeTimer);
       map.off("zoom", updateMarkerScale);
       map.off("zoomend", updateMarkerScale);
       vnSovereignty.cleanup();
@@ -385,11 +390,14 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
         position: "relative",
         width: "100%",
         height: "100%",
-        minHeight: { xs: 450, sm: 550, md: 620 },
+        flex: 1,
+        minHeight: { xs: "100%", sm: 550, md: 620 },
         bgcolor: "#F1F5F9",
         borderRadius: "16px",
         overflow: "hidden",
         border: "1px solid #E2E8F0",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       {/* Map DOM Container */}
@@ -398,7 +406,8 @@ export const TravelLeafletMap: React.FC<TravelLeafletMapProps> = ({
         sx={{
           width: "100%",
           height: "100%",
-          minHeight: "inherit",
+          flex: 1,
+          minHeight: 0,
           zIndex: 1,
           "& .custom-div-icon": {
             overflow: "visible",
