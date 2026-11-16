@@ -18,7 +18,7 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined'
 import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined'
 import ExploreOutlinedIcon from '@mui/icons-material/ExploreOutlined'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, Link } from 'react-router-dom'
 import { APP_NAME } from '@/constants/common'
 
 const SIDEBAR_WIDTH = 260
@@ -77,7 +77,6 @@ const menuItems: MenuItem[] = [
 
 export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: SidebarProps) {
   const location = useLocation()
-  const navigate = useNavigate()
 
   const isUsersRoute = location.pathname.startsWith('/users')
   const isTravelMemoriesRoute = location.pathname.startsWith('/admin/travel-memories')
@@ -102,30 +101,21 @@ export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: Si
     }
   }
 
-  const handleParentClick = (item: MenuItem) => {
+  const handleParentToggle = (item: MenuItem) => {
     if (item.disabled) return
-
     if (item.children) {
       setOpenMenus((prev) => ({ ...prev, [item.title]: !prev[item.title] }))
-    } else if (item.path) {
-      navigate(item.path)
-      if (isMobile) {
-        onMobileClose()
-      }
-    }
-  }
-
-  const handleSubItemClick = (path: string) => {
-    navigate(path)
-    if (isMobile) {
-      onMobileClose()
     }
   }
 
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: '#FFFFFF' }}>
       <Box
+        component={Link}
+        to="/admin/dashboard"
         sx={{
+          textDecoration: 'none',
+          color: 'inherit',
           height: { xs: 50, sm: 56 },
           display: 'flex',
           alignItems: 'center',
@@ -172,12 +162,22 @@ export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: Si
                     Boolean(item.children?.some((child) => location.pathname === child.path))
                   )
 
+            const isLink = Boolean(item.path && !hasChildren)
+
             const parentButtonContent = (
               <ListItemButton
+                {...(isLink ? { component: Link, to: item.path } : {})}
                 selected={isParentSelected && !hasChildren}
                 disabled={item.disabled}
-                onClick={() => handleParentClick(item)}
+                onClick={() => {
+                  if (hasChildren) {
+                    handleParentToggle(item)
+                  } else if (isMobile) {
+                    onMobileClose()
+                  }
+                }}
                 sx={{
+                  textDecoration: 'none',
                   minHeight: 44,
                   borderRadius: '10px',
                   justifyContent: isCollapsed && !isMobile ? 'center' : 'flex-start',
@@ -246,9 +246,16 @@ export function Sidebar({ isMobile, mobileOpen, onMobileClose, isCollapsed }: Si
                         return (
                           <ListItemButton
                             key={subItem.path}
+                            component={Link}
+                            to={subItem.path}
                             selected={isSubSelected}
-                            onClick={() => handleSubItemClick(subItem.path)}
+                            onClick={() => {
+                              if (isMobile) {
+                                onMobileClose()
+                              }
+                            }}
                             sx={{
+                              textDecoration: 'none',
                               minHeight: { xs: 44, sm: 38 },
                               pl: 6.5,
                               pr: 2,
