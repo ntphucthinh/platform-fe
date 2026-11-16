@@ -219,11 +219,11 @@ export function extractRelativeImagePath(
     const afterUpload = trimmed.substring(
       cloudinaryUploadIndex + "/image/upload/".length,
     );
-    // Strip transforms (e.g. c_scale,w_500/), version (e.g. v1234567890/), and env prefix (dev/|prod/|production/|staging/|test/)
+    // Strip transforms (e.g. c_scale,w_500/), version (e.g. v1234567890/), and env prefix (dev/|prod/|production/|staging/|stg/|test/)
     const pathWithoutEnv = afterUpload
       .replace(/^(?:[a-z]_[^/]+\/)+/i, "") // e.g. w_500,f_auto/
       .replace(/^v\d+\//, "") // e.g. v1689234123/
-      .replace(/^(?:dev|prod|production|staging|test)\//i, ""); // e.g. dev/
+      .replace(/^(?:dev|prod|production|staging|stg|test)\//i, ""); // e.g. dev/ or stg/
 
     return pathWithoutEnv.replace(/^\/+/, "");
   }

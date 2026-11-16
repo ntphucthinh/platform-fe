@@ -18,19 +18,46 @@ import {
 
 export function getPublicImageUrl(path: string | null | undefined): string {
   if (!path || !path.trim()) return "";
-  const trimmed = path.trim();
+  let trimmed = path.trim();
+
+  // Normalize protocol-relative URL
+  if (trimmed.startsWith("//")) {
+    trimmed = `https:${trimmed}`;
+  }
+
   if (
     trimmed.startsWith("http://") ||
     trimmed.startsWith("https://") ||
     trimmed.startsWith("blob:") ||
     trimmed.startsWith("data:")
   ) {
-    return trimmed;
+    // If a saved URL inadvertently points to "staging/", rewrite to "stg/"
+    return trimmed.replace(/\/image\/upload\/staging\//g, "/image/upload/stg/");
   }
 
   const cloudName = env.cloudinaryCloudName || "aapohgop";
-  const assetEnv = env.cloudinaryAssetEnv || "dev";
-  const cleanPath = trimmed.replace(/^\/+/, "");
+  let assetEnv = env.cloudinaryAssetEnv || "dev";
+  if (assetEnv === "staging") {
+    assetEnv = "stg";
+  }
+
+  let cleanPath = trimmed.replace(/^\/+/, "");
+
+  // If path was saved starting with "image/upload/"
+  if (cleanPath.startsWith("image/upload/")) {
+    cleanPath = cleanPath.replace(/^image\/upload\/staging\//, "image/upload/stg/");
+    return `https://res.cloudinary.com/${cloudName}/${cleanPath}`;
+  }
+
+  // If cleanPath begins with "staging/", normalize to "stg/"
+  if (cleanPath.startsWith("staging/")) {
+    cleanPath = cleanPath.replace(/^staging\//, "stg/");
+  }
+
+  // If cleanPath already begins with "stg/" or "dev/", do not duplicate assetEnv
+  if (cleanPath.startsWith("stg/") || cleanPath.startsWith("dev/")) {
+    return `https://res.cloudinary.com/${cloudName}/image/upload/${cleanPath}`;
+  }
 
   return `https://res.cloudinary.com/${cloudName}/image/upload/${assetEnv}/${cleanPath}`;
 }

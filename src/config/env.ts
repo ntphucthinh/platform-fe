@@ -8,6 +8,13 @@ function normalizeApiUrl(raw: string | undefined): string {
   return raw.trim().replace(/\/+$/, "");
 }
 
+function normalizeAssetEnv(raw: string | undefined): string {
+  if (!raw) return "dev";
+  const trimmed = raw.trim().toLowerCase();
+  if (trimmed === "staging") return "stg";
+  return trimmed || "dev";
+}
+
 export const env = {
   apiUrl: normalizeApiUrl(import.meta.env.VITE_API_URL as string | undefined),
   appName: import.meta.env.VITE_APP_NAME as string | undefined,
@@ -15,6 +22,7 @@ export const env = {
   cloudinaryCloudName:
     (import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string | undefined) ||
     "aapohgop",
-  cloudinaryAssetEnv:
-    (import.meta.env.VITE_CLOUDINARY_ASSET_ENV as string | undefined) || "dev",
+  cloudinaryAssetEnv: normalizeAssetEnv(
+    import.meta.env.VITE_CLOUDINARY_ASSET_ENV as string | undefined,
+  ),
 };
