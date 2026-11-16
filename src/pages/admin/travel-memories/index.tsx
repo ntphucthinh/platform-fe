@@ -659,7 +659,7 @@ export const TravelMemoryListPage: React.FC = () => {
             gap: 1.5,
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Typography
               variant="subtitle1"
               sx={{
@@ -670,93 +670,97 @@ export const TravelMemoryListPage: React.FC = () => {
             >
               Danh sách chuyến đi
             </Typography>
-            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              ({totalItems} chuyến đi · Đang xem {startItem}–{endItem})
-            </Typography>
           </Box>
 
-          {/* Navigation Controls: Previous / Next buttons */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {/* Navigation Controls: Previous / Next buttons (Desktop only in top bar) */}
+          <Box
+            sx={{
+              display: { xs: "none", sm: "flex" },
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <IconButton
+              size="small"
+              onClick={handlePrevGroup}
+              disabled={page <= 1 || totalGroups <= 1 || isLoading}
+              aria-label="Trang trước"
+              sx={{
+                border: "1px solid",
+                borderColor:
+                  page <= 1 || totalGroups <= 1 || isLoading
+                    ? "#E2E8F0"
+                    : "#CBD5E1",
+                bgcolor: "#FFFFFF",
+                borderRadius: "8px",
+                width: 36,
+                height: 36,
+                color:
+                  page <= 1 || totalGroups <= 1 || isLoading
+                    ? "action.disabled"
+                    : "text.primary",
+                transition: "all 0.15s ease-in-out",
+                "&:hover": {
+                  bgcolor: "#F8FAFC",
+                  borderColor: "primary.main",
+                  color: "primary.main",
+                },
+                "&.Mui-disabled": {
+                  borderColor: "#E2E8F0",
+                  bgcolor: "#F8FAFC",
+                },
+              }}
+            >
+              <ChevronLeftRoundedIcon fontSize="small" />
+            </IconButton>
+
             <Typography
-              variant="caption"
+              variant="body2"
               sx={{
                 color: "text.secondary",
                 fontWeight: 600,
-                display: { xs: "none", sm: "block" },
+                fontSize: "0.85rem",
+                userSelect: "none",
+                whiteSpace: "nowrap",
+                px: 0.5,
               }}
             >
-              Nhóm {page} / {totalGroups}
+              Trang {page}/{totalGroups}
             </Typography>
 
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-              <IconButton
-                size="small"
-                onClick={handlePrevGroup}
-                disabled={page <= 1 || totalGroups <= 1 || isLoading}
-                aria-label="Nhóm trước"
-                sx={{
-                  border: "1px solid",
-                  borderColor:
-                    page <= 1 || totalGroups <= 1 || isLoading
-                      ? "#E2E8F0"
-                      : "#CBD5E1",
-                  bgcolor: "#FFFFFF",
-                  borderRadius: "8px",
-                  width: 36,
-                  height: 36,
-                  color:
-                    page <= 1 || totalGroups <= 1 || isLoading
-                      ? "action.disabled"
-                      : "text.primary",
-                  transition: "all 0.15s ease-in-out",
-                  "&:hover": {
-                    bgcolor: "#F8FAFC",
-                    borderColor: "primary.main",
-                    color: "primary.main",
-                  },
-                  "&.Mui-disabled": {
-                    borderColor: "#E2E8F0",
-                    bgcolor: "#F8FAFC",
-                  },
-                }}
-              >
-                <ChevronLeftRoundedIcon fontSize="small" />
-              </IconButton>
-
-              <IconButton
-                size="small"
-                onClick={handleNextGroup}
-                disabled={page >= totalGroups || totalGroups <= 1 || isLoading}
-                aria-label="Nhóm tiếp theo"
-                sx={{
-                  border: "1px solid",
-                  borderColor:
-                    page >= totalGroups || totalGroups <= 1 || isLoading
-                      ? "#E2E8F0"
-                      : "#CBD5E1",
-                  bgcolor: "#FFFFFF",
-                  borderRadius: "8px",
-                  width: 36,
-                  height: 36,
-                  color:
-                    page >= totalGroups || totalGroups <= 1 || isLoading
-                      ? "action.disabled"
-                      : "text.primary",
-                  transition: "all 0.15s ease-in-out",
-                  "&:hover": {
-                    bgcolor: "#F8FAFC",
-                    borderColor: "primary.main",
-                    color: "primary.main",
-                  },
-                  "&.Mui-disabled": {
-                    borderColor: "#E2E8F0",
-                    bgcolor: "#F8FAFC",
-                  },
-                }}
-              >
-                <ChevronRightRoundedIcon fontSize="small" />
-              </IconButton>
-            </Box>
+            <IconButton
+              size="small"
+              onClick={handleNextGroup}
+              disabled={page >= totalGroups || totalGroups <= 1 || isLoading}
+              aria-label="Trang sau"
+              sx={{
+                border: "1px solid",
+                borderColor:
+                  page >= totalGroups || totalGroups <= 1 || isLoading
+                    ? "#E2E8F0"
+                    : "#CBD5E1",
+                bgcolor: "#FFFFFF",
+                borderRadius: "8px",
+                width: 36,
+                height: 36,
+                color:
+                  page >= totalGroups || totalGroups <= 1 || isLoading
+                    ? "action.disabled"
+                    : "text.primary",
+                transition: "all 0.15s ease-in-out",
+                "&:hover": {
+                  bgcolor: "#F8FAFC",
+                  borderColor: "primary.main",
+                  color: "primary.main",
+                },
+                "&.Mui-disabled": {
+                  borderColor: "#E2E8F0",
+                  bgcolor: "#F8FAFC",
+                },
+              }}
+            >
+              <ChevronRightRoundedIcon fontSize="small" />
+            </IconButton>
           </Box>
         </Box>
       )}
@@ -901,12 +905,126 @@ export const TravelMemoryListPage: React.FC = () => {
             alignItems: "center",
             justifyContent: "center",
             gap: 1.5,
-            mt: 0.5,
+            pt: { xs: 2.5, sm: 0 },
+            mt: { xs: 1.5, sm: 0.5 },
+            borderTop: { xs: "1px solid #E2E8F0", sm: "none" },
+            width: "100%",
           }}
         >
-          {/* Progress dots if multiple groups with accessible touch targets */}
+          {/* Mobile Pagination Control: Active on xs */}
+          <Box
+            sx={{
+              display: { xs: "flex", sm: "none" },
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 1.25,
+              width: "100%",
+            }}
+          >
+            {/* Result count above pagination on mobile */}
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                fontSize: "0.85rem",
+                fontWeight: 500,
+                textAlign: "center",
+              }}
+            >
+              Đang xem {startItem}–{endItem} trong {totalItems} chuyến đi
+            </Typography>
+
+            {/* Grouped Previous, Indicator, Next in one centered horizontal control */}
+            {totalGroups > 1 && (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 1,
+                  width: "100%",
+                }}
+              >
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<ChevronLeftRoundedIcon />}
+                  disabled={page <= 1 || totalGroups <= 1 || isLoading}
+                  onClick={handlePrevGroup}
+                  aria-label="Trang trước"
+                  sx={{
+                    borderRadius: "8px",
+                    textTransform: "none",
+                    fontWeight: 600,
+                    fontSize: "0.825rem",
+                    borderColor: "#CBD5E1",
+                    color: "text.primary",
+                    minHeight: 40,
+                    minWidth: 80,
+                    px: 1.5,
+                    "&:hover": { borderColor: "primary.main", bgcolor: "#F8FAFC" },
+                    "&.Mui-disabled": {
+                      borderColor: "#E2E8F0",
+                      bgcolor: "#F8FAFC",
+                    },
+                  }}
+                >
+                  Trước
+                </Button>
+
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontWeight: 600,
+                    color: "text.secondary",
+                    px: 1.25,
+                    fontSize: "0.85rem",
+                    whiteSpace: "nowrap",
+                    textAlign: "center",
+                  }}
+                >
+                  Trang {page} / {totalGroups}
+                </Typography>
+
+                <Button
+                  size="small"
+                  variant="outlined"
+                  endIcon={<ChevronRightRoundedIcon />}
+                  disabled={page >= totalGroups || totalGroups <= 1 || isLoading}
+                  onClick={handleNextGroup}
+                  aria-label="Trang sau"
+                  sx={{
+                    borderRadius: "8px",
+                    textTransform: "none",
+                    fontWeight: 600,
+                    fontSize: "0.825rem",
+                    borderColor: "#CBD5E1",
+                    color: "text.primary",
+                    minHeight: 40,
+                    minWidth: 80,
+                    px: 1.5,
+                    "&:hover": { borderColor: "primary.main", bgcolor: "#F8FAFC" },
+                    "&.Mui-disabled": {
+                      borderColor: "#E2E8F0",
+                      bgcolor: "#F8FAFC",
+                    },
+                  }}
+                >
+                  Sau
+                </Button>
+              </Box>
+            )}
+          </Box>
+
+          {/* Desktop Progress dots if multiple groups with accessible touch targets */}
           {totalGroups > 1 && totalGroups <= 12 && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <Box
+              sx={{
+                display: { xs: "none", sm: "flex" },
+                alignItems: "center",
+                gap: 0.5,
+              }}
+            >
               {Array.from({ length: totalGroups }).map((_, idx) => (
                 <Box
                   key={idx}
@@ -953,10 +1071,14 @@ export const TravelMemoryListPage: React.FC = () => {
             </Box>
           )}
 
-          {/* Progress text indicator */}
+          {/* Progress text indicator (Desktop only) */}
           <Typography
             variant="body2"
-            sx={{ color: "text.secondary", fontWeight: 500 }}
+            sx={{
+              color: "text.secondary",
+              fontWeight: 500,
+              display: { xs: "none", sm: "block" },
+            }}
           >
             Đang xem {startItem}–{endItem} trong {totalItems} chuyến đi
           </Typography>

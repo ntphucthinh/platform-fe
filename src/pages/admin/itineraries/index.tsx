@@ -23,6 +23,8 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
+import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import { useNavigate } from "react-router-dom";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { tableSx } from "@/components/ui/table/tableStyles";
@@ -30,6 +32,7 @@ import { useItineraryList } from "@/hooks/itineraries/useItineraries";
 import type { IItineraryListItem } from "@/types/pages/itineraries/itinerary";
 import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
+import { ItineraryCard } from "@/components/pages/itineraries/itineraryCard";
 
 function CustomNoRowsOverlay() {
   return (
@@ -126,6 +129,32 @@ export const ItineraryListPage: React.FC = () => {
     destinationFilter,
     durationFilter,
   ]);
+
+  // Mobile card view pagination (10 items / page, 2 cols x 5 rows)
+  const [mobilePage, setMobilePage] = useState(1);
+  const mobilePerPage = 10;
+  const totalMobileItems = filteredItineraries.length;
+  const totalMobilePages = Math.max(1, Math.ceil(totalMobileItems / mobilePerPage));
+
+  // Reset mobile page to 1 when search or filters change
+  const filterKey = `${searchTerm}_${destinationFilter}_${durationFilter}`;
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
+  if (filterKey !== prevFilterKey) {
+    setPrevFilterKey(filterKey);
+    setMobilePage(1);
+  }
+
+  const safeMobilePage = Math.min(mobilePage, totalMobilePages);
+  const startMobileItem =
+    totalMobileItems === 0 ? 0 : (safeMobilePage - 1) * mobilePerPage + 1;
+  const endMobileItem = Math.min(safeMobilePage * mobilePerPage, totalMobileItems);
+
+  const visibleMobileItineraries = useMemo(() => {
+    return filteredItineraries.slice(
+      (safeMobilePage - 1) * mobilePerPage,
+      safeMobilePage * mobilePerPage,
+    );
+  }, [filteredItineraries, safeMobilePage, mobilePerPage]);
 
   const isFiltered =
     searchTerm !== "" ||
@@ -539,10 +568,11 @@ export const ItineraryListPage: React.FC = () => {
         </Box>
       </Card>
 
-      {/* 5.4 DataGrid */}
+      {/* 5.4 DataGrid (Desktop sm+) */}
       <Card
         elevation={0}
         sx={{
+          display: { xs: "none", sm: "block" },
           width: "100%",
           bgcolor: "#FFFFFF",
           borderRadius: "12px",
@@ -571,6 +601,174 @@ export const ItineraryListPage: React.FC = () => {
           sx={tableSx}
         />
       </Card>
+
+      {/* 5.5 Mobile Card Grid & Pagination (xs only) */}
+      <Box
+        sx={{
+          display: { xs: "flex", sm: "none" },
+          flexDirection: "column",
+          gap: 1.5,
+          width: "100%",
+        }}
+      >
+        {totalMobileItems === 0 ? (
+          <Card
+            elevation={0}
+            sx={{
+              borderRadius: "12px",
+              border: "1px dashed #CBD5E1",
+              bgcolor: "#F8FAFC",
+              p: 4,
+              textAlign: "center",
+            }}
+          >
+            <Typography
+              variant="body1"
+              sx={{ fontWeight: 600, color: "text.primary" }}
+            >
+              Không tìm thấy lịch trình nào
+            </Typography>
+            <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
+              Chưa có dữ liệu phù hợp với từ khóa hoặc bộ lọc đã chọn.
+            </Typography>
+          </Card>
+        ) : (
+          <>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, 1fr)",
+                gap: 1.25,
+                width: "100%",
+              }}
+            >
+              {visibleMobileItineraries.map((item) => (
+                <ItineraryCard
+                  key={item.id}
+                  item={item}
+                  onView={handlePreview}
+                  onEdit={handleEdit}
+                  onDelete={(it) => setItemToDelete(it)}
+                />
+              ))}
+            </Box>
+
+            {/* Mobile Pagination */}
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 1.25,
+                pt: 2,
+                mt: 1,
+                borderTop: "1px solid #E2E8F0",
+                width: "100%",
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                  fontSize: "0.85rem",
+                  fontWeight: 500,
+                  textAlign: "center",
+                }}
+              >
+                Đang xem {startMobileItem}–{endMobileItem} trong {totalMobileItems} lịch trình
+              </Typography>
+
+              {totalMobilePages > 1 && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 1,
+                    width: "100%",
+                  }}
+                >
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<ChevronLeftRoundedIcon />}
+                    disabled={safeMobilePage <= 1}
+                    onClick={() => setMobilePage((p) => Math.max(1, p - 1))}
+                    aria-label="Trang trước"
+                    sx={{
+                      borderRadius: "8px",
+                      textTransform: "none",
+                      fontWeight: 600,
+                      fontSize: "0.825rem",
+                      borderColor: "#CBD5E1",
+                      color: "text.primary",
+                      minHeight: 40,
+                      minWidth: 80,
+                      px: 1.5,
+                      "&:hover": {
+                        borderColor: "primary.main",
+                        bgcolor: "#F8FAFC",
+                      },
+                      "&.Mui-disabled": {
+                        borderColor: "#E2E8F0",
+                        bgcolor: "#F8FAFC",
+                      },
+                    }}
+                  >
+                    Trước
+                  </Button>
+
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 600,
+                      color: "text.secondary",
+                      px: 1.25,
+                      fontSize: "0.85rem",
+                      whiteSpace: "nowrap",
+                      textAlign: "center",
+                    }}
+                  >
+                    Trang {safeMobilePage} / {totalMobilePages}
+                  </Typography>
+
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    endIcon={<ChevronRightRoundedIcon />}
+                    disabled={safeMobilePage >= totalMobilePages}
+                    onClick={() =>
+                      setMobilePage((p) => Math.min(totalMobilePages, p + 1))
+                    }
+                    aria-label="Trang sau"
+                    sx={{
+                      borderRadius: "8px",
+                      textTransform: "none",
+                      fontWeight: 600,
+                      fontSize: "0.825rem",
+                      borderColor: "#CBD5E1",
+                      color: "text.primary",
+                      minHeight: 40,
+                      minWidth: 80,
+                      px: 1.5,
+                      "&:hover": {
+                        borderColor: "primary.main",
+                        bgcolor: "#F8FAFC",
+                      },
+                      "&.Mui-disabled": {
+                        borderColor: "#E2E8F0",
+                        bgcolor: "#F8FAFC",
+                      },
+                    }}
+                  >
+                    Sau
+                  </Button>
+                </Box>
+              )}
+            </Box>
+          </>
+        )}
+      </Box>
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmDialog
