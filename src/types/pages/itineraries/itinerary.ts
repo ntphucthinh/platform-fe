@@ -10,9 +10,10 @@ export interface IItineraryActivity {
   id: string
   time: string
   title: string
-  type: ItineraryActivityType
+  type?: ItineraryActivityType
   duration: string
   location: string
+  mapUrl?: string
   description: string
   image: string
   notes?: string

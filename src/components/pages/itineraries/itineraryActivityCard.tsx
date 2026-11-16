@@ -34,7 +34,7 @@ export const ItineraryActivityCard: React.FC<ItineraryActivityCardProps> = ({
     setImgSrc(activity.image || DEFAULT_NO_IMAGE)
   }
 
-  const colors = ITINERARY_CATEGORY_COLORS[activity.type] || {
+  const colors = (activity.type && ITINERARY_CATEGORY_COLORS[activity.type]) || {
     bg: '#F1F5F9',
     text: '#475569',
     border: '#E2E8F0',
@@ -172,19 +172,21 @@ export const ItineraryActivityCard: React.FC<ItineraryActivityCardProps> = ({
                 {activity.title}
               </Typography>
 
-              <Chip
-                label={activity.type}
-                size="small"
-                sx={{
-                  bgcolor: colors.bg,
-                  color: colors.text,
-                  border: `1px solid ${colors.border}`,
-                  fontWeight: 700,
-                  fontSize: '0.72rem',
-                  height: 22,
-                  borderRadius: '6px',
-                }}
-              />
+              {activity.type && (
+                <Chip
+                  label={activity.type}
+                  size="small"
+                  sx={{
+                    bgcolor: colors.bg,
+                    color: colors.text,
+                    border: `1px solid ${colors.border}`,
+                    fontWeight: 700,
+                    fontSize: '0.72rem',
+                    height: 22,
+                    borderRadius: '6px',
+                  }}
+                />
+              )}
             </Box>
 
             <Typography
@@ -216,12 +218,32 @@ export const ItineraryActivityCard: React.FC<ItineraryActivityCardProps> = ({
                 </Typography>
               </Box>
 
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <PlaceOutlinedIcon sx={{ fontSize: 16, color: '#64748B' }} />
-                <Typography variant="caption" sx={{ fontWeight: 600, color: '#475569' }}>
-                  {activity.location}
-                </Typography>
-              </Box>
+              {activity.location && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <PlaceOutlinedIcon sx={{ fontSize: 16, color: '#64748B' }} />
+                  {activity.mapUrl ? (
+                    <Typography
+                      component="a"
+                      href={activity.mapUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      variant="caption"
+                      sx={{
+                        fontWeight: 600,
+                        color: 'primary.main',
+                        textDecoration: 'underline',
+                        '&:hover': { color: 'primary.dark' },
+                      }}
+                    >
+                      {activity.location}
+                    </Typography>
+                  ) : (
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: '#475569' }}>
+                      {activity.location}
+                    </Typography>
+                  )}
+                </Box>
+              )}
             </Box>
           </Box>
 

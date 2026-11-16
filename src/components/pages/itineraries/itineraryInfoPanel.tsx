@@ -55,7 +55,7 @@ export const ItineraryInfoPanel: React.FC<ItineraryInfoPanelProps> = ({
           </Box>
           <Box>
             <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 500, display: 'block' }}>
-              Thời lượng
+              Thời gian chuyến đi
             </Typography>
             <Typography variant="body2" sx={{ fontWeight: 700, color: '#1E293B', fontSize: '0.95rem' }}>
               {duration}
@@ -82,7 +82,7 @@ export const ItineraryInfoPanel: React.FC<ItineraryInfoPanelProps> = ({
           </Box>
           <Box>
             <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 500, display: 'block' }}>
-              Địa điểm
+              Điểm đến
             </Typography>
             <Typography variant="body2" sx={{ fontWeight: 700, color: '#1E293B', fontSize: '0.95rem' }}>
               {destination}
@@ -136,7 +136,7 @@ export const ItineraryInfoPanel: React.FC<ItineraryInfoPanelProps> = ({
           </Box>
           <Box>
             <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 500, display: 'block' }}>
-              Số hoạt động
+              Trải nghiệm trong chuyến đi
             </Typography>
             <Typography variant="body2" sx={{ fontWeight: 700, color: '#1E293B', fontSize: '0.95rem' }}>
               {totalActivities} hoạt động
@@ -163,7 +163,7 @@ export const ItineraryInfoPanel: React.FC<ItineraryInfoPanelProps> = ({
           </Box>
           <Box sx={{ flex: 1 }}>
             <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 500, display: 'block', mb: 0.75 }}>
-              Chủ đề
+              Chủ đề khám phá
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
               {(themes || []).length === 0 ? (

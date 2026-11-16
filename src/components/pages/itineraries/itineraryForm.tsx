@@ -1,4 +1,10 @@
-import React, { useState, useRef, useMemo, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useRef,
+  useMemo,
+  useEffect,
+  useCallback,
+} from "react";
 import {
   Box,
   Typography,
@@ -8,10 +14,6 @@ import {
   Button,
   Chip,
   IconButton,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
   Tooltip,
   Dialog,
   DialogTitle,
@@ -33,7 +35,6 @@ import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import dayjs from "dayjs";
 import { useForm, useWatch } from "react-hook-form";
@@ -77,15 +78,6 @@ const AVAILABLE_THEMES = [
   "Lịch sử",
 ];
 
-const ACTIVITY_CATEGORIES: ItineraryActivityType[] = [
-  "Ăn uống",
-  "Tham quan",
-  "Thiên nhiên",
-  "Cà phê",
-  "Mua sắm",
-  "Nghỉ ngơi",
-];
-
 export interface ItineraryFormProps {
   initialData?: ITravelItinerary | null;
   isEdit?: boolean;
@@ -124,7 +116,9 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     resolver: yupResolver(itinerarySchema),
     defaultValues: {
       title: initialData?.title || "",
-      locationId: initialData?.locationId ? Number(initialData.locationId) : null,
+      locationId: initialData?.locationId
+        ? Number(initialData.locationId)
+        : null,
       destination: initialData?.destination || "",
       durationDays: initialDaysCount,
       durationNights: initialNightsCount,
@@ -137,8 +131,6 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
   const title = useWatch({ control, name: "title" }) ?? "";
   const locationId = useWatch({ control, name: "locationId" }) ?? null;
   const destination = useWatch({ control, name: "destination" }) ?? "";
-  const durationDays = useWatch({ control, name: "durationDays" }) ?? 3;
-  const durationNights = useWatch({ control, name: "durationNights" }) ?? 2;
   const suitableFor = useWatch({ control, name: "suitableFor" }) ?? "";
   const description = useWatch({ control, name: "description" }) ?? "";
   const coverImage = useWatch({ control, name: "coverImage" }) ?? "";
@@ -321,9 +313,10 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     activityIndex: number | null;
     time: string;
     title: string;
-    type: ItineraryActivityType;
+    type?: ItineraryActivityType;
     duration: string;
     location: string;
+    mapUrl: string;
     description: string;
     notes: string;
     image: string;
@@ -333,9 +326,9 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     activityIndex: null,
     time: "08:00",
     title: "",
-    type: "Tham quan",
     duration: "1 giờ",
     location: "",
+    mapUrl: "",
     description: "",
     notes: "",
     image: "",
@@ -391,33 +384,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     }
   };
 
-  // Duration changes
-  const handleDaysCountChange = (newDays: number) => {
-    const clamped = Math.max(1, Math.min(30, newDays));
-    setValue("durationDays", clamped, { shouldDirty: true });
-    setValue("durationNights", Math.max(0, clamped - 1), { shouldDirty: true });
 
-    // Expand days if count increased
-    if (clamped > days.length) {
-      const currentLen = days.length;
-      const added: IItineraryDay[] = [];
-      for (let i = currentLen + 1; i <= clamped; i++) {
-        added.push({
-          id: `day-${i}-${Date.now()}`,
-          dayNumber: i,
-          title: `Ngày ${i} – Khám phá tự do`,
-          subtitle: "Lịch trình linh hoạt theo kế hoạch cá nhân.",
-          date: "",
-          summary: "Dành thời gian trải nghiệm theo nhịp độ riêng.",
-          coverImage: coverImage || DEFAULT_NO_IMAGE,
-          activities: [],
-        });
-      }
-      setDays([...days, ...added]);
-    } else if (clamped < days.length && activeDayIndex >= clamped) {
-      setActiveDayIndex(clamped - 1);
-    }
-  };
 
   // Add Day manually
   const handleAddDay = () => {
@@ -479,9 +446,9 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
       activityIndex: null,
       time: "08:00",
       title: "",
-      type: "Tham quan",
       duration: "1 giờ",
       location: "",
+      mapUrl: "",
       description: "",
       notes: "",
       image: "",
@@ -499,9 +466,10 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
       activityIndex: actIndex,
       time: act.time || "08:00",
       title: act.title || "",
-      type: act.type || "Tham quan",
+      type: act.type,
       duration: act.duration || "1 giờ",
       location: act.location || "",
+      mapUrl: act.mapUrl || "",
       description: act.description || "",
       notes: act.notes || "",
       image: act.image || "",
@@ -520,6 +488,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
       type,
       duration,
       location,
+      mapUrl,
       description: actDesc,
       notes,
       image,
@@ -535,6 +504,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
       type,
       duration: duration.trim() || "1 giờ",
       location: location.trim(),
+      mapUrl: mapUrl.trim(),
       description: actDesc.trim(),
       notes: notes.trim(),
       image: image || DEFAULT_NO_IMAGE,
@@ -583,13 +553,16 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
         .map((t) => t.trim())
         .filter(Boolean);
 
+      const finalDays = days.length;
+      const finalNights = Math.max(0, finalDays - 1);
+
       const payload: ICreateItineraryInput = {
         title: values.title.trim(),
         destination: values.destination.trim(),
         locationId: resolvedLocationId,
-        durationDays: values.durationDays,
-        durationNights: values.durationNights,
-        duration: `${values.durationDays} ngày ${values.durationNights} đêm`,
+        durationDays: finalDays,
+        durationNights: finalNights,
+        duration: `${finalDays} ngày ${finalNights} đêm`,
         description:
           (values.description || "").trim() ||
           `Khám phá vẻ đẹp tuyệt vời tại ${values.destination}.`,
@@ -625,15 +598,17 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
   );
 
   // Temporary Itinerary object for real-time preview
+  const livePreviewDays = days.length;
+  const livePreviewNights = Math.max(0, livePreviewDays - 1);
   const livePreviewItinerary: ITravelItinerary = {
     id: initialData?.id || "preview-temp",
     locationId:
       locationId ?? (selectedLocation ? Number(selectedLocation.value) : null),
     title: title || "Lịch trình chưa đặt tên",
     destination: destination || "Địa điểm chưa xác định",
-    duration: `${durationDays} ngày ${durationNights} đêm`,
-    durationDays,
-    durationNights,
+    duration: `${livePreviewDays} ngày ${livePreviewNights} đêm`,
+    durationDays: livePreviewDays,
+    durationNights: livePreviewNights,
     description:
       description || "Mô tả tổng quan hành trình đang được cập nhật.",
     coverImage: coverImage || DEFAULT_NO_IMAGE,
@@ -881,42 +856,13 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             )}
           />
 
-          {/* Row 3: Thời lượng (Số ngày, Số đêm) & Đối tượng phù hợp */}
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 2fr" },
-              gap: 2,
-            }}
-          >
-            <TextField
-              label="Số ngày *"
-              type="number"
-              value={durationDays}
-              onChange={(e) => handleDaysCountChange(Number(e.target.value))}
-              slotProps={{ htmlInput: { min: 1, max: 30 } }}
-              helperText={`${durationDays} ngày`}
-            />
-
-            <TextField
-              label="Số đêm"
-              type="number"
-              value={durationNights}
-              onChange={(e) =>
-                setValue("durationNights", Math.max(0, Number(e.target.value)), {
-                  shouldDirty: true,
-                })
-              }
-              slotProps={{ htmlInput: { min: 0, max: 30 } }}
-              helperText={`${durationNights} đêm`}
-            />
-
-            <TextField
-              label="Đối tượng phù hợp"
-              placeholder="Ví dụ: Cặp đôi, nhóm bạn, gia đình"
-              {...register("suitableFor")}
-            />
-          </Box>
+          {/* Row 3: Đối tượng phù hợp */}
+          <TextField
+            label="Đối tượng phù hợp"
+            placeholder="Ví dụ: Cặp đôi, nhóm bạn, gia đình"
+            {...register("suitableFor")}
+            fullWidth
+          />
 
           {/* Row 4: Chủ đề */}
           <Box>
@@ -1124,10 +1070,13 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
         >
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 700, color: "#0F172A" }}>
-              2. Chi tiết lịch trình theo từng ngày ({days.length} ngày)
+              2. Chi tiết lịch trình theo từng ngày
             </Typography>
-            <Typography variant="body2" sx={{ color: "#64748B" }}>
-              Thêm các hoạt động cụ thể, thời gian và địa điểm cho từng ngày.
+            <Typography
+              variant="body2"
+              sx={{ color: "#64748B", mt: 0.25, fontWeight: 500 }}
+            >
+              {days.length} ngày {Math.max(0, days.length - 1)} đêm
             </Typography>
           </Box>
 
@@ -1143,7 +1092,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
               boxShadow: "none",
             }}
           >
-            + Thêm ngày mới
+            Thêm ngày mới
           </Button>
         </Box>
 
@@ -1166,73 +1115,108 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
         >
           {days.map((day, dayIndex) => {
             const isActive = dayIndex === safeActiveDayIndex;
-            const actCount = day.activities?.length || 0;
             return (
-              <Button
+              <Box
                 key={day.id || day.dayNumber}
-                onClick={() => setActiveDayIndex(dayIndex)}
                 sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
                   flexShrink: 0,
-                  px: 2,
-                  py: 1,
                   borderRadius: "12px",
                   border: "1px solid",
                   borderColor: isActive ? "primary.main" : "#E2E8F0",
                   bgcolor: isActive ? "#EFF6FF" : "#FFFFFF",
-                  color: isActive ? "primary.dark" : "#475569",
-                  fontWeight: isActive ? 700 : 500,
-                  textTransform: "none",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
                   boxShadow: isActive
                     ? "0 2px 6px rgba(37, 99, 235, 0.12)"
                     : "none",
                   transition: "all 0.18s ease-in-out",
                   "&:hover": {
-                    bgcolor: isActive ? "#DBEAFE" : "#F8FAFC",
                     borderColor: isActive ? "primary.main" : "#CBD5E1",
-                  },
-                  "&:focus-visible": {
-                    outline: "2px solid #2563EB",
-                    outlineOffset: 2,
                   },
                 }}
               >
                 <Box
+                  component="button"
+                  type="button"
+                  onClick={() => setActiveDayIndex(dayIndex)}
                   sx={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: "50%",
-                    bgcolor: isActive ? "primary.main" : "#E2E8F0",
-                    color: isActive ? "#FFFFFF" : "#475569",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "0.75rem",
-                    fontWeight: 800,
+                    gap: 1,
+                    pl: 1.75,
+                    pr: days.length > 1 ? 0.75 : 1.75,
+                    py: 1,
+                    border: "none",
+                    bgcolor: "transparent",
+                    color: isActive ? "primary.dark" : "#475569",
+                    fontWeight: isActive ? 700 : 500,
+                    cursor: "pointer",
+                    borderRadius: "11px",
+                    outline: "none",
+                    transition: "background-color 0.15s ease",
+                    "&:hover": {
+                      bgcolor: isActive ? "#DBEAFE" : "#F8FAFC",
+                    },
+                    "&:focus-visible": {
+                      outline: "2px solid #2563EB",
+                      outlineOffset: -1,
+                    },
                   }}
                 >
-                  {day.dayNumber}
+                  <Box
+                    sx={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      bgcolor: isActive ? "primary.main" : "#E2E8F0",
+                      color: isActive ? "#FFFFFF" : "#475569",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "0.75rem",
+                      fontWeight: 800,
+                    }}
+                  >
+                    {day.dayNumber}
+                  </Box>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: "inherit",
+                      fontSize: "0.88rem",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Ngày {day.dayNumber}
+                  </Typography>
                 </Box>
-                <Typography
-                  variant="body2"
-                  sx={{ fontWeight: "inherit", fontSize: "0.88rem" }}
-                >
-                  Ngày {day.dayNumber}
-                </Typography>
-                <Chip
-                  label={`${actCount}`}
-                  size="small"
-                  sx={{
-                    height: 20,
-                    fontSize: "0.7rem",
-                    fontWeight: 700,
-                    bgcolor: isActive ? "primary.main" : "#F1F5F9",
-                    color: isActive ? "#FFFFFF" : "#64748B",
-                  }}
-                />
-              </Button>
+
+                {days.length > 1 && (
+                  <Tooltip title={`Xóa Ngày ${day.dayNumber}`}>
+                    <IconButton
+                      size="small"
+                      aria-label={`Xóa Ngày ${day.dayNumber}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDayToDelete(dayIndex);
+                      }}
+                      sx={{
+                        mr: 0.75,
+                        p: 0.5,
+                        color: isActive ? "primary.main" : "#94A3B8",
+                        borderRadius: "6px",
+                        transition: "all 0.15s ease",
+                        "&:hover": {
+                          color: "error.main",
+                          bgcolor: "#FEE2E2",
+                        },
+                      }}
+                    >
+                      <DeleteOutlinedIcon sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </Box>
             );
           })}
 
@@ -1253,7 +1237,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
               "&:hover": { borderColor: "primary.main", bgcolor: "#EFF6FF" },
             }}
           >
-            + Ngày mới
+            Ngày mới
           </Button>
         </Box>
 
@@ -1339,7 +1323,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                     fontWeight: 600,
                   }}
                 >
-                  + Thêm hoạt động
+                  Thêm hoạt động
                 </Button>
 
                 {days.length > 1 && (
@@ -1362,65 +1346,21 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             </Box>
 
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-              {/* Day Inputs: Title, Date, Summary */}
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: { xs: "1fr", md: "2fr 1fr" },
-                  gap: 2,
-                  mb: 2.5,
-                }}
-              >
-                <TextField
-                  label="Tiêu đề ngày"
-                  value={currentActiveDay.title}
-                  onChange={(e) =>
-                    handleUpdateDayField(
-                      safeActiveDayIndex,
-                      "title",
-                      e.target.value,
-                    )
-                  }
-                  size="small"
-                  fullWidth
-                />
-
-                <DatePicker
-                  label="Ngày hiển thị (Tùy chọn)"
-                  format="DD/MM/YYYY"
-                  value={
-                    currentActiveDay.date
-                      ? dayjs(currentActiveDay.date, [
-                          "DD/MM/YYYY",
-                          "YYYY-MM-DD",
-                        ]).isValid()
-                        ? dayjs(currentActiveDay.date, [
-                            "DD/MM/YYYY",
-                            "YYYY-MM-DD",
-                          ])
-                        : null
-                      : null
-                  }
-                  onChange={(newValue) => {
-                    handleUpdateDayField(
-                      safeActiveDayIndex,
-                      "date",
-                      newValue && newValue.isValid()
-                        ? newValue.format("DD/MM/YYYY")
-                        : ""
-                    );
-                  }}
-                  slotProps={{
-                    actionBar: {
-                      actions: ["clear", "accept"],
-                    },
-                    textField: {
-                      size: "small",
-                      fullWidth: true,
-                    },
-                  }}
-                />
-              </Box>
+              {/* Day Inputs: Title & Summary */}
+              <TextField
+                label="Tiêu đề ngày"
+                value={currentActiveDay.title}
+                onChange={(e) =>
+                  handleUpdateDayField(
+                    safeActiveDayIndex,
+                    "title",
+                    e.target.value,
+                  )
+                }
+                size="small"
+                fullWidth
+                sx={{ mb: 2.5 }}
+              />
 
               <TextField
                 label="Mô tả / Tóm tắt ngày"
@@ -1467,7 +1407,8 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                       variant="body2"
                       sx={{ color: "#64748B", mb: 1 }}
                     >
-                      Chưa có hoạt động nào cho ngày {currentActiveDay.dayNumber}.
+                      Chưa có hoạt động nào cho ngày{" "}
+                      {currentActiveDay.dayNumber}.
                     </Typography>
                     <Button
                       size="small"
@@ -1482,7 +1423,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                 ) : (
                   currentActiveDay.activities.map((act, actIndex) => {
                     const catStyle =
-                      ITINERARY_CATEGORY_COLORS[act.type] ||
+                      (act.type && ITINERARY_CATEGORY_COLORS[act.type]) ||
                       ITINERARY_CATEGORY_COLORS["Tham quan"];
                     return (
                       <Box
@@ -1548,18 +1489,20 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                               >
                                 {act.title}
                               </Typography>
-                              <Chip
-                                label={act.type}
-                                size="small"
-                                sx={{
-                                  height: 22,
-                                  fontSize: "0.72rem",
-                                  fontWeight: 600,
-                                  bgcolor: catStyle.bg,
-                                  color: catStyle.text,
-                                  border: `1px solid ${catStyle.border}`,
-                                }}
-                              />
+                              {act.type && (
+                                <Chip
+                                  label={act.type}
+                                  size="small"
+                                  sx={{
+                                    height: 22,
+                                    fontSize: "0.72rem",
+                                    fontWeight: 600,
+                                    bgcolor: catStyle.bg,
+                                    color: catStyle.text,
+                                    border: `1px solid ${catStyle.border}`,
+                                  }}
+                                />
+                              )}
                             </Box>
 
                             <Box
@@ -1573,12 +1516,22 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                             >
                               {act.location && (
                                 <Typography
+                                  {...(act.mapUrl
+                                    ? {
+                                        component: "a",
+                                        href: act.mapUrl,
+                                        target: "_blank",
+                                        rel: "noopener noreferrer",
+                                      }
+                                    : {})}
                                   variant="caption"
                                   sx={{
-                                    color: "#64748B",
+                                    color: act.mapUrl ? "primary.main" : "#64748B",
                                     display: "flex",
                                     alignItems: "center",
                                     gap: 0.25,
+                                    textDecoration: act.mapUrl ? "underline" : "none",
+                                    "&:hover": act.mapUrl ? { color: "primary.dark" } : {},
                                   }}
                                 >
                                   <PlaceOutlinedIcon sx={{ fontSize: 14 }} />
@@ -1707,7 +1660,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                       fontWeight: 600,
                     }}
                   >
-                    + Thêm ngày mới
+                    Thêm ngày mới
                   </Button>
                 )}
               </Box>
@@ -1843,11 +1796,24 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
           dividers
           sx={{ display: "flex", flexDirection: "column", gap: 2.25 }}
         >
-          {/* Time & Title */}
+          {/* Row 1: Tên hoạt động (Full width) */}
+          <TextField
+            label="Tên hoạt động *"
+            placeholder="Ví dụ: Ăn sáng tại chợ địa phương"
+            value={activityModal.title}
+            onChange={(e) =>
+              setActivityModal((prev) => ({ ...prev, title: e.target.value }))
+            }
+            slotProps={{ htmlInput: { maxLength: 200 } }}
+            required
+            fullWidth
+          />
+
+          {/* Row 2: Giờ bắt đầu & Thời lượng dự kiến */}
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "1fr 2fr" },
+              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
               gap: 2,
             }}
           >
@@ -1856,7 +1822,8 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
               ampm={false}
               format="HH:mm"
               value={
-                activityModal.time && dayjs(activityModal.time, "HH:mm").isValid()
+                activityModal.time &&
+                dayjs(activityModal.time, "HH:mm").isValid()
                   ? dayjs(activityModal.time, "HH:mm")
                   : null
               }
@@ -1885,48 +1852,6 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             />
 
             <TextField
-              label="Tên hoạt động *"
-              placeholder="Ví dụ: Ăn sáng tại chợ địa phương"
-              value={activityModal.title}
-              onChange={(e) =>
-                setActivityModal((prev) => ({ ...prev, title: e.target.value }))
-              }
-              slotProps={{ htmlInput: { maxLength: 200 } }}
-              required
-              fullWidth
-            />
-          </Box>
-
-          {/* Category & Duration */}
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-              gap: 2,
-            }}
-          >
-            <FormControl fullWidth>
-              <InputLabel id="category-label">Danh mục *</InputLabel>
-              <Select
-                labelId="category-label"
-                value={activityModal.type}
-                label="Danh mục *"
-                onChange={(e) =>
-                  setActivityModal((prev) => ({
-                    ...prev,
-                    type: e.target.value as ItineraryActivityType,
-                  }))
-                }
-              >
-                {ACTIVITY_CATEGORIES.map((cat) => (
-                  <MenuItem key={cat} value={cat}>
-                    {cat}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <TextField
               label="Thời lượng dự kiến"
               placeholder="Ví dụ: 1 giờ, 1.5 giờ"
               value={activityModal.duration}
@@ -1940,7 +1865,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             />
           </Box>
 
-          {/* Location */}
+          {/* Row 3: Địa điểm cụ thể */}
           <TextField
             label="Địa điểm cụ thể"
             placeholder="Ví dụ: Nhà thờ Con Gà, đường Trần Phú"
@@ -1949,6 +1874,20 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
               setActivityModal((prev) => ({
                 ...prev,
                 location: e.target.value,
+              }))
+            }
+            fullWidth
+          />
+
+          {/* Row 4: Link Google Maps (Không bắt buộc) */}
+          <TextField
+            label="Link Google Maps (Không bắt buộc)"
+            placeholder="Ví dụ: https://maps.app.goo.gl/... hoặc https://google.com/maps/..."
+            value={activityModal.mapUrl}
+            onChange={(e) =>
+              setActivityModal((prev) => ({
+                ...prev,
+                mapUrl: e.target.value,
               }))
             }
             fullWidth
