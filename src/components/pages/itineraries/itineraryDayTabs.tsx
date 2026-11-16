@@ -61,12 +61,13 @@ export const ItineraryDayTabs: React.FC<ItineraryDayTabsProps> = ({
           overflowX: 'auto',
           pb: { xs: 0.75, sm: 0.5 },
           WebkitOverflowScrolling: 'touch',
-          scrollbarWidth: 'thin',
+          scrollbarWidth: { xs: 'none', sm: 'thin' },
           scrollbarColor: '#CBD5E1 transparent',
-          '::-webkit-scrollbar': {
+          '&::-webkit-scrollbar': {
+            display: { xs: 'none', sm: 'block' },
             height: 3,
           },
-          '::-webkit-scrollbar-thumb': {
+          '&::-webkit-scrollbar-thumb': {
             backgroundColor: '#CBD5E1',
             borderRadius: 2,
           },

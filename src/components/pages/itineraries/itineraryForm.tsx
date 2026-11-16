@@ -2298,12 +2298,13 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             <Box
               sx={{
                 position: "sticky",
-                top: 57,
-                zIndex: 9,
+                top: { xs: 52, sm: 60 },
+                zIndex: 10,
                 bgcolor: "#F8FAFC",
                 pt: 1,
                 pb: 1.5,
                 borderBottom: "1px solid #E2E8F0",
+                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.03)",
               }}
             >
               <ItineraryDayTabs

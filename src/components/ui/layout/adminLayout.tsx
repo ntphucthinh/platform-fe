@@ -54,7 +54,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               md: 2,
             },
             maxWidth: '100%',
-            overflowX: 'hidden',
+            overflowX: 'clip',
           }}
         >
           {children || <Outlet />}

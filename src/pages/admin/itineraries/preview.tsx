@@ -56,8 +56,8 @@ export const ItineraryPreviewPage: React.FC = () => {
     const headerHeight = headerEl
       ? headerEl.getBoundingClientRect().height
       : window.innerWidth < 600
-        ? 56
-        : 64
+        ? 50
+        : 56
 
     const tabsHeight = tabsRef.current
       ? tabsRef.current.offsetHeight
@@ -304,13 +304,16 @@ export const ItineraryPreviewPage: React.FC = () => {
         ref={tabsRef}
         sx={{
           position: 'sticky',
-          top: { xs: 56, sm: 64 },
-          zIndex: 10,
+          top: { xs: 50, sm: 56 },
+          zIndex: (theme) => theme.zIndex.appBar - 1,
           bgcolor: 'background.default',
+          mx: { xs: -1.25, sm: -1.75, md: 0 },
+          px: { xs: 1.25, sm: 1.75, md: 0 },
           pt: { xs: 0.75, sm: 1 },
           pb: { xs: 0.75, sm: 1.25 },
           borderBottom: '1px solid',
           borderColor: 'divider',
+          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.03)',
         }}
       >
         <ItineraryDayTabs
