@@ -38,13 +38,32 @@ export const TravelMemoryDateConfirmDialog: React.FC<
       onClose={onCancel}
       maxWidth="sm"
       fullWidth
+      sx={{
+        "& .MuiDialog-container": {
+          alignItems: "center",
+          justifyContent: "center",
+          px: { xs: 1.5, sm: 2 },
+          py: {
+            xs: "calc(12px + env(safe-area-inset-top, 0px))",
+            sm: 2,
+          },
+        },
+      }}
       slotProps={{
         paper: {
           sx: {
             borderRadius: "14px",
+            overflow: "hidden",
             p: 1,
-            m: { xs: 1.5, sm: 2 },
-            width: { xs: "calc(100% - 24px)", sm: "auto" },
+            m: 0,
+            width: { xs: "100%", sm: "auto" },
+            maxWidth: { xs: "100%", sm: "sm" },
+            maxHeight: {
+              xs: "calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))",
+              sm: "calc(100dvh - 48px)",
+            },
+            display: "flex",
+            flexDirection: "column",
           },
         },
       }}

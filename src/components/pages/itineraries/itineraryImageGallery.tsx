@@ -157,6 +157,17 @@ export const ItineraryImageGallery: React.FC<ItineraryImageGalleryProps> = ({
           onClose={() => setSelectedImage(null)}
           maxWidth="md"
           fullWidth
+          sx={{
+            "& .MuiDialog-container": {
+              alignItems: "center",
+              justifyContent: "center",
+              px: { xs: 1.5, sm: 2 },
+              py: {
+                xs: "calc(12px + env(safe-area-inset-top, 0px))",
+                sm: 2,
+              },
+            },
+          }}
           slotProps={{
             paper: {
               sx: {
@@ -164,6 +175,16 @@ export const ItineraryImageGallery: React.FC<ItineraryImageGalleryProps> = ({
                 overflow: 'hidden',
                 bgcolor: '#0F172A',
                 color: '#FFFFFF',
+                width: { xs: '100%', sm: 'auto' },
+                maxWidth: { xs: '100%', sm: 'md' },
+                m: 0,
+                maxHeight: {
+                  xs: 'calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+                  sm: 'calc(100dvh - 48px)',
+                  md: 'calc(100vh - 64px)',
+                },
+                display: 'flex',
+                flexDirection: 'column',
               },
             },
           }}

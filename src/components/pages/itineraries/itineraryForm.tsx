@@ -1781,12 +1781,32 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
         onClose={() => setActivityModal((prev) => ({ ...prev, open: false }))}
         maxWidth="sm"
         fullWidth
+        sx={{
+          "& .MuiDialog-container": {
+            alignItems: "center",
+            justifyContent: "center",
+            px: { xs: 1.5, sm: 2 },
+            py: {
+              xs: "calc(12px + env(safe-area-inset-top, 0px))",
+              sm: 2,
+            },
+          },
+        }}
         slotProps={{
           paper: {
             sx: {
               borderRadius: "16px",
-              m: { xs: 1, sm: 2 },
-              width: { xs: "calc(100% - 16px)", sm: "auto" },
+              overflow: "hidden",
+              width: { xs: "100%", sm: "auto" },
+              maxWidth: { xs: "100%", sm: "sm" },
+              m: 0,
+              maxHeight: {
+                xs: "calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))",
+                sm: "calc(100dvh - 48px)",
+                md: "calc(100vh - 64px)",
+              },
+              display: "flex",
+              flexDirection: "column",
             },
           },
         }}
@@ -2084,12 +2104,29 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
         onClose={() => setDayToDelete(null)}
         maxWidth="xs"
         fullWidth
+        sx={{
+          "& .MuiDialog-container": {
+            alignItems: "center",
+            justifyContent: "center",
+            px: { xs: 1.5, sm: 2 },
+            py: {
+              xs: "calc(12px + env(safe-area-inset-top, 0px))",
+              sm: 2,
+            },
+          },
+        }}
         slotProps={{
           paper: {
             sx: {
               borderRadius: "14px",
-              m: { xs: 1.5, sm: 2 },
-              width: { xs: "calc(100% - 24px)", sm: "auto" },
+              overflow: "hidden",
+              width: { xs: "100%", sm: "auto" },
+              maxWidth: { xs: "100%", sm: "xs" },
+              m: 0,
+              maxHeight: {
+                xs: "calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))",
+                sm: "calc(100dvh - 48px)",
+              },
             },
           },
         }}

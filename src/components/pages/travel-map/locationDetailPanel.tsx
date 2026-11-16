@@ -1159,11 +1159,11 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
             left: 0,
             right: 0,
             zIndex: 1201,
-            height: "92dvh",
-            maxHeight: "92dvh",
-            "@supports not (height: 92dvh)": {
-              height: "92vh",
-              maxHeight: "92vh",
+            height: "calc(100dvh - 44px - env(safe-area-inset-top, 0px))",
+            maxHeight: "calc(100dvh - 44px - env(safe-area-inset-top, 0px))",
+            "@supports not (height: 100dvh)": {
+              height: "calc(100vh - 44px)",
+              maxHeight: "calc(100vh - 44px)",
             },
             display: "flex",
             flexDirection: "column",

@@ -1371,9 +1371,10 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
           alignItems: "center",
           justifyContent: "space-between",
           px: { xs: 2, sm: 3 },
-          pt: { xs: 2, sm: 2.5 },
+          pt: { xs: 1.75, sm: 2.5 },
           pb: 1.5,
           borderBottom: "1px solid #F1F5F9",
+          flexShrink: 0,
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
@@ -1421,7 +1422,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ px: { xs: 2, sm: 3 }, pt: "14px !important", pb: 2.5 }}>
+      <DialogContent sx={{ px: { xs: 2, sm: 3 }, pt: "14px !important", pb: 2.5, flex: "1 1 auto", overflowY: "auto", minHeight: 0 }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {/* BỘ CHỌN 2 TRƯỜNG CÙNG HÀNG: QUỐC GIA & TÊN ĐIỂM ĐẾN */}
           <Box
@@ -1981,10 +1982,11 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
       <DialogActions
         sx={{
           px: { xs: 2, sm: 3 },
-          py: 2,
+          py: { xs: 1.5, sm: 2 },
           borderTop: "1px solid #F1F5F9",
           gap: 1,
           flexDirection: { xs: "column-reverse", sm: "row" },
+          flexShrink: 0,
         }}
       >
         <Button
@@ -2044,13 +2046,32 @@ export const LocationFormDialog: React.FC<LocationFormDialogProps> = ({
       onClose={onClose}
       maxWidth="md"
       fullWidth
+      sx={{
+        "& .MuiDialog-container": {
+          alignItems: "center",
+          justifyContent: "center",
+          px: { xs: 1.5, sm: 2 },
+          py: {
+            xs: "calc(12px + env(safe-area-inset-top, 0px))",
+            sm: 2,
+          },
+        },
+      }}
       slotProps={{
         paper: {
           sx: {
             borderRadius: "16px",
-            maxHeight: { xs: "96vh", sm: "92vh" },
-            m: { xs: 1, sm: 2 },
-            width: { xs: "calc(100% - 16px)", sm: "100%" },
+            overflow: "hidden",
+            width: { xs: "100%", sm: "auto" },
+            maxWidth: { xs: "100%", sm: "sm", md: "md" },
+            m: 0,
+            maxHeight: {
+              xs: "calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))",
+              sm: "calc(100dvh - 48px)",
+              md: "calc(100vh - 64px)",
+            },
+            display: "flex",
+            flexDirection: "column",
           },
         },
       }}
