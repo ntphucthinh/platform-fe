@@ -5,7 +5,6 @@ import type {
   ICreateItineraryInput,
   IUpdateItineraryInput,
   IItineraryListItem,
-  ItineraryStatus,
 } from "@/types/pages/itineraries/itinerary";
 
 const STORAGE_KEY = "platform_travel_itineraries_data";
@@ -36,8 +35,6 @@ function buildListItems(): IItineraryListItem[] {
       (acc, day) => acc + (day.activities?.length || 0),
       0,
     );
-    const status: ItineraryStatus =
-      item.status === "Đã hoàn thiện" ? "Đã hoàn thiện" : "Bản nháp";
     return {
       id: item.id,
       locationId: item.locationId,
@@ -51,7 +48,6 @@ function buildListItems(): IItineraryListItem[] {
         } đêm`,
       daysCount: item.days.length,
       activityCount,
-      status,
       updatedAt: item.updatedAt || "Hôm nay",
       description: item.description,
       coverImage: item.coverImage,
@@ -172,7 +168,6 @@ export function createItinerary(
     durationNights: nightsCount,
     description: input.description.trim(),
     coverImage: input.coverImage,
-    status: input.status || "Bản nháp",
     suitableFor: input.suitableFor || "Mọi đối tượng",
     themes: input.themes.length > 0 ? input.themes : ["Du lịch", "Khám phá"],
     highlights: input.highlights || [
@@ -259,7 +254,6 @@ export function updateItinerary(
     durationDays: daysCount,
     durationNights: nightsCount,
     coverImage: input.coverImage || existing.coverImage,
-    status: input.status || existing.status,
     suitableFor: input.suitableFor ?? existing.suitableFor,
     themes: input.themes || existing.themes,
     days: (input.days || existing.days).map((d, idx) => ({

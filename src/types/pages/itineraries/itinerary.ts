@@ -45,8 +45,6 @@ export interface IItineraryGalleryImage {
   caption?: string
 }
 
-export type ItineraryStatus = 'Bản nháp' | 'Đã hoàn thiện'
-
 export interface IItineraryListItem {
   id: string
   locationId?: number | null
@@ -55,7 +53,6 @@ export interface IItineraryListItem {
   duration: string
   daysCount: number
   activityCount: number
-  status: ItineraryStatus
   updatedAt: string
   description: string
   coverImage: string
@@ -72,7 +69,6 @@ export interface ITravelItinerary {
   durationNights?: number
   description: string
   coverImage: string
-  status: string
   suitableFor?: string
   themes: string[]
   highlights?: IItineraryHighlight[]
@@ -92,7 +88,6 @@ export interface ICreateItineraryInput {
   duration?: string
   description: string
   coverImage: string
-  status?: string
   suitableFor?: string
   themes: string[]
   days: IItineraryDay[]

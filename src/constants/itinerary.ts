@@ -51,7 +51,6 @@ export const MOCK_DALAT_ITINERARY: ITravelItinerary = {
     'Một hành trình nhẹ nhàng để cảm nhận trọn vẹn vẻ đẹp của Đà Lạt, từ thiên nhiên, ẩm thực đến những góc cà phê thơ mộng.',
   coverImage:
     'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80',
-  status: 'Đã hoàn thiện',
   suitableFor: 'Cặp đôi, nhóm bạn, gia đình',
   themes: ['Thiên nhiên', 'Ẩm thực', 'Cà phê', 'Văn hóa địa phương'],
   createdAt: '2024-03-01T08:00:00.000Z',
@@ -352,7 +351,6 @@ export const MOCK_DANANG_ITINERARY: ITravelItinerary = {
     'Hành trình khám phá di sản phố cổ Hội An, biển Mỹ Khê và danh thắng Bà Nà Hills tuyệt đẹp.',
   coverImage:
     'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&w=1600&q=80',
-  status: 'Bản nháp',
   suitableFor: 'Gia đình, bạn bè, khách du lịch yêu biển và văn hóa',
   themes: ['Di sản văn hóa', 'Biển đảo', 'Ẩm thực', 'Check-in'],
   createdAt: '2024-03-02T09:00:00.000Z',
@@ -635,7 +633,6 @@ export const MOCK_NHATRANG_ITINERARY: ITravelItinerary = {
     'Trải nghiệm lặn biển ngắm san hô, tắm khoáng nóng và thưởng thức hải sản tươi ngon vùng vịnh biển ngập tràn ánh nắng.',
   coverImage:
     'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80',
-  status: 'Đã hoàn thiện',
   suitableFor: 'Nhóm bạn, gia đình trẻ, cặp đôi',
   themes: ['Biển đảo', 'Lặn biển', 'Nghỉ dưỡng', 'Hải sản'],
   createdAt: '2024-03-03T08:00:00.000Z',
@@ -859,7 +856,6 @@ export const MOCK_VUNGTAU_ITINERARY: ITravelItinerary = {
     'Chuyến nghỉ dưỡng ngắn ngày đổi gió tại Bãi Trước, Bãi Sau và ngọn hải đăng Vũng Tàu thơ mộng.',
   coverImage:
     'https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=1600&q=80',
-  status: 'Bản nháp',
   suitableFor: 'Cặp đôi, gia đình cuối tuần, nhóm bạn đi xe máy/ô tô',
   themes: ['Nghỉ dưỡng ngắn ngày', 'Ẩm thực', 'Check-in biển', 'Hải sản'],
   createdAt: '2024-03-04T07:00:00.000Z',
@@ -1026,7 +1022,6 @@ export const MOCK_ITINERARY_LIST: IItineraryListItem[] = MOCK_ALL_ITINERARIES.ma
   duration: item.duration,
   daysCount: item.days.length,
   activityCount: item.days.reduce((acc, d) => acc + d.activities.length, 0),
-  status: item.status === 'Đã hoàn thiện' ? 'Đã hoàn thiện' : 'Bản nháp',
   updatedAt: item.updatedAt || 'Hôm nay',
   description: item.description,
   coverImage: item.coverImage,

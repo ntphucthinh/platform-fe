@@ -10,7 +10,6 @@ import {
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
-import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'
 import { useNavigate, useParams } from 'react-router-dom'
 import { HeaderTitle } from '@/components/ui/header/headerTitle'
 import { useItineraryDetail } from '@/hooks/itineraries/useItineraries'
@@ -127,14 +126,6 @@ export const ItineraryPreviewPage: React.FC = () => {
     navigate(`/admin/itineraries/${itinerary.id}/edit`)
   }
 
-  const handleSaveDraft = () => {
-    setSnackbar({
-      open: true,
-      message: 'Bản xem trước: Đã lưu bản nháp mô phỏng (UI demo - không lưu vào CSDL).',
-      severity: 'success',
-    })
-  }
-
   const handleCloseSnackbar = () => {
     setSnackbar((prev) => ({ ...prev, open: false }))
   }
@@ -232,32 +223,10 @@ export const ItineraryPreviewPage: React.FC = () => {
           }}
         >
           <Button
-            variant="outlined"
-            startIcon={<EditOutlinedIcon />}
-            onClick={handleEditClick}
-            sx={{
-              flex: { xs: 1, sm: 'none' },
-              borderColor: '#CBD5E1',
-              color: '#334155',
-              fontWeight: 600,
-              borderRadius: '8px',
-              textTransform: 'none',
-              px: 2,
-              minHeight: 40,
-              '&:hover': {
-                borderColor: '#94A3B8',
-                bgcolor: '#F8FAFC',
-              },
-            }}
-          >
-            Chỉnh sửa
-          </Button>
-
-          <Button
             variant="contained"
             color="primary"
-            startIcon={<BookmarkBorderIcon />}
-            onClick={handleSaveDraft}
+            startIcon={<EditOutlinedIcon />}
+            onClick={handleEditClick}
             sx={{
               flex: { xs: 1, sm: 'none' },
               fontWeight: 600,
@@ -268,7 +237,7 @@ export const ItineraryPreviewPage: React.FC = () => {
               boxShadow: 'none',
             }}
           >
-            Lưu bản nháp
+            Chỉnh sửa
           </Button>
         </Box>
       </Box>

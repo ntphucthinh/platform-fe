@@ -166,7 +166,6 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     return null;
   }, [travelLocationsSelections, locationData, locationId, destination]);
 
-  const status = initialData?.status || "Đã hoàn thiện";
   const [themes, setThemes] = useState<string[]>(
     initialData?.themes && initialData.themes.length > 0
       ? initialData.themes
@@ -567,7 +566,6 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
           (values.description || "").trim() ||
           `Khám phá vẻ đẹp tuyệt vời tại ${values.destination}.`,
         coverImage: values.coverImage || DEFAULT_NO_IMAGE,
-        status,
         suitableFor: values.suitableFor,
         themes,
         days,
@@ -612,7 +610,6 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     description:
       description || "Mô tả tổng quan hành trình đang được cập nhật.",
     coverImage: coverImage || DEFAULT_NO_IMAGE,
-    status,
     suitableFor,
     themes: themes.length > 0 ? themes : ["Du lịch", "Khám phá"],
     highlights: initialData?.highlights || [
@@ -780,7 +777,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
               ? "Đang lưu..."
               : isEdit
               ? "Lưu thay đổi"
-              : "Lưu bản nháp"}
+              : "Tạo lịch trình"}
           </Button>
         </Box>
       </Box>
@@ -1730,7 +1727,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             ? "Đang lưu..."
             : isEdit
             ? "Lưu thay đổi"
-            : "Lưu bản nháp"}
+            : "Tạo lịch trình"}
         </Button>
       </Box>
 
