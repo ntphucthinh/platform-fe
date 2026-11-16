@@ -848,11 +848,11 @@ export const TravelMemoryListPage: React.FC = () => {
           sx={{
             display: "grid",
             gridTemplateColumns: {
-              xs: "1fr",
+              xs: "repeat(2, 1fr)",
               sm: "repeat(2, 1fr)",
               lg: "repeat(5, 1fr)",
             },
-            gap: 2,
+            gap: { xs: 1.25, sm: 2 },
             animation: prefersReducedMotion
               ? "none"
               : `${

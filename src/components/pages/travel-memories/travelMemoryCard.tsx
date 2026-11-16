@@ -54,7 +54,7 @@ export const TravelMemoryCard: React.FC<TravelMemoryCardProps> = ({
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        borderRadius: "14px",
+        borderRadius: { xs: "10px", sm: "14px" },
         overflow: "hidden",
         border: "1px solid #E2E8F0",
         bgcolor: "#FFFFFF",
@@ -95,14 +95,19 @@ export const TravelMemoryCard: React.FC<TravelMemoryCardProps> = ({
           size="small"
           sx={{
             position: "absolute",
-            top: 10,
-            right: 10,
-            bgcolor: "rgba(15, 23, 42, 0.8)",
+            top: { xs: 5, sm: 8 },
+            right: { xs: 5, sm: 8 },
+            bgcolor: "rgba(15, 23, 42, 0.75)",
             color: "#FFFFFF",
             backdropFilter: "blur(4px)",
-            fontWeight: 700,
-            fontSize: "0.75rem",
+            fontWeight: 600,
+            fontSize: { xs: "0.62rem", sm: "0.7rem" },
+            height: { xs: 18, sm: 22 },
             borderRadius: "4px",
+            px: { xs: 0.25, sm: 0.5 },
+            "& .MuiChip-label": {
+              px: { xs: 0.6, sm: 0.8 },
+            },
           }}
         />
 
@@ -110,21 +115,29 @@ export const TravelMemoryCard: React.FC<TravelMemoryCardProps> = ({
         <Chip
           icon={
             <PhotoCameraBackOutlinedIcon
-              sx={{ fontSize: "14px !important", color: "#FFFFFF !important" }}
+              sx={{
+                fontSize: { xs: "11px !important", sm: "13px !important" },
+                color: "#FFFFFF !important",
+              }}
             />
           }
           label={`${totalPhotos} ảnh`}
           size="small"
           sx={{
             position: "absolute",
-            bottom: 10,
-            left: 10,
-            bgcolor: "rgba(30, 41, 59, 0.8)",
+            bottom: { xs: 5, sm: 8 },
+            left: { xs: 5, sm: 8 },
+            bgcolor: "rgba(30, 41, 59, 0.75)",
             color: "#FFFFFF",
             backdropFilter: "blur(4px)",
             fontWeight: 600,
-            fontSize: "0.75rem",
+            fontSize: { xs: "0.62rem", sm: "0.7rem" },
+            height: { xs: 18, sm: 22 },
             borderRadius: "4px",
+            px: { xs: 0.25, sm: 0.5 },
+            "& .MuiChip-label": {
+              px: { xs: 0.6, sm: 0.8 },
+            },
           }}
         />
       </Box>
@@ -135,8 +148,9 @@ export const TravelMemoryCard: React.FC<TravelMemoryCardProps> = ({
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          gap: 1,
-          p: 1.75,
+          gap: { xs: 0.75, sm: 1 },
+          p: { xs: 1.25, sm: 1.75 },
+          "&:last-child": { pb: { xs: 1.25, sm: 1.75 } },
         }}
       >
         <Typography
@@ -144,7 +158,7 @@ export const TravelMemoryCard: React.FC<TravelMemoryCardProps> = ({
           component="h2"
           sx={{
             fontWeight: 700,
-            fontSize: "0.95rem",
+            fontSize: { xs: "0.84rem", sm: "0.95rem" },
             color: "text.primary",
             lineHeight: 1.35,
             display: "-webkit-box",
@@ -171,16 +185,20 @@ export const TravelMemoryCard: React.FC<TravelMemoryCardProps> = ({
           {memory.title}
         </Typography>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.8, minWidth: 0 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.6, minWidth: 0 }}>
           <LocationOnOutlinedIcon
-            sx={{ fontSize: 16, color: "primary.main", flexShrink: 0 }}
+            sx={{
+              fontSize: { xs: 14, sm: 16 },
+              color: "primary.main",
+              flexShrink: 0,
+            }}
           />
           <Typography
             variant="body2"
             sx={{
               fontWeight: 600,
               color: "text.primary",
-              fontSize: "0.82rem",
+              fontSize: { xs: "0.74rem", sm: "0.82rem" },
               minWidth: 0,
             }}
             noWrap
@@ -189,46 +207,37 @@ export const TravelMemoryCard: React.FC<TravelMemoryCardProps> = ({
           </Typography>
         </Box>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.6 }}>
           <CalendarMonthOutlinedIcon
-            sx={{ fontSize: 16, color: "text.secondary" }}
+            sx={{
+              fontSize: { xs: 14, sm: 16 },
+              color: "text.secondary",
+              flexShrink: 0,
+            }}
           />
-          <Typography
-            variant="body2"
-            sx={{ color: "text.secondary", fontSize: "0.8rem" }}
-          >
-            {dateRangeLabel}
-          </Typography>
-        </Box>
-
-        {memory.description && (
           <Typography
             variant="body2"
             sx={{
               color: "text.secondary",
-              fontSize: "0.8rem",
-              lineHeight: 1.45,
-              mt: 0.25,
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
+              fontSize: { xs: "0.72rem", sm: "0.8rem" },
             }}
+            noWrap
           >
-            {memory.description}
+            {dateRangeLabel}
           </Typography>
-        )}
+        </Box>
       </CardContent>
 
       {/* Action Footer */}
       <CardActions
         sx={{
-          px: 1.75,
-          py: 1.25,
+          px: { xs: 1, sm: 1.75 },
+          py: { xs: 0.85, sm: 1.25 },
           borderTop: "1px solid",
           borderColor: "divider",
           justifyContent: "space-between",
           alignItems: "center",
+          gap: 0.5,
         }}
       >
         <Button
@@ -236,16 +245,23 @@ export const TravelMemoryCard: React.FC<TravelMemoryCardProps> = ({
           color="primary"
           size="small"
           startIcon={
-            <VisibilityOutlinedIcon sx={{ fontSize: "16px !important" }} />
+            <VisibilityOutlinedIcon
+              sx={{
+                fontSize: "14px !important",
+                display: { xs: "none", sm: "inline-flex" },
+              }}
+            />
           }
           onClick={() => onView(memory.id)}
           sx={{
-            borderRadius: "8px",
+            flex: 1,
+            minWidth: 0,
+            borderRadius: "6px",
             textTransform: "none",
             fontWeight: 600,
-            fontSize: "0.78rem",
-            px: 1.25,
-            height: 34,
+            fontSize: { xs: "0.72rem", sm: "0.78rem" },
+            px: { xs: 0.5, sm: 1.25 },
+            height: { xs: 30, sm: 34 },
             whiteSpace: "nowrap",
             "&:focus-visible": {
               outline: "2px solid #1976D2",
@@ -253,10 +269,15 @@ export const TravelMemoryCard: React.FC<TravelMemoryCardProps> = ({
             },
           }}
         >
-          Xem chi tiết
+          <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
+            Xem
+          </Box>
+          <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+            Xem chi tiết
+          </Box>
         </Button>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexShrink: 0 }}>
           <Tooltip title="Chỉnh sửa chuyến đi">
             <Button
               variant="outlined"
@@ -265,11 +286,11 @@ export const TravelMemoryCard: React.FC<TravelMemoryCardProps> = ({
               onClick={() => onEdit(memory.id)}
               aria-label={`Chỉnh sửa ${memory.title}`}
               sx={{
-                minWidth: { xs: 36, sm: 34 },
-                width: { xs: 36, sm: 34 },
-                height: { xs: 36, sm: 34 },
+                minWidth: { xs: 28, sm: 34 },
+                width: { xs: 28, sm: 34 },
+                height: { xs: 28, sm: 34 },
                 p: 0,
-                borderRadius: "8px",
+                borderRadius: "6px",
                 borderColor: "divider",
                 color: "text.secondary",
                 "&:hover": {
@@ -283,7 +304,7 @@ export const TravelMemoryCard: React.FC<TravelMemoryCardProps> = ({
                 },
               }}
             >
-              <EditOutlinedIcon sx={{ fontSize: 16 }} />
+              <EditOutlinedIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />
             </Button>
           </Tooltip>
 
@@ -295,11 +316,11 @@ export const TravelMemoryCard: React.FC<TravelMemoryCardProps> = ({
               onClick={() => onDelete(memory)}
               aria-label={`Xóa ${memory.title}`}
               sx={{
-                minWidth: { xs: 36, sm: 34 },
-                width: { xs: 36, sm: 34 },
-                height: { xs: 36, sm: 34 },
+                minWidth: { xs: 28, sm: 34 },
+                width: { xs: 28, sm: 34 },
+                height: { xs: 28, sm: 34 },
                 p: 0,
-                borderRadius: "8px",
+                borderRadius: "6px",
                 borderColor: "#FECACA",
                 color: "error.main",
                 "&:hover": {
@@ -312,7 +333,7 @@ export const TravelMemoryCard: React.FC<TravelMemoryCardProps> = ({
                 },
               }}
             >
-              <DeleteOutlinedIcon sx={{ fontSize: 16 }} />
+              <DeleteOutlinedIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />
             </Button>
           </Tooltip>
         </Box>

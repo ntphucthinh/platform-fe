@@ -1073,8 +1073,14 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
               2. Chi tiết lịch trình theo từng ngày
             </Typography>
             <Typography
-              variant="body2"
-              sx={{ color: "#64748B", mt: 0.25, fontWeight: 500 }}
+              variant="caption"
+              sx={{
+                color: "#64748B",
+                mt: 0.25,
+                fontWeight: 500,
+                fontSize: "0.8rem",
+                display: "block",
+              }}
             >
               {days.length} ngày {Math.max(0, days.length - 1)} đêm
             </Typography>
