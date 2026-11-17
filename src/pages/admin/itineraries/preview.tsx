@@ -320,13 +320,29 @@ export const ItineraryPreviewPage: React.FC = () => {
           )}
         </Box>
 
-        {/* Right Column: Contextual based on Active Tab */}
+        {/* Right Column: Contextual based on Active Tab - Sticky below tabs on Desktop */}
         <Box
           sx={{
             display: 'flex',
             flexDirection: 'column',
             gap: 3,
             width: '100%',
+            position: { xs: 'static', lg: 'sticky' },
+            top: { xs: 'auto', lg: 132 },
+            alignSelf: 'start',
+            zIndex: 10,
+            maxHeight: { xs: 'none', lg: 'calc(100vh - 148px)' },
+            overflowY: { xs: 'visible', lg: 'auto' },
+            pr: { lg: 0.5 },
+            scrollbarWidth: 'thin',
+            scrollbarColor: '#CBD5E1 transparent',
+            '&::-webkit-scrollbar': {
+              width: 4,
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: '#CBD5E1',
+              borderRadius: 2,
+            },
           }}
         >
           {activeTab === 'overview' ? (
