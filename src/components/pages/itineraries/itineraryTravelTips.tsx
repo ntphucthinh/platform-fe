@@ -1,6 +1,6 @@
 import React from 'react'
 import { Card, Box, Typography } from '@mui/material'
-import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined'
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 
 interface ItineraryTravelTipsProps {
   tips: string[]
@@ -19,19 +19,7 @@ export const ItineraryTravelTips: React.FC<ItineraryTravelTipsProps> = ({ tips }
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 2 }}>
-        <Box
-          sx={{
-            p: 0.75,
-            borderRadius: '8px',
-            bgcolor: '#EFF6FF',
-            color: 'primary.main',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <LightbulbOutlinedIcon sx={{ fontSize: 20 }} />
-        </Box>
+        <InfoOutlinedIcon sx={{ fontSize: 20, color: 'primary.main' }} />
         <Typography
           variant="h6"
           component="h3"

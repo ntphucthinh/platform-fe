@@ -1,5 +1,5 @@
 import React from 'react'
-import { Box, Typography } from '@mui/material'
+import { Box, Typography, Card } from '@mui/material'
 import type { IItineraryDay } from '@/types/pages/itineraries/itinerary'
 import { ItineraryActivityCard } from '@/components/pages/itineraries/itineraryActivityCard'
 
@@ -21,20 +21,24 @@ export const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ day }) => 
         scrollMarginTop: { xs: '120px', sm: '140px' },
       }}
     >
-      {/* Day Header Banner */}
-      <Box
+      {/* Day Header Banner Card */}
+      <Card
+        elevation={0}
         sx={{
+          p: { xs: 2, sm: 2.5 },
+          borderRadius: '12px',
+          bgcolor: '#FFFFFF',
+          border: '1px solid #E2E8F0',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
           gap: 1.5,
-          mb: { xs: 2, sm: 3 },
-          pb: 1.5,
-          borderBottom: '1px solid #E2E8F0',
+          mb: { xs: 2.5, sm: 3 },
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75, minWidth: 0 }}>
           {/* Day number circle badge */}
           <Box
             sx={{
@@ -47,52 +51,37 @@ export const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ day }) => 
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: 800,
-              fontSize: '1.1rem',
+              fontSize: '1rem',
               flexShrink: 0,
             }}
           >
             {day.dayNumber}
           </Box>
 
-          <Box>
+          <Box sx={{ minWidth: 0 }}>
             <Typography
-              variant="h6"
+              variant="subtitle1"
               component="h2"
               sx={{
                 fontWeight: 700,
                 color: '#0F172A',
-                fontSize: { xs: '1.05rem', sm: '1.15rem' },
+                fontSize: { xs: '0.95rem', sm: '1.05rem' },
                 lineHeight: 1.3,
               }}
             >
               {day.title}
             </Typography>
-            <Typography
-              variant="body2"
-              sx={{ color: '#64748B', fontSize: '0.85rem', mt: 0.25 }}
-            >
-              {day.subtitle}
-            </Typography>
+            {(day.subtitle || day.summary) && (
+              <Typography
+                variant="body2"
+                sx={{ color: '#64748B', fontSize: '0.8rem', mt: 0.25 }}
+              >
+                {day.subtitle || day.summary}
+              </Typography>
+            )}
           </Box>
         </Box>
-
-        {day.date && (
-          <Typography
-            variant="caption"
-            sx={{
-              color: '#64748B',
-              fontWeight: 600,
-              bgcolor: '#F8FAFC',
-              px: 1.5,
-              py: 0.5,
-              borderRadius: '6px',
-              border: '1px solid #E2E8F0',
-            }}
-          >
-            {day.date}
-          </Typography>
-        )}
-      </Box>
+      </Card>
 
       {/* Timeline Activities List */}
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
@@ -112,15 +101,47 @@ export const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ day }) => 
             </Typography>
           </Box>
         ) : (
-          sortedActivities.map((activity, index) => (
-            <ItineraryActivityCard
-              key={activity.id}
-              activity={activity}
-              isLast={index === sortedActivities.length - 1}
+          <Box
+            sx={{
+              position: 'relative',
+              width: '100%',
+              ml: { xs: 0.5, sm: 1 },
+            }}
+          >
+            {/* The Continuous Vertical Timeline Line */}
+            <Box
+              sx={{
+                position: 'absolute',
+                left: 7,
+                top: 0,
+                bottom: 0,
+                width: '2px',
+                bgcolor: '#93C5FD',
+                zIndex: 0,
+              }}
             />
-          ))
+
+            {/* Activities List */}
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2.5,
+                width: '100%',
+              }}
+            >
+              {sortedActivities.map((activity, index) => (
+                <ItineraryActivityCard
+                  key={activity.id}
+                  activity={activity}
+                  isLast={index === sortedActivities.length - 1}
+                />
+              ))}
+            </Box>
+          </Box>
         )}
       </Box>
     </Box>
   )
 }
+

@@ -100,6 +100,7 @@ export const MOCK_DALAT_ITINERARY: ITravelItinerary = {
           type: 'Ăn uống',
           duration: '1 giờ',
           location: 'Chợ Đà Lạt',
+          mapUrl: 'https://www.google.com/maps?q=11.9427,108.4373',
           description:
             'Thưởng thức bánh căn, sữa đậu nành và các món đặc sản tại chợ Đà Lạt.',
           image:
@@ -113,10 +114,11 @@ export const MOCK_DALAT_ITINERARY: ITravelItinerary = {
           type: 'Tham quan',
           duration: '1 giờ',
           location: 'Nhà thờ Con Gà',
+          mapUrl: 'https://www.google.com/maps?q=11.9367,108.4373',
           description:
             'Chiêm ngưỡng kiến trúc cổ kính và lưu giữ những bức ảnh đẹp tại biểu tượng của Đà Lạt.',
           image:
-            'https://images.unsplash.com/photo-1548625361-196144e138a4?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=600&q=80',
           notes: 'Nhà thờ mở cửa tự do khuôn viên bên ngoài, lưu ý giữ yên tĩnh khi có lễ.',
         },
         {
@@ -126,6 +128,7 @@ export const MOCK_DALAT_ITINERARY: ITravelItinerary = {
           type: 'Ăn uống',
           duration: '1–1,5 giờ',
           location: 'Khu vực trung tâm',
+          mapUrl: 'https://www.google.com/maps?q=11.9305,108.4447',
           description:
             'Thưởng thức lẩu gà lá é hoặc các món ăn đặc trưng của Đà Lạt trong không gian ấm cúng.',
           image:
@@ -139,6 +142,7 @@ export const MOCK_DALAT_ITINERARY: ITravelItinerary = {
           type: 'Tham quan',
           duration: '1,5 giờ',
           location: 'Hồ Xuân Hương',
+          mapUrl: 'https://www.google.com/maps?q=11.9412,108.4452',
           description:
             'Dạo quanh hồ, ngắm cảnh và chụp ảnh với khung cảnh thơ mộng.',
           image:
@@ -152,6 +156,7 @@ export const MOCK_DALAT_ITINERARY: ITravelItinerary = {
           type: 'Cà phê',
           duration: '1–2 giờ',
           location: 'Khu vực Hồ Xuân Hương',
+          mapUrl: 'https://www.google.com/maps?q=11.9458,108.4495',
           description:
             'Thư giãn và ngắm hoàng hôn tại một quán cà phê có tầm nhìn đẹp ven hồ thơ mộng.',
           image:
@@ -179,6 +184,7 @@ export const MOCK_DALAT_ITINERARY: ITravelItinerary = {
           type: 'Ăn uống',
           duration: '1 giờ',
           location: 'Khu vực lưu trú',
+          mapUrl: 'https://www.google.com/maps?q=11.9365,108.4420',
           description:
             'Bắt đầu ngày mới với bữa sáng và chuẩn bị phương tiện cho hành trình khám phá ngoại ô.',
           image:
@@ -192,6 +198,7 @@ export const MOCK_DALAT_ITINERARY: ITravelItinerary = {
           type: 'Thiên nhiên',
           duration: '2 giờ',
           location: 'Thác Datanla',
+          mapUrl: 'https://www.google.com/maps?q=11.9029,108.4498',
           description:
             'Khám phá cảnh quan thác nước và trải nghiệm các hoạt động ngoài trời phù hợp như máng trượt alpine coaster.',
           image:
@@ -205,6 +212,7 @@ export const MOCK_DALAT_ITINERARY: ITravelItinerary = {
           type: 'Ăn uống',
           duration: '1–1,5 giờ',
           location: 'Khu vực ngoại ô',
+          mapUrl: 'https://www.google.com/maps?q=11.8980,108.4610',
           description:
             'Nghỉ ngơi và thưởng thức món ăn địa phương trước khi tiếp tục hành trình.',
           image:
@@ -218,6 +226,7 @@ export const MOCK_DALAT_ITINERARY: ITravelItinerary = {
           type: 'Tham quan',
           duration: '1,5 giờ',
           location: 'Ngoại ô Đà Lạt',
+          mapUrl: 'https://www.google.com/maps?q=11.8596,108.5630',
           description:
             'Tận hưởng không gian xanh và chụp ảnh giữa khung cảnh thiên nhiên xanh ngát.',
           image:
@@ -231,6 +240,7 @@ export const MOCK_DALAT_ITINERARY: ITravelItinerary = {
           type: 'Cà phê',
           duration: '1 giờ',
           location: 'Ngoại ô Đà Lạt',
+          mapUrl: 'https://www.google.com/maps?q=11.8750,108.5320',
           description:
             'Dừng chân nghỉ ngơi, ngắm cảnh và tận hưởng không khí mát mẻ trong lành giữa thung lũng.',
           image:
@@ -258,6 +268,7 @@ export const MOCK_DALAT_ITINERARY: ITravelItinerary = {
           type: 'Ăn uống',
           duration: '1 giờ',
           location: 'Trung tâm Đà Lạt',
+          mapUrl: 'https://www.google.com/maps?q=11.9390,108.4350',
           description:
             'Thưởng thức bữa sáng và chuẩn bị cho buổi tham quan cuối cùng.',
           image:
@@ -271,6 +282,7 @@ export const MOCK_DALAT_ITINERARY: ITravelItinerary = {
           type: 'Mua sắm',
           duration: '1,5 giờ',
           location: 'Chợ Đà Lạt',
+          mapUrl: 'https://www.google.com/maps?q=11.9424,108.4377',
           description:
             'Tìm mua đặc sản, quà lưu niệm và những món quà dành cho gia đình.',
           image:
@@ -284,6 +296,7 @@ export const MOCK_DALAT_ITINERARY: ITravelItinerary = {
           type: 'Ăn uống',
           duration: '1 giờ',
           location: 'Trung tâm Đà Lạt',
+          mapUrl: 'https://www.google.com/maps?q=11.9405,108.4430',
           description:
             'Dùng bữa trước khi kết thúc hành trình.',
           image:

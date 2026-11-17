@@ -24,6 +24,7 @@ import { ItineraryOverview } from '@/components/pages/itineraries/itineraryOverv
 import { ItineraryTimeline } from '@/components/pages/itineraries/itineraryTimeline'
 import { ItineraryImageGallery } from '@/components/pages/itineraries/itineraryImageGallery'
 import { ItineraryTravelTips } from '@/components/pages/itineraries/itineraryTravelTips'
+import { ItineraryDayRoute } from '@/components/pages/itineraries/itineraryDayRoute'
 import { ItineraryNotFound } from '@/components/pages/itineraries/itineraryNotFound'
 
 export const ItineraryPreviewPage: React.FC = () => {
@@ -319,7 +320,7 @@ export const ItineraryPreviewPage: React.FC = () => {
           )}
         </Box>
 
-        {/* Right Column: Featured Images & Travel Tips */}
+        {/* Right Column: Contextual based on Active Tab */}
         <Box
           sx={{
             display: 'flex',
@@ -328,8 +329,14 @@ export const ItineraryPreviewPage: React.FC = () => {
             width: '100%',
           }}
         >
-          <ItineraryImageGallery images={itinerary.featuredImages || []} />
-          <ItineraryTravelTips tips={itinerary.travelTips || []} />
+          {activeTab === 'overview' ? (
+            <>
+              <ItineraryImageGallery images={itinerary.featuredImages || []} />
+              <ItineraryTravelTips tips={itinerary.travelTips || []} />
+            </>
+          ) : activeDay ? (
+            <ItineraryDayRoute day={activeDay} />
+          ) : null}
         </Box>
       </Box>
 

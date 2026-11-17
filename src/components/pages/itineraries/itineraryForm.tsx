@@ -578,14 +578,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             caption: values.destination.trim(),
           },
         ],
-        highlights: initialData?.highlights || [
-          {
-            id: `hl-1`,
-            title: values.destination.trim(),
-            subtitle: "Điểm đến hấp dẫn",
-            icon: "nature",
-          },
-        ],
+        highlights: initialData?.highlights || [],
       };
 
       onSubmit(payload);
@@ -612,14 +605,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     coverImage: coverImage || DEFAULT_NO_IMAGE,
     suitableFor,
     themes: themes.length > 0 ? themes : ["Du lịch", "Khám phá"],
-    highlights: initialData?.highlights || [
-      {
-        id: "hl-preview-1",
-        title: destination || "Điểm đến nổi bật",
-        subtitle: "Trải nghiệm phong phú",
-        icon: "nature",
-      },
-    ],
+    highlights: initialData?.highlights || [],
     days,
     featuredImages: initialData?.featuredImages || [
       {

@@ -45,7 +45,7 @@ export const ItineraryInfoPanel: React.FC<ItineraryInfoPanelProps> = ({
               p: 1,
               borderRadius: '10px',
               bgcolor: '#EFF6FF',
-              color: 'primary.main',
+              color: '#2563EB',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -71,8 +71,8 @@ export const ItineraryInfoPanel: React.FC<ItineraryInfoPanelProps> = ({
             sx={{
               p: 1,
               borderRadius: '10px',
-              bgcolor: '#EFF6FF',
-              color: 'primary.main',
+              bgcolor: '#ECFDF5',
+              color: '#059669',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -98,8 +98,8 @@ export const ItineraryInfoPanel: React.FC<ItineraryInfoPanelProps> = ({
             sx={{
               p: 1,
               borderRadius: '10px',
-              bgcolor: '#EFF6FF',
-              color: 'primary.main',
+              bgcolor: '#F5F3FF',
+              color: '#7C3AED',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -125,8 +125,8 @@ export const ItineraryInfoPanel: React.FC<ItineraryInfoPanelProps> = ({
             sx={{
               p: 1,
               borderRadius: '10px',
-              bgcolor: '#EFF6FF',
-              color: 'primary.main',
+              bgcolor: '#FFFBEB',
+              color: '#D97706',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -136,7 +136,7 @@ export const ItineraryInfoPanel: React.FC<ItineraryInfoPanelProps> = ({
           </Box>
           <Box>
             <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 500, display: 'block' }}>
-              Trải nghiệm trong chuyến đi
+              Trải nghiệm trong tour
             </Typography>
             <Typography variant="body2" sx={{ fontWeight: 700, color: '#1E293B', fontSize: '0.95rem' }}>
               {totalActivities} hoạt động
@@ -152,8 +152,8 @@ export const ItineraryInfoPanel: React.FC<ItineraryInfoPanelProps> = ({
             sx={{
               p: 1,
               borderRadius: '10px',
-              bgcolor: '#EFF6FF',
-              color: 'primary.main',
+              bgcolor: '#FFF1F2',
+              color: '#E11D48',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -179,7 +179,7 @@ export const ItineraryInfoPanel: React.FC<ItineraryInfoPanelProps> = ({
                     sx={{
                       bgcolor: '#F1F5F9',
                       color: '#334155',
-                      fontWeight: 600,
+                      fontWeight: 500,
                       fontSize: '0.78rem',
                       borderRadius: '8px',
                       border: '1px solid #E2E8F0',

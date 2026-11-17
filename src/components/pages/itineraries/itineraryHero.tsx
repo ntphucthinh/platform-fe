@@ -78,7 +78,7 @@ export const ItineraryHero: React.FC<ItineraryHeroProps> = ({
       {/* Top Location Badge */}
       <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center' }}>
         <Chip
-          icon={<LocationOnIcon sx={{ fontSize: 18, color: '#1E293B !important' }} />}
+          icon={<LocationOnIcon sx={{ fontSize: 18, color: '#EF4444 !important' }} />}
           label={destination}
           sx={{
             bgcolor: 'rgba(255, 255, 255, 0.92)',

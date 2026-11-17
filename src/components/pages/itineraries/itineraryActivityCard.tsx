@@ -1,17 +1,7 @@
-import React, { useState } from 'react'
-import {
-  Box,
-  Typography,
-  Chip,
-  IconButton,
-  Collapse,
-  Avatar,
-} from '@mui/material'
-import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined'
+import React from 'react'
+import { Box, Typography, Tooltip } from '@mui/material'
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined'
-import ChevronRightIcon from '@mui/icons-material/ChevronRight'
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
+import LaunchOutlinedIcon from '@mui/icons-material/LaunchOutlined'
 import type { IItineraryActivity } from '@/types/pages/itineraries/itinerary'
 import { ITINERARY_CATEGORY_COLORS } from '@/constants/itinerary'
 import { DEFAULT_NO_IMAGE } from '@/constants/homestay'
@@ -23,17 +13,7 @@ interface ItineraryActivityCardProps {
 
 export const ItineraryActivityCard: React.FC<ItineraryActivityCardProps> = ({
   activity,
-  isLast = false,
 }) => {
-  const [expanded, setExpanded] = useState(false)
-  const [prevImage, setPrevImage] = useState(activity.image)
-  const [imgSrc, setImgSrc] = useState(activity.image || DEFAULT_NO_IMAGE)
-
-  if (activity.image !== prevImage) {
-    setPrevImage(activity.image)
-    setImgSrc(activity.image || DEFAULT_NO_IMAGE)
-  }
-
   const colors = (activity.type && ITINERARY_CATEGORY_COLORS[activity.type]) || {
     bg: '#F1F5F9',
     text: '#475569',
@@ -41,256 +21,327 @@ export const ItineraryActivityCard: React.FC<ItineraryActivityCardProps> = ({
   }
 
   return (
-    <Box sx={{ display: 'flex', position: 'relative', width: '100%' }}>
-      {/* Time column on the left */}
+    <Box
+      sx={{
+        position: 'relative',
+        width: '100%',
+        pl: { xs: 3.25, sm: 3.75 },
+      }}
+    >
+      {/* Concentric Node Circle: perfectly centered on the 8px timeline line axis */}
       <Box
         sx={{
-          width: { xs: 54, sm: 64 },
+          position: 'absolute',
+          left: 8,
+          transform: 'translateX(-50%)',
+          top: { xs: 13, sm: 15 },
+          width: 14,
+          height: 14,
+          borderRadius: '50%',
+          bgcolor: '#2563EB',
+          border: '2px solid #FFFFFF',
+          boxShadow: '0 0 0 2px #3B82F6',
+          zIndex: 1,
           flexShrink: 0,
-          pt: 0.25,
         }}
-      >
-        <Typography
-          variant="subtitle2"
-          sx={{
-            fontWeight: 700,
-            color: '#1E293B',
-            fontSize: { xs: '0.85rem', sm: '0.95rem' },
-          }}
-        >
-          {activity.time}
-        </Typography>
-      </Box>
-
-      {/* Timeline track and dot */}
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          width: 24,
-          flexShrink: 0,
-          mr: { xs: 1.5, sm: 2 },
-          position: 'relative',
-        }}
-      >
-        {/* Dot */}
-        <Box
-          sx={{
-            width: 10,
-            height: 10,
-            borderRadius: '50%',
-            bgcolor: 'primary.main',
-            border: '2px solid #FFFFFF',
-            boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}`,
-            mt: 0.75,
-            zIndex: 1,
-            flexShrink: 0,
-          }}
-        />
-
-        {/* Vertical connector line */}
-        {!isLast && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 18,
-              bottom: -16,
-              width: '2px',
-              bgcolor: '#CBD5E1',
-              zIndex: 0,
-            }}
-          />
-        )}
-      </Box>
+      />
 
       {/* Activity Card */}
       <Box
         sx={{
-          flex: 1,
-          mb: 3,
           p: { xs: 1.75, sm: 2 },
           borderRadius: '12px',
           bgcolor: '#FFFFFF',
           border: '1px solid #E2E8F0',
-          boxShadow: '0 1px 4px rgba(15, 23, 42, 0.04)',
+          boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
           transition: 'all 0.2s ease-in-out',
           '&:hover': {
-            boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
             borderColor: '#CBD5E1',
+            boxShadow: '0 2px 8px rgba(15, 23, 42, 0.06)',
           },
         }}
       >
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
-            gap: 2,
-            alignItems: { xs: 'flex-start', sm: 'center' },
-          }}
-        >
-          {/* Thumbnail */}
-          <Avatar
-            variant="rounded"
-            src={imgSrc}
-            alt={activity.title}
-            slotProps={{
-              img: {
-                onError: () => setImgSrc(DEFAULT_NO_IMAGE),
-              },
-            }}
+          {/* Header Row: Time + Duration + Badge (Left), Location (Right) */}
+          <Box
             sx={{
-              width: { xs: '100%', sm: 100 },
-              height: { xs: 140, sm: 76 },
-              borderRadius: '8px',
-              bgcolor: '#F1F5F9',
-              objectFit: 'cover',
-              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 1,
+              mb: 1,
             }}
-          />
+          >
+            {/* Left: Time, Duration, Category Badge */}
+            <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+              <Typography
+                sx={{
+                  fontFamily: 'monospace, inherit',
+                  fontWeight: 700,
+                  fontSize: { xs: '0.85rem', sm: '0.9rem' },
+                  color: '#0F172A',
+                }}
+              >
+                {activity.time}
+              </Typography>
 
-          {/* Activity Information */}
-          <Box sx={{ flex: 1, minWidth: 0, width: '100%' }}>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: 1,
-                mb: 0.5,
-              }}
-            >
+              {activity.duration && (
+                <Typography
+                  sx={{
+                    color: '#64748B',
+                    fontSize: '0.8rem',
+                    fontWeight: 500,
+                  }}
+                >
+                  ({activity.duration})
+                </Typography>
+              )}
+
+              {activity.type && (
+                <Box
+                  component="span"
+                  sx={{
+                    px: 1,
+                    py: 0.25,
+                    borderRadius: '6px',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    bgcolor: colors.bg,
+                    color: colors.text,
+                    border: `1px solid ${colors.border}`,
+                    lineHeight: 1.3,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  {activity.type}
+                </Box>
+              )}
+            </Box>
+
+            {/* Right: Location */}
+            {activity.location &&
+              (activity.mapUrl ? (
+                <Tooltip
+                  title="Mở địa điểm trên Google Maps (tab mới)"
+                  arrow
+                  placement="top"
+                >
+                  <Box
+                    component="a"
+                    href={activity.mapUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      px: { xs: 1, sm: 1.25 },
+                      py: 0.35,
+                      borderRadius: '6px',
+                      bgcolor: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                      color: '#1D4ED8',
+                      textDecoration: 'none',
+                      fontSize: { xs: '0.76rem', sm: '0.8rem' },
+                      fontWeight: 600,
+                      minHeight: 28,
+                      transition: 'all 0.15s ease-in-out',
+                      cursor: 'pointer',
+                      maxWidth: '100%',
+                      '&:hover': {
+                        bgcolor: '#EFF6FF',
+                        borderColor: '#BFDBFE',
+                        color: '#1E40AF',
+                        boxShadow: '0 1px 3px rgba(37, 99, 235, 0.08)',
+                      },
+                      '&:active': {
+                        bgcolor: '#DBEAFE',
+                        transform: 'scale(0.98)',
+                      },
+                    }}
+                  >
+                    <PlaceOutlinedIcon
+                      sx={{ fontSize: 14, color: '#2563EB', flexShrink: 0 }}
+                    />
+                    <Typography
+                      component="span"
+                      sx={{
+                        fontSize: 'inherit',
+                        fontWeight: 'inherit',
+                        color: 'inherit',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {activity.location}
+                    </Typography>
+                    <LaunchOutlinedIcon
+                      sx={{
+                        fontSize: 12,
+                        color: '#3B82F6',
+                        flexShrink: 0,
+                        ml: 0.25,
+                      }}
+                    />
+                  </Box>
+                </Tooltip>
+              ) : (
+                <Box
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    color: '#64748B',
+                    fontSize: { xs: '0.76rem', sm: '0.8rem' },
+                    fontWeight: 500,
+                    py: 0.35,
+                  }}
+                >
+                  <PlaceOutlinedIcon
+                    sx={{ fontSize: 14, color: '#94A3B8', flexShrink: 0 }}
+                  />
+                  <Typography
+                    component="span"
+                    sx={{
+                      fontSize: 'inherit',
+                      fontWeight: 'inherit',
+                      color: 'inherit',
+                    }}
+                  >
+                    {activity.location}
+                  </Typography>
+                </Box>
+              ))}
+          </Box>
+
+          {/* Main Body: Image on the Left (balanced 1:1 square ratio), Title + Notes on the Right */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: { xs: 1.5, sm: 2 },
+              mt: 1,
+            }}
+          >
+            {/* Image container on the left: Synchronized 4:3 landscape ratio matching Tab Tổng quan */}
+            {activity.image && (
+              <Box
+                sx={{
+                  width: { xs: 100, sm: 140 },
+                  height: { xs: 75, sm: 105 },
+                  aspectRatio: '4 / 3',
+                  borderRadius: '10px',
+                  overflow: 'hidden',
+                  border: '1px solid #E2E8F0',
+                  flexShrink: 0,
+                  boxShadow: '0 1px 3px rgba(15, 23, 42, 0.05)',
+                  position: 'relative',
+                  bgcolor: '#F1F5F9',
+                }}
+              >
+                <Box
+                  component="img"
+                  src={activity.image}
+                  alt={activity.title}
+                  loading="lazy"
+                  onError={(e) => {
+                    const target = e.currentTarget
+                    target.onerror = null
+                    target.src = DEFAULT_NO_IMAGE
+                  }}
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                    display: 'block',
+                    transition: 'transform 0.25s ease',
+                    '&:hover': {
+                      transform: 'scale(1.04)',
+                    },
+                  }}
+                />
+              </Box>
+            )}
+
+            {/* Content: Title, Description, Notes (to the right of image, or full width if no image) */}
+            <Box sx={{ flex: 1, minWidth: 0, width: '100%' }}>
+              {/* Activity Title */}
               <Typography
                 variant="subtitle1"
+                component="h3"
                 sx={{
                   fontWeight: 700,
                   color: '#0F172A',
-                  fontSize: { xs: '0.95rem', sm: '1rem' },
-                  wordBreak: 'break-word',
+                  fontSize: { xs: '0.92rem', sm: '0.98rem' },
+                  lineHeight: 1.4,
+                  mb:
+                    activity.notes ||
+                    (activity.description && activity.description !== activity.title)
+                      ? 0.75
+                      : 0,
                 }}
               >
                 {activity.title}
               </Typography>
 
-              {activity.type && (
-                <Chip
-                  label={activity.type}
-                  size="small"
+              {/* Optional Activity Description (if distinct from title) */}
+              {activity.description && activity.description !== activity.title && (
+                <Typography
+                  variant="body2"
                   sx={{
-                    bgcolor: colors.bg,
-                    color: colors.text,
-                    border: `1px solid ${colors.border}`,
-                    fontWeight: 700,
-                    fontSize: '0.72rem',
-                    height: 22,
-                    borderRadius: '6px',
+                    color: '#64748B',
+                    fontSize: '0.84rem',
+                    lineHeight: 1.5,
+                    mb: activity.notes ? 1 : 0,
                   }}
-                />
-              )}
-            </Box>
-
-            <Typography
-              variant="body2"
-              sx={{
-                color: '#64748B',
-                fontSize: '0.88rem',
-                lineHeight: 1.5,
-                mb: 1,
-              }}
-            >
-              {activity.description}
-            </Typography>
-
-            {/* Metadata tags */}
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: { xs: 1.5, sm: 2.5 },
-                color: '#475569',
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <AccessTimeOutlinedIcon sx={{ fontSize: 16, color: '#64748B' }} />
-                <Typography variant="caption" sx={{ fontWeight: 600, color: '#475569' }}>
-                  {activity.duration}
+                >
+                  {activity.description}
                 </Typography>
-              </Box>
+              )}
 
-              {activity.location && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <PlaceOutlinedIcon sx={{ fontSize: 16, color: '#64748B' }} />
-                  {activity.mapUrl ? (
-                    <Typography
-                      component="a"
-                      href={activity.mapUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      variant="caption"
-                      sx={{
-                        fontWeight: 600,
-                        color: 'primary.main',
-                        textDecoration: 'underline',
-                        '&:hover': { color: 'primary.dark' },
-                      }}
-                    >
-                      {activity.location}
-                    </Typography>
-                  ) : (
-                    <Typography variant="caption" sx={{ fontWeight: 600, color: '#475569' }}>
-                      {activity.location}
-                    </Typography>
-                  )}
+              {/* Suggestion Callout Box */}
+              {activity.notes && (
+                <Box
+                  sx={{
+                    bgcolor: '#F8FAFC',
+                    border: '1px solid #F1F5F9',
+                    borderRadius: '8px',
+                    p: { xs: 1.25, sm: 1.5 },
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 1,
+                    mt: 1,
+                  }}
+                >
+                  <Typography
+                    component="span"
+                    sx={{ fontSize: '0.9rem', lineHeight: 1.2, flexShrink: 0 }}
+                  >
+                    💡
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#334155',
+                      fontSize: '0.82rem',
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    <Box component="strong" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                      Gợi ý:
+                    </Box>{' '}
+                    {activity.notes}
+                  </Typography>
                 </Box>
               )}
             </Box>
           </Box>
-
-          {/* Expand Details Arrow Button */}
-          {activity.notes && (
-            <IconButton
-              size="small"
-              onClick={() => setExpanded((prev) => !prev)}
-              aria-label={expanded ? 'Thu gọn chi tiết' : 'Xem thêm ghi chú'}
-              sx={{
-                alignSelf: { xs: 'flex-end', sm: 'center' },
-                color: '#64748B',
-                bgcolor: '#F8FAFC',
-                '&:hover': { bgcolor: '#F1F5F9' },
-                mt: { xs: -1, sm: 0 },
-              }}
-            >
-              {expanded ? (
-                <KeyboardArrowDownIcon sx={{ fontSize: 20 }} />
-              ) : (
-                <ChevronRightIcon sx={{ fontSize: 20 }} />
-              )}
-            </IconButton>
-          )}
         </Box>
-
-        {/* Collapsible Details / Notes */}
-        {activity.notes && (
-          <Collapse in={expanded} timeout="auto" unmountOnExit>
-            <Box
-              sx={{
-                mt: 1.75,
-                pt: 1.5,
-                borderTop: '1px dashed #E2E8F0',
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 1,
-              }}
-            >
-              <InfoOutlinedIcon sx={{ fontSize: 16, color: 'primary.main', mt: 0.25 }} />
-              <Typography variant="caption" sx={{ color: '#334155', fontStyle: 'italic', lineHeight: 1.5 }}>
-                <strong>Gợi ý:</strong> {activity.notes}
-              </Typography>
-            </Box>
-          </Collapse>
-        )}
       </Box>
-    </Box>
-  )
-}
+    )
+  }
+
+
