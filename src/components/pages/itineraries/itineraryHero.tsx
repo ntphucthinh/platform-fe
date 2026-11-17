@@ -5,7 +5,7 @@ import { DEFAULT_NO_IMAGE } from '@/constants/homestay'
 
 interface ItineraryHeroProps {
   coverImage: string
-  destination: string
+  destination?: string
   title: string
   duration: string
   description: string
@@ -76,23 +76,25 @@ export const ItineraryHero: React.FC<ItineraryHeroProps> = ({
       />
 
       {/* Top Location Badge */}
-      <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center' }}>
-        <Chip
-          icon={<LocationOnIcon sx={{ fontSize: 18, color: '#EF4444 !important' }} />}
-          label={destination}
-          sx={{
-            bgcolor: 'rgba(255, 255, 255, 0.92)',
-            backdropFilter: 'blur(8px)',
-            color: '#0F172A',
-            fontWeight: 700,
-            fontSize: '0.82rem',
-            px: 0.5,
-            py: 0.25,
-            borderRadius: '20px',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-          }}
-        />
-      </Box>
+      {destination && (
+        <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center' }}>
+          <Chip
+            icon={<LocationOnIcon sx={{ fontSize: 18, color: '#EF4444 !important' }} />}
+            label={destination}
+            sx={{
+              bgcolor: 'rgba(255, 255, 255, 0.92)',
+              backdropFilter: 'blur(8px)',
+              color: '#0F172A',
+              fontWeight: 700,
+              fontSize: '0.82rem',
+              px: 0.5,
+              py: 0.25,
+              borderRadius: '20px',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+            }}
+          />
+        </Box>
+      )}
 
       {/* Bottom Content Area */}
       <Box sx={{ position: 'relative', zIndex: 2, mt: { xs: 4, sm: 6 } }}>

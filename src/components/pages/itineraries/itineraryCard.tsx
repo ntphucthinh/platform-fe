@@ -251,10 +251,10 @@ export const ItineraryCard: React.FC<ItineraryCardProps> = ({
           }}
         >
           <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
-            Xem
+            Chi tiết
           </Box>
           <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-            Xem chi tiết
+            Chi tiết lịch trình
           </Box>
         </Button>
 

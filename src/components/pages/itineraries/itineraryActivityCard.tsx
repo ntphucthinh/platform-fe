@@ -246,10 +246,8 @@ export const ItineraryActivityCard: React.FC<ItineraryActivityCardProps> = ({
                   src={activity.image}
                   alt={activity.title}
                   loading="lazy"
-                  onError={(e) => {
-                    const target = e.currentTarget
-                    target.onerror = null
-                    target.src = DEFAULT_NO_IMAGE
+                  onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                    e.currentTarget.src = DEFAULT_NO_IMAGE
                   }}
                   sx={{
                     width: '100%',

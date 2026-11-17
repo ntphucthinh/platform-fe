@@ -9,7 +9,6 @@ import {
   Box,
   Typography,
   Card,
-  CardContent,
   TextField,
   Button,
   Chip,
@@ -64,6 +63,7 @@ import { ItineraryOverview } from "@/components/pages/itineraries/itineraryOverv
 import { ItineraryTimeline } from "@/components/pages/itineraries/itineraryTimeline";
 import { ItineraryImageGallery } from "@/components/pages/itineraries/itineraryImageGallery";
 import { ItineraryTravelTips } from "@/components/pages/itineraries/itineraryTravelTips";
+import { ItineraryDayRoute } from "@/components/pages/itineraries/itineraryDayRoute";
 import useTravelLocationSelection from "@/hooks/selections/useTravelLocationSelection";
 
 const AVAILABLE_THEMES = [
@@ -202,7 +202,10 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
   // Days state
   const [days, setDays] = useState<IItineraryDay[]>(() => {
     if (initialData?.days && initialData.days.length > 0) {
-      return initialData.days;
+      return initialData.days.map((d) => ({
+        ...d,
+        dayTipsText: d.dayTipsText ?? (d.dayTips || []).join("\n"),
+      }));
     }
     return [
       {
@@ -305,6 +308,43 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
   const [previewActiveTab, setPreviewActiveTab] =
     useState<ItineraryTabKey>("overview");
 
+  // Scroll to the beginning of the selected itinerary content when switching tabs in Preview Dialog
+  const previewScrollContainerRef = useRef<HTMLDivElement>(null);
+  const previewContentRef = useRef<HTMLDivElement>(null);
+  const prevPreviewTabRef = useRef<ItineraryTabKey>(previewActiveTab);
+  const isFirstPreviewRender = useRef(true);
+
+  useEffect(() => {
+    if (!previewOpen) {
+      isFirstPreviewRender.current = true;
+      return;
+    }
+
+    if (isFirstPreviewRender.current) {
+      isFirstPreviewRender.current = false;
+      return;
+    }
+
+    if (prevPreviewTabRef.current === previewActiveTab) {
+      return;
+    }
+    prevPreviewTabRef.current = previewActiveTab;
+
+    if (!previewContentRef.current || !previewScrollContainerRef.current) return;
+
+    const contentRect = previewContentRef.current.getBoundingClientRect();
+    const containerRect =
+      previewScrollContainerRef.current.getBoundingClientRect();
+    const currentScrollTop = previewScrollContainerRef.current.scrollTop;
+    const offset = contentRect.top - containerRect.top;
+    const targetScroll = currentScrollTop + offset - 115;
+
+    previewScrollContainerRef.current.scrollTo({
+      top: Math.max(0, targetScroll),
+      behavior: "smooth",
+    });
+  }, [previewActiveTab, previewOpen]);
+
   // Activity Dialog State
   const [activityModal, setActivityModal] = useState<{
     open: boolean;
@@ -397,6 +437,8 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
       summary: "Dành thời gian trải nghiệm thêm các địa điểm mới.",
       coverImage: coverImage || DEFAULT_NO_IMAGE,
       activities: [],
+      dayTips: [],
+      dayTipsText: "",
     };
     setDays([...days, newDay]);
     setValue("durationDays", nextDayNum, { shouldDirty: true });
@@ -426,14 +468,28 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     setDayToDelete(null);
   };
 
-  // Update Day Title/Summary
+  // Update Day Fields (Title / Summary / Date / DayTipsText)
   const handleUpdateDayField = (
     dayIndex: number,
-    field: "title" | "summary" | "date",
+    field: "title" | "summary" | "date" | "dayTipsText",
     val: string,
   ) => {
     setDays((prev) =>
-      prev.map((d, idx) => (idx === dayIndex ? { ...d, [field]: val } : d)),
+      prev.map((d, idx) => {
+        if (idx !== dayIndex) return d;
+        if (field === "dayTipsText") {
+          const parsedTips = val
+            .split("\n")
+            .map((t) => t.trim())
+            .filter(Boolean);
+          return {
+            ...d,
+            dayTipsText: val,
+            dayTips: parsedTips,
+          };
+        }
+        return { ...d, [field]: val };
+      }),
     );
   };
 
@@ -557,14 +613,16 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
 
       const payload: ICreateItineraryInput = {
         title: values.title.trim(),
-        destination: values.destination.trim(),
+        destination: (values.destination || "").trim(),
         locationId: resolvedLocationId,
         durationDays: finalDays,
         durationNights: finalNights,
         duration: `${finalDays} ngày ${finalNights} đêm`,
         description:
           (values.description || "").trim() ||
-          `Khám phá vẻ đẹp tuyệt vời tại ${values.destination}.`,
+          (values.destination
+            ? `Khám phá vẻ đẹp tuyệt vời tại ${values.destination.trim()}.`
+            : "Khám phá vẻ đẹp tuyệt vời của chuyến đi."),
         coverImage: values.coverImage || DEFAULT_NO_IMAGE,
         suitableFor: values.suitableFor,
         themes,
@@ -575,10 +633,9 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             id: `img-1`,
             title: values.title.trim(),
             url: values.coverImage || DEFAULT_NO_IMAGE,
-            caption: values.destination.trim(),
+            caption: (values.destination || values.title || "").trim(),
           },
         ],
-        highlights: initialData?.highlights || [],
       };
 
       onSubmit(payload);
@@ -605,7 +662,6 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     coverImage: coverImage || DEFAULT_NO_IMAGE,
     suitableFor,
     themes: themes.length > 0 ? themes : ["Du lịch", "Khám phá"],
-    highlights: initialData?.highlights || [],
     days,
     featuredImages: initialData?.featuredImages || [
       {
@@ -830,9 +886,8 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             renderInput={(params) => (
               <TextField
                 {...params}
-                required
-                label="Địa điểm *"
-                placeholder="Chọn địa điểm..."
+                label="Địa điểm"
+                placeholder="Chọn địa điểm (không bắt buộc)..."
                 error={Boolean(errors.destination)}
                 helperText={errors.destination?.message}
               />
@@ -1041,7 +1096,18 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
       </Card>
 
       {/* FORM SECTION 2: LỊCH TRÌNH THEO TỪNG NGÀY */}
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+      <Card
+        elevation={0}
+        sx={{
+          borderRadius: "16px",
+          border: "1px solid #E2E8F0",
+          bgcolor: "#FFFFFF",
+          p: { xs: 2.5, sm: 3.5 },
+          display: "flex",
+          flexDirection: "column",
+          gap: 2.5,
+        }}
+      >
         <Box
           sx={{
             display: "flex",
@@ -1114,13 +1180,14 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                   borderRadius: "12px",
                   border: "1px solid",
                   borderColor: isActive ? "primary.main" : "#E2E8F0",
-                  bgcolor: isActive ? "#EFF6FF" : "#FFFFFF",
+                  bgcolor: isActive ? "#EFF6FF" : "#F8FAFC",
                   boxShadow: isActive
                     ? "0 2px 6px rgba(37, 99, 235, 0.12)"
                     : "none",
                   transition: "all 0.18s ease-in-out",
                   "&:hover": {
                     borderColor: isActive ? "primary.main" : "#CBD5E1",
+                    bgcolor: isActive ? "#EFF6FF" : "#F1F5F9",
                   },
                 }}
               >
@@ -1217,26 +1284,31 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             sx={{
               flexShrink: 0,
               borderRadius: "12px",
+              borderStyle: "dashed",
+              borderColor: "#CBD5E1",
               textTransform: "none",
               fontWeight: 600,
               height: 40,
               px: 1.75,
-              borderColor: "#CBD5E1",
-              color: "#334155",
-              "&:hover": { borderColor: "primary.main", bgcolor: "#EFF6FF" },
+              color: "#475569",
+              bgcolor: "#F8FAFC",
+              "&:hover": {
+                borderColor: "primary.main",
+                bgcolor: "#EFF6FF",
+                color: "primary.main",
+              },
             }}
           >
             Ngày mới
           </Button>
         </Box>
 
-        {/* Active Day Content (Focused Single-Day Wizard) */}
-        {currentActiveDay && (
-          <Card
+        {/* Active Day Content (Focused Single-Day Wizard Sub-Panel) */}
+        {currentActiveDay ? (
+          <Box
             key={currentActiveDay.id || currentActiveDay.dayNumber}
-            elevation={0}
             sx={{
-              borderRadius: "16px",
+              borderRadius: "14px",
               border: "1px solid #E2E8F0",
               bgcolor: "#FFFFFF",
               overflow: "hidden",
@@ -1334,7 +1406,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
               </Box>
             </Box>
 
-            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+            <Box sx={{ p: { xs: 2, sm: 3 } }}>
               {/* Day Inputs: Title & Summary */}
               <TextField
                 label="Tiêu đề ngày"
@@ -1362,9 +1434,37 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                   )
                 }
                 multiline
+                rows={2}
+                size="small"
+                fullWidth
+                sx={{
+                  mb: 2.5,
+                  "& textarea": {
+                    resize: "vertical",
+                  },
+                }}
+              />
+
+              <TextField
+                label="Lưu ý trong ngày"
+                placeholder="Nhập các lưu ý đặc thù riêng cho ngày này (mỗi lưu ý một dòng)..."
+                value={
+                  currentActiveDay.dayTipsText !== undefined
+                    ? currentActiveDay.dayTipsText
+                    : (currentActiveDay.dayTips || []).join("\n")
+                }
+                onChange={(e) =>
+                  handleUpdateDayField(
+                    safeActiveDayIndex,
+                    "dayTipsText",
+                    e.target.value,
+                  )
+                }
+                multiline
                 rows={3}
                 size="small"
                 fullWidth
+                helperText="Mỗi dòng là một lưu ý riêng cho ngày này (hiển thị ở thẻ Lưu ý trong ngày khi xem trước)"
                 sx={{
                   mb: 3,
                   "& textarea": {
@@ -1653,10 +1753,36 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                   </Button>
                 )}
               </Box>
-            </CardContent>
-          </Card>
+            </Box>
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              p: 4,
+              textAlign: "center",
+              borderRadius: "12px",
+              border: "1px dashed #CBD5E1",
+              bgcolor: "#F8FAFC",
+            }}
+          >
+            <Typography variant="body1" sx={{ color: "#64748B", mb: 2 }}>
+              Chưa có ngày nào trong lịch trình.
+            </Typography>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleAddDay}
+              sx={{
+                borderRadius: "8px",
+                textTransform: "none",
+                fontWeight: 600,
+              }}
+            >
+              Thêm ngày đầu tiên
+            </Button>
+          </Box>
         )}
-      </Box>
+      </Card>
 
       {/* BOTTOM ACTION BAR */}
       <Box
@@ -2122,11 +2248,22 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         fullScreen
+        slotProps={{
+          paper: {
+            sx: {
+              overflow: "hidden",
+            },
+          },
+        }}
       >
         <Box
+          ref={previewScrollContainerRef}
           sx={{
             bgcolor: "#F8FAFC",
-            minHeight: "100vh",
+            height: "100vh",
+            maxHeight: "100vh",
+            overflowY: "auto",
+            scrollBehavior: "smooth",
             display: "flex",
             flexDirection: "column",
           }}
@@ -2143,7 +2280,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
               justifyContent: "space-between",
               position: "sticky",
               top: 0,
-              zIndex: 10,
+              zIndex: 20,
             }}
           >
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
@@ -2185,9 +2322,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
           {/* Preview Content Body */}
           <Box
             sx={{
-              p: { xs: 2, sm: 4 },
-              maxWidth: 1400,
-              mx: "auto",
+              p: { xs: 2, sm: 3, md: 4 },
               width: "100%",
               display: "flex",
               flexDirection: "column",
@@ -2198,7 +2333,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             <Box
               sx={{
                 display: "grid",
-                gridTemplateColumns: { xs: "1fr", lg: "1fr 340px" },
+                gridTemplateColumns: { xs: "1fr", lg: "1fr 340px", xl: "1fr 360px" },
                 gap: 3,
                 alignItems: "stretch",
               }}
@@ -2215,7 +2350,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                 duration={livePreviewItinerary.duration}
                 destination={livePreviewItinerary.destination}
                 suitableFor={
-                  livePreviewItinerary.suitableFor || "Mọi đối tượng"
+                  livePreviewItinerary.suitableFor || "Cặp đôi, nhóm bạn, gia đình"
                 }
                 totalActivities={liveTotalActivities}
                 themes={livePreviewItinerary.themes}
@@ -2226,11 +2361,13 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             <Box
               sx={{
                 position: "sticky",
-                top: { xs: 52, sm: 60 },
-                zIndex: 10,
+                top: 57,
+                zIndex: 15,
                 bgcolor: "#F8FAFC",
-                pt: 1,
-                pb: 1.5,
+                mx: { xs: -2, sm: -3, md: -4 },
+                px: { xs: 2, sm: 3, md: 4 },
+                pt: { xs: 0.75, sm: 1 },
+                pb: { xs: 0.75, sm: 1.25 },
                 borderBottom: "1px solid #E2E8F0",
                 boxShadow: "0 2px 4px rgba(0, 0, 0, 0.03)",
               }}
@@ -2244,13 +2381,16 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
 
             {/* Main Content & Supporting Sidebar */}
             <Box
+              ref={previewContentRef}
               sx={{
                 display: "grid",
-                gridTemplateColumns: { xs: "1fr", lg: "1fr 340px" },
+                gridTemplateColumns: { xs: "1fr", lg: "1fr 340px", xl: "1fr 360px" },
                 gap: 3,
                 alignItems: "start",
+                mt: { xs: 0.5, sm: 0 },
               }}
             >
+              {/* Left Column: Overview or Timeline based on Active Tab */}
               <Box sx={{ minWidth: 0, width: "100%" }}>
                 {previewActiveTab === "overview" ? (
                   <ItineraryOverview
@@ -2261,25 +2401,48 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                   <ItineraryTimeline day={liveActiveDay} />
                 ) : (
                   <Typography sx={{ color: "text.secondary", py: 4 }}>
-                    Không có thông tin cho ngày đã chọn.
+                    Không tìm thấy thông tin cho ngày đã chọn.
                   </Typography>
                 )}
               </Box>
 
+              {/* Right Column: Contextual based on Active Tab - Sticky below tabs on Desktop */}
               <Box
                 sx={{
                   display: "flex",
                   flexDirection: "column",
                   gap: 3,
                   width: "100%",
+                  position: { xs: "static", lg: "sticky" },
+                  top: { xs: "auto", lg: 125 },
+                  alignSelf: "start",
+                  zIndex: 10,
+                  maxHeight: { xs: "none", lg: "calc(100vh - 145px)" },
+                  overflowY: { xs: "visible", lg: "auto" },
+                  pr: { lg: 0.5 },
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "#CBD5E1 transparent",
+                  "&::-webkit-scrollbar": {
+                    width: 4,
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    backgroundColor: "#CBD5E1",
+                    borderRadius: 2,
+                  },
                 }}
               >
-                <ItineraryImageGallery
-                  images={livePreviewItinerary.featuredImages || []}
-                />
-                <ItineraryTravelTips
-                  tips={livePreviewItinerary.travelTips || []}
-                />
+                {previewActiveTab === "overview" ? (
+                  <>
+                    <ItineraryImageGallery
+                      images={livePreviewItinerary.featuredImages || []}
+                    />
+                    <ItineraryTravelTips
+                      tips={livePreviewItinerary.travelTips || []}
+                    />
+                  </>
+                ) : liveActiveDay ? (
+                  <ItineraryDayRoute day={liveActiveDay} />
+                ) : null}
               </Box>
             </Box>
           </Box>

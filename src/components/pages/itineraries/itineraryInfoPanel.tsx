@@ -8,7 +8,7 @@ import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined'
 
 interface ItineraryInfoPanelProps {
   duration: string
-  destination: string
+  destination?: string
   suitableFor: string
   totalActivities: number
   themes: string[]
@@ -85,7 +85,7 @@ export const ItineraryInfoPanel: React.FC<ItineraryInfoPanelProps> = ({
               Điểm đến
             </Typography>
             <Typography variant="body2" sx={{ fontWeight: 700, color: '#1E293B', fontSize: '0.95rem' }}>
-              {destination}
+              {destination || 'Chưa cập nhật'}
             </Typography>
           </Box>
         </Box>

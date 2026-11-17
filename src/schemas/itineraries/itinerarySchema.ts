@@ -4,7 +4,7 @@ import type { IItineraryFormData } from "@/types/pages/itineraries/itinerary";
 export const itinerarySchema: ObjectSchema<IItineraryFormData> = object().shape(
   {
     title: string().trim().required("Vui lòng nhập tên lịch trình"),
-    destination: string().trim().required("Vui lòng chọn địa điểm"),
+    destination: string().trim().nullable().optional(),
     locationId: number().nullable().optional(),
     durationDays: number()
       .min(1, "Số ngày tối thiểu là 1")

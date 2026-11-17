@@ -144,13 +144,11 @@ export const ItineraryPreviewPage: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         gap: { xs: 1.5, sm: 2.5, md: 3 },
-        maxWidth: 1400,
-        mx: 'auto',
         width: '100%',
         pb: 6,
       }}
     >
-      <HeaderTitle>{`Xem trước: ${itinerary.title}`}</HeaderTitle>
+      <HeaderTitle>{`Lịch trình: ${itinerary.title}`}</HeaderTitle>
 
       {/* Admin Preview Toolbar */}
       <Box
@@ -247,7 +245,7 @@ export const ItineraryPreviewPage: React.FC = () => {
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', lg: '1fr 340px' },
+          gridTemplateColumns: { xs: '1fr', lg: '1fr 340px', xl: '1fr 360px' },
           gap: 3,
           alignItems: 'stretch',
         }}
@@ -277,8 +275,8 @@ export const ItineraryPreviewPage: React.FC = () => {
           top: { xs: 50, sm: 56 },
           zIndex: (theme) => theme.zIndex.appBar - 1,
           bgcolor: 'background.default',
-          mx: { xs: -1.25, sm: -1.75, md: 0 },
-          px: { xs: 1.25, sm: 1.75, md: 0 },
+          mx: { xs: -1.25, sm: -1.75, md: -2 },
+          px: { xs: 1.25, sm: 1.75, md: 2 },
           pt: { xs: 0.75, sm: 1 },
           pb: { xs: 0.75, sm: 1.25 },
           borderBottom: '1px solid',
@@ -298,7 +296,7 @@ export const ItineraryPreviewPage: React.FC = () => {
         ref={contentRef}
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', lg: '1fr 340px' },
+          gridTemplateColumns: { xs: '1fr', lg: '1fr 340px', xl: '1fr 360px' },
           gap: 3,
           alignItems: 'start',
           mt: { xs: 0.5, sm: 0 },

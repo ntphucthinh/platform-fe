@@ -29,6 +29,7 @@ import { useNavigate } from "react-router-dom";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { tableSx } from "@/components/ui/table/tableStyles";
 import { useItineraryList } from "@/hooks/itineraries/useItineraries";
+import { useTravelLocationSelection } from "@/hooks/selections/useTravelLocationSelection";
 import type { IItineraryListItem } from "@/types/pages/itineraries/itinerary";
 import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
@@ -61,9 +62,9 @@ function CustomNoRowsOverlay() {
 export const ItineraryListPage: React.FC = () => {
   const navigate = useNavigate();
   const { data: itineraries, deleteItinerary } = useItineraryList();
+  const { travelLocationsSelections } = useTravelLocationSelection();
   const [searchTerm, setSearchTerm] = useState("");
   const [destinationFilter, setDestinationFilter] = useState("ALL");
-  const [durationFilter, setDurationFilter] = useState("ALL");
 
   // Delete modal state
   const [itemToDelete, setItemToDelete] = useState<IItineraryListItem | null>(
@@ -81,54 +82,37 @@ export const ItineraryListPage: React.FC = () => {
     severity: "info",
   });
 
-  // Summary counts
-  const totalCount = itineraries.length;
-  const totalActivitiesCount = useMemo(
-    () => itineraries.reduce((sum, item) => sum + (item.activityCount || 0), 0),
-    [itineraries],
-  );
-
-  // Unique destinations for filter dropdown
-  const uniqueDestinations = useMemo(() => {
-    const set = new Set<string>();
-    itineraries.forEach((item) => {
-      set.add(item.destination);
-    });
-    return Array.from(set);
-  }, [itineraries]);
-
   // Filtered dataset
   const filteredItineraries = useMemo(() => {
+    const selectedLoc = travelLocationsSelections.find(
+      (opt) => String(opt.value) === destinationFilter,
+    );
+
     return itineraries.filter((item) => {
       const term = searchTerm.toLowerCase().trim();
       const matchesSearch =
         !term ||
         item.title.toLowerCase().includes(term) ||
-        item.destination.toLowerCase().includes(term) ||
+        (item.destination && item.destination.toLowerCase().includes(term)) ||
         item.description.toLowerCase().includes(term);
 
       const matchesDestination =
-        destinationFilter === "ALL" || item.destination === destinationFilter;
+        destinationFilter === "ALL" ||
+        (item.locationId !== undefined &&
+          item.locationId !== null &&
+          String(item.locationId) === destinationFilter) ||
+        (Boolean(item.destination) &&
+          Boolean(selectedLoc) &&
+          (item.destination
+            ?.toLowerCase()
+            .includes(selectedLoc?.label.toLowerCase() || "") ||
+            selectedLoc?.label
+              .toLowerCase()
+              .includes(item.destination?.toLowerCase() || "")));
 
-      let matchesDuration = true;
-      if (durationFilter === "1") {
-        matchesDuration = item.daysCount === 1;
-      } else if (durationFilter === "2") {
-        matchesDuration = item.daysCount === 2;
-      } else if (durationFilter === "3") {
-        matchesDuration = item.daysCount === 3;
-      } else if (durationFilter === "4+") {
-        matchesDuration = item.daysCount >= 4;
-      }
-
-      return matchesSearch && matchesDestination && matchesDuration;
+      return matchesSearch && matchesDestination;
     });
-  }, [
-    itineraries,
-    searchTerm,
-    destinationFilter,
-    durationFilter,
-  ]);
+  }, [itineraries, searchTerm, destinationFilter, travelLocationsSelections]);
 
   // Mobile card view pagination (10 items / page, 2 cols x 5 rows)
   const [mobilePage, setMobilePage] = useState(1);
@@ -137,7 +121,7 @@ export const ItineraryListPage: React.FC = () => {
   const totalMobilePages = Math.max(1, Math.ceil(totalMobileItems / mobilePerPage));
 
   // Reset mobile page to 1 when search or filters change
-  const filterKey = `${searchTerm}_${destinationFilter}_${durationFilter}`;
+  const filterKey = `${searchTerm}_${destinationFilter}`;
   const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
   if (filterKey !== prevFilterKey) {
     setPrevFilterKey(filterKey);
@@ -158,13 +142,11 @@ export const ItineraryListPage: React.FC = () => {
 
   const isFiltered =
     searchTerm !== "" ||
-    destinationFilter !== "ALL" ||
-    durationFilter !== "ALL";
+    destinationFilter !== "ALL";
 
   const handleResetFilters = () => {
     setSearchTerm("");
     setDestinationFilter("ALL");
-    setDurationFilter("ALL");
   };
 
   const handleCreate = () => {
@@ -259,7 +241,7 @@ export const ItineraryListPage: React.FC = () => {
             fontWeight: 500,
           }}
         >
-          {value as string}
+          {(value as string) || "—"}
         </Typography>
       ),
     },
@@ -276,7 +258,7 @@ export const ItineraryListPage: React.FC = () => {
             fontWeight: 600,
           }}
         >
-          {value as string}
+          {(value as string) || "—"}
         </Typography>
       ),
     },
@@ -301,18 +283,6 @@ export const ItineraryListPage: React.FC = () => {
       ),
     },
     {
-      field: "updatedAt",
-      headerName: "Cập nhật",
-      width: 120,
-      align: "center",
-      headerAlign: "center",
-      renderCell: ({ value }) => (
-        <Typography sx={{ color: "#64748B", fontSize: "12.5px" }}>
-          {value as string}
-        </Typography>
-      ),
-    },
-    {
       field: "actions",
       headerName: "Thao tác",
       width: 150,
@@ -323,11 +293,11 @@ export const ItineraryListPage: React.FC = () => {
       headerAlign: "center",
       renderCell: ({ row }) => (
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-          <Tooltip title="Xem trước lịch trình">
+          <Tooltip title="Chi tiết lịch trình">
             <Button
               variant="outlined"
               color="primary"
-              aria-label="Xem trước lịch trình"
+              aria-label="Chi tiết lịch trình"
               onClick={() => handlePreview(row)}
               sx={{
                 minWidth: 0,
@@ -447,7 +417,7 @@ export const ItineraryListPage: React.FC = () => {
           <FormControl
             size="small"
             sx={{
-              minWidth: { xs: "100%", sm: 160 },
+              minWidth: { xs: "100%", sm: 180 },
               "& .MuiOutlinedInput-root": {
                 height: 40,
                 borderRadius: "8px",
@@ -464,39 +434,11 @@ export const ItineraryListPage: React.FC = () => {
               onChange={(e) => setDestinationFilter(e.target.value)}
             >
               <MenuItem value="ALL">Tất cả địa điểm</MenuItem>
-              {uniqueDestinations.map((dest) => (
-                <MenuItem key={dest} value={dest}>
-                  {dest}
+              {travelLocationsSelections.map((loc) => (
+                <MenuItem key={loc.value} value={String(loc.value)}>
+                  {loc.label}
                 </MenuItem>
               ))}
-            </Select>
-          </FormControl>
-
-          {/* Duration Filter */}
-          <FormControl
-            size="small"
-            sx={{
-              minWidth: { xs: "100%", sm: 150 },
-              "& .MuiOutlinedInput-root": {
-                height: 40,
-                borderRadius: "8px",
-                bgcolor: "#F8FAFC",
-                fontSize: "0.875rem",
-              },
-            }}
-          >
-            <InputLabel id="duration-filter-label">Thời lượng</InputLabel>
-            <Select
-              labelId="duration-filter-label"
-              value={durationFilter}
-              label="Thời lượng"
-              onChange={(e) => setDurationFilter(e.target.value)}
-            >
-              <MenuItem value="ALL">Tất cả thời lượng</MenuItem>
-              <MenuItem value="1">1 ngày</MenuItem>
-              <MenuItem value="2">2 ngày</MenuItem>
-              <MenuItem value="3">3 ngày</MenuItem>
-              <MenuItem value="4+">4 ngày trở lên</MenuItem>
             </Select>
           </FormControl>
 
@@ -523,7 +465,7 @@ export const ItineraryListPage: React.FC = () => {
           )}
         </Box>
 
-        {/* Right: Quick Stat & Create Action */}
+        {/* Right: Create Action */}
         <Box
           sx={{
             display: "flex",
@@ -531,21 +473,9 @@ export const ItineraryListPage: React.FC = () => {
             gap: 1.5,
             flexShrink: 0,
             width: { xs: "100%", md: "auto" },
-            justifyContent: { xs: "space-between", md: "flex-end" },
+            justifyContent: "flex-end",
           }}
         >
-          <Typography
-            variant="body2"
-            sx={{
-              color: "text.secondary",
-              fontWeight: 600,
-              fontSize: "0.85rem",
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            {totalCount} lịch trình ({totalActivitiesCount} hoạt động)
-          </Typography>
-
           <Button
             variant="contained"
             color="primary"

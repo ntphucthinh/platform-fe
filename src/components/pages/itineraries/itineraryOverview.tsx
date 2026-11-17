@@ -69,7 +69,7 @@ export const ItineraryOverview: React.FC<ItineraryOverviewProps> = ({
               mt: 0.5,
             }}
           >
-            Hành trình {itinerary.days?.length || 0} ngày khám phá trọn vẹn {itinerary.destination}
+            Hành trình {itinerary.days?.length || 0} ngày khám phá trọn vẹn {itinerary.destination || 'điểm đến'}
           </Typography>
         </Box>
 

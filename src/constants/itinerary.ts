@@ -55,32 +55,6 @@ export const MOCK_DALAT_ITINERARY: ITravelItinerary = {
   themes: ['Thiên nhiên', 'Ẩm thực', 'Cà phê', 'Văn hóa địa phương'],
   createdAt: '2024-03-01T08:00:00.000Z',
   updatedAt: '14/03/2024',
-  highlights: [
-    {
-      id: 'hl-1',
-      title: 'Thiên nhiên tươi đẹp',
-      subtitle: 'Hồ, thác, đồi thông',
-      icon: 'nature',
-    },
-    {
-      id: 'hl-2',
-      title: 'Cà phê đặc sắc',
-      subtitle: 'Nhiều quán cà phê view đẹp',
-      icon: 'coffee',
-    },
-    {
-      id: 'hl-3',
-      title: 'Ẩm thực phong phú',
-      subtitle: 'Đặc sản Đà Lạt',
-      icon: 'food',
-    },
-    {
-      id: 'hl-4',
-      title: 'Nhiều góc check-in',
-      subtitle: 'Phong cảnh thơ mộng',
-      icon: 'photo',
-    },
-  ],
   days: [
     {
       id: 'day-1',
@@ -381,32 +355,6 @@ export const MOCK_DANANG_ITINERARY: ITravelItinerary = {
   themes: ['Di sản văn hóa', 'Biển đảo', 'Ẩm thực', 'Check-in'],
   createdAt: '2024-03-02T09:00:00.000Z',
   updatedAt: '12/03/2024',
-  highlights: [
-    {
-      id: 'dn-hl-1',
-      title: 'Biển Mỹ Khê',
-      subtitle: 'Bãi biển đẹp hàng đầu hành tinh',
-      icon: 'nature',
-    },
-    {
-      id: 'dn-hl-2',
-      title: 'Bà Nà Hills',
-      subtitle: 'Cầu Vàng và làng Pháp cổ tích',
-      icon: 'photo',
-    },
-    {
-      id: 'dn-hl-3',
-      title: 'Phố cổ Hội An',
-      subtitle: 'Lung linh đèn lồng và sông Hoài',
-      icon: 'coffee',
-    },
-    {
-      id: 'dn-hl-4',
-      title: 'Ẩm thực miền Trung',
-      subtitle: 'Mì Quảng, cao lầu, hải sản',
-      icon: 'food',
-    },
-  ],
   days: [
     {
       id: 'dn-d1',
@@ -664,32 +612,6 @@ export const MOCK_NHATRANG_ITINERARY: ITravelItinerary = {
   themes: ['Biển đảo', 'Lặn biển', 'Nghỉ dưỡng', 'Hải sản'],
   createdAt: '2024-03-03T08:00:00.000Z',
   updatedAt: '10/03/2024',
-  highlights: [
-    {
-      id: 'nt-hl-1',
-      title: 'Vịnh Nha Trang',
-      subtitle: 'Một trong 29 vịnh biển đẹp nhất thế giới',
-      icon: 'nature',
-    },
-    {
-      id: 'nt-hl-2',
-      title: 'Lặn ngắm san hô',
-      subtitle: 'Khu bảo tồn biển Hòn Mun',
-      icon: 'photo',
-    },
-    {
-      id: 'nt-hl-3',
-      title: 'Tắm bùn khoáng nóng',
-      subtitle: 'Thư giãn tái tạo năng lượng',
-      icon: 'nature',
-    },
-    {
-      id: 'nt-hl-4',
-      title: 'Hải sản tươi sống',
-      subtitle: 'Thưởng thức tại bè nổi vịnh biển',
-      icon: 'food',
-    },
-  ],
   days: [
     {
       id: 'nt-d1',
@@ -888,32 +810,6 @@ export const MOCK_VUNGTAU_ITINERARY: ITravelItinerary = {
   themes: ['Nghỉ dưỡng ngắn ngày', 'Ẩm thực', 'Check-in biển', 'Hải sản'],
   createdAt: '2024-03-04T07:00:00.000Z',
   updatedAt: '08/03/2024',
-  highlights: [
-    {
-      id: 'vt-hl-1',
-      title: 'Ngọn Hải Đăng',
-      subtitle: 'Ngắm toàn cảnh phố biển từ trên cao',
-      icon: 'photo',
-    },
-    {
-      id: 'vt-hl-2',
-      title: 'Tượng Chúa Kito',
-      subtitle: 'Chinh phục gần 1000 bậc thang',
-      icon: 'nature',
-    },
-    {
-      id: 'vt-hl-3',
-      title: 'Bánh khọt Vũng Tàu',
-      subtitle: 'Món ăn vặt thơm giòn khó cưỡng',
-      icon: 'food',
-    },
-    {
-      id: 'vt-hl-4',
-      title: 'Hoàng hôn Bãi Trước',
-      subtitle: 'Gió biển lộng và phố đêm nhộn nhịp',
-      icon: 'coffee',
-    },
-  ],
   days: [
     {
       id: 'vt-d1',
@@ -1045,6 +941,7 @@ export const MOCK_ALL_ITINERARIES: ITravelItinerary[] = [
 
 export const MOCK_ITINERARY_LIST: IItineraryListItem[] = MOCK_ALL_ITINERARIES.map((item) => ({
   id: item.id,
+  locationId: item.locationId,
   title: item.title,
   destination: item.destination,
   duration: item.duration,

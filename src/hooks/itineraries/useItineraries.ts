@@ -162,7 +162,7 @@ export function createItinerary(
     id: `itinerary-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
     locationId: input.locationId ?? undefined,
     title: input.title.trim(),
-    destination: input.destination.trim(),
+    destination: (input.destination || "").trim(),
     duration: durationStr,
     durationDays: daysCount,
     durationNights: nightsCount,
@@ -170,14 +170,6 @@ export function createItinerary(
     coverImage: input.coverImage,
     suitableFor: input.suitableFor || "Mọi đối tượng",
     themes: input.themes.length > 0 ? input.themes : ["Du lịch", "Khám phá"],
-    highlights: input.highlights || [
-      {
-        id: `hl-${Date.now()}-1`,
-        title: input.destination,
-        subtitle: "Điểm đến hấp dẫn",
-        icon: "nature",
-      },
-    ],
     days: input.days.map((d, idx) => ({
       ...d,
       id: d.id || `day-${idx + 1}-${Date.now()}`,
@@ -192,7 +184,7 @@ export function createItinerary(
         id: `img-${Date.now()}`,
         title: input.title,
         url: input.coverImage,
-        caption: input.destination,
+        caption: (input.destination || input.title || "").trim(),
       },
     ],
     travelTips:
@@ -244,7 +236,7 @@ export function updateItinerary(
     title: input.title !== undefined ? input.title.trim() : existing.title,
     destination:
       input.destination !== undefined
-        ? input.destination.trim()
+        ? (input.destination || "").trim()
         : existing.destination,
     description:
       input.description !== undefined
@@ -267,7 +259,6 @@ export function updateItinerary(
     })),
     featuredImages: input.featuredImages || existing.featuredImages,
     travelTips: input.travelTips || existing.travelTips,
-    highlights: input.highlights || existing.highlights,
     updatedAt: todayStr,
   };
 
