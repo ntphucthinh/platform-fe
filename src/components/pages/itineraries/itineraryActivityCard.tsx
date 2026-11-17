@@ -216,11 +216,11 @@ export const ItineraryActivityCard: React.FC<ItineraryActivityCardProps> = ({
               ))}
           </Box>
 
-          {/* Main Body: Image on the Left (balanced 1:1 square ratio), Title + Notes on the Right */}
+          {/* Main Body: Image on the Left (vertically centered with content), Title + Notes on the Right */}
           <Box
             sx={{
               display: 'flex',
-              alignItems: 'flex-start',
+              alignItems: 'center',
               gap: { xs: 1.5, sm: 2 },
               mt: 1,
             }}

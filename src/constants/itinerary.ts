@@ -92,6 +92,12 @@ export const MOCK_DALAT_ITINERARY: ITravelItinerary = {
         'Dành trọn vẹn ngày đầu tiên để cảm nhận không khí mát lành của trung tâm thành phố, khám phá ẩm thực đường phố và ngắm hoàng hôn bên Hồ Xuân Hương.',
       coverImage:
         'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80',
+      dayTips: [
+        'Trời se lạnh (15–22°C), nên mang theo áo khoác nhẹ và khăn choàng.',
+        'Một số đoạn đường dốc, nên mang giày thể thao hoặc giày đế bám tốt.',
+        'Thời điểm chụp ảnh đẹp là buổi sáng và chiều hoàng hôn.',
+        'Chuẩn bị nước uống và một số vật dụng cá nhân cần thiết.',
+      ],
       activities: [
         {
           id: 'd1-a1',
@@ -176,6 +182,12 @@ export const MOCK_DALAT_ITINERARY: ITravelItinerary = {
         'Rời trung tâm để đắm mình vào cảnh sắc hùng vĩ của thác nước Datanla, dạo bước giữa đồi chè bạt ngàn và tận hưởng ly cà phê giữa không gian sương mù ngoại ô.',
       coverImage:
         'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=800&q=80',
+      dayTips: [
+        'Nên đặt vé máng trượt thác Datanla trước để tránh phải xếp hàng.',
+        'Đồi chè Cầu Đất nhiều gió và nắng, nên thoa kem chống nắng và mang kính râm.',
+        'Đoạn đèo uốn lượn ngoại ô, chú ý kiểm tra xe và giữ tốc độ an toàn.',
+        'Sau 16:30 nhiệt độ hạ nhanh xuống dưới 16°C, nhớ mang thêm áo ấm.',
+      ],
       activities: [
         {
           id: 'd2-a1',
@@ -260,6 +272,7 @@ export const MOCK_DALAT_ITINERARY: ITravelItinerary = {
         'Thong thả chọn mua quà đặc sản Đà Lạt như mứt, trà atiso, dâu tây tươi và đóng gói hành lý trước khi kết thúc một chuyến đi trọn vẹn kỷ niệm đẹp.',
       coverImage:
         'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80',
+      dayTips: [],
       activities: [
         {
           id: 'd3-a1',
@@ -564,6 +577,7 @@ export const MOCK_DANANG_ITINERARY: ITravelItinerary = {
         'Mua sắm đặc sản chả bò, mực rim me tại chợ Cồn, thưởng thức cà phê muối và kết thúc chuyến hành trình trọn vẹn.',
       coverImage:
         'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80',
+      dayTips: [],
       activities: [
         {
           id: 'dn-d4-a1',
@@ -793,6 +807,7 @@ export const MOCK_NHATRANG_ITINERARY: ITravelItinerary = {
         'Tìm hiểu thế giới đại dương tại Viện Hải dương học cổ xưa nhất Đông Dương và mua đặc sản mực một nắng về làm quà.',
       coverImage:
         'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80',
+      dayTips: [],
       activities: [
         {
           id: 'nt-d3-a1',

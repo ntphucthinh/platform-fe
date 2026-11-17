@@ -4,15 +4,12 @@ import {
   Box,
   Typography,
   Button,
-  Chip,
-  Tooltip,
 } from '@mui/material'
-import AltRouteOutlinedIcon from '@mui/icons-material/AltRouteOutlined'
+import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined'
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
+import MapOutlinedIcon from '@mui/icons-material/MapOutlined'
 import LaunchOutlinedIcon from '@mui/icons-material/LaunchOutlined'
-import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined'
-import LocationOffOutlinedIcon from '@mui/icons-material/LocationOffOutlined'
 import type { IItineraryDay } from '@/types/pages/itineraries/itinerary'
-import { ITINERARY_CATEGORY_COLORS } from '@/constants/itinerary'
 
 interface ItineraryDayRouteProps {
   day: IItineraryDay
@@ -26,12 +23,12 @@ export const ItineraryDayRoute: React.FC<ItineraryDayRouteProps> = ({ day }) => 
     (a.time || '').localeCompare(b.time || '')
   )
 
-  // Lọc các trạm có thông tin địa điểm hoặc link để vẽ lộ trình Google Maps
+  // Lọc các trạm có thông tin địa điểm hoặc link để tạo URL Google Maps
   const stopsWithLocation = sortedActivities.filter(
     (act) => Boolean(act.location && act.location.trim())
   )
 
-  // Tạo URL Google Maps Directions nối các điểm
+  // Tạo URL Google Maps Directions nối liên hoàn các điểm
   let googleMapsRouteUrl: string | null = null
   if (stopsWithLocation.length >= 2) {
     const origin = encodeURIComponent(stopsWithLocation[0].location.trim())
@@ -54,15 +51,9 @@ export const ItineraryDayRoute: React.FC<ItineraryDayRouteProps> = ({ day }) => 
       )}`
   }
 
-  // Thống kê phân bổ danh mục trong ngày
-  const categoryCounts = sortedActivities.reduce((acc, act) => {
-    if (act.type) {
-      acc[act.type] = (acc[act.type] || 0) + 1
-    }
-    return acc
-  }, {} as Record<string, number>)
-
-  const categories = Object.entries(categoryCounts)
+  // Danh sách lưu ý của ngày (nếu rỗng hoặc không có -> hiển thị Empty State)
+  const dayTips = day.dayTips || []
+  const hasTips = dayTips.length > 0
 
   return (
     <Card
@@ -78,333 +69,295 @@ export const ItineraryDayRoute: React.FC<ItineraryDayRouteProps> = ({ day }) => 
         gap: 2,
       }}
     >
-      {/* Header Widget */}
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      {/* Header: Icon Clipboard + Tiêu đề "Lưu ý trong ngày" */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+        <Box
+          sx={{
+            width: 34,
+            height: 34,
+            borderRadius: '9px',
+            bgcolor: '#EFF6FF',
+            color: '#2563EB',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            boxShadow: '0 1px 2px rgba(37, 99, 235, 0.08)',
+          }}
+        >
+          <AssignmentOutlinedIcon sx={{ fontSize: 20 }} />
+        </Box>
+        <Typography
+          variant="subtitle1"
+          component="h3"
+          sx={{
+            fontWeight: 700,
+            color: '#0F172A',
+            fontSize: '1.02rem',
+            letterSpacing: '-0.01em',
+          }}
+        >
+          Lưu ý trong ngày
+        </Typography>
+      </Box>
+
+      {/* Body: Danh sách lưu ý HOẶC Empty State (Chưa có lưu ý trong ngày) */}
+      {hasTips ? (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {dayTips.map((tip, idx) => (
+            <Box
+              key={idx}
+              sx={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 1.5,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  bgcolor: '#EFF6FF',
+                  color: '#2563EB',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  mt: 0.1,
+                }}
+              >
+                <InfoOutlinedIcon sx={{ fontSize: 18 }} />
+              </Box>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: '#1E293B',
+                  fontSize: '0.88rem',
+                  lineHeight: 1.55,
+                  fontWeight: 500,
+                  pt: 0.25,
+                }}
+              >
+                {tip}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+      ) : (
+        /* Empty State: Minh họa Clipboard checklist + Tiêu đề & Mô tả */
+        <Box
+          sx={{
+            py: 2,
+            px: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+          }}
+        >
+          {/* Illustration: Checklist Clipboard with soft cloud, leaf & sparkles */}
           <Box
             sx={{
-              width: 32,
-              height: 32,
-              borderRadius: '8px',
-              bgcolor: '#EFF6FF',
-              color: '#2563EB',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              flexShrink: 0,
+              mb: 1.5,
+              position: 'relative',
+              width: 96,
+              height: 96,
             }}
           >
-            <AltRouteOutlinedIcon sx={{ fontSize: 18 }} />
-          </Box>
-          <Box>
-            <Typography
-              variant="subtitle1"
-              component="h3"
-              sx={{
-                fontWeight: 700,
-                color: '#0F172A',
-                fontSize: '0.95rem',
-                lineHeight: 1.3,
-              }}
+            <svg
+              width="96"
+              height="96"
+              viewBox="0 0 96 96"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ display: 'block' }}
             >
-              Cung đường Ngày {day.dayNumber}
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ color: '#64748B', fontSize: '0.75rem', fontWeight: 500 }}
-            >
-              Lộ trình trạm dừng liên tiếp
-            </Typography>
-          </Box>
-        </Box>
+              {/* Soft cloud behind */}
+              <ellipse cx="62" cy="52" rx="22" ry="14" fill="#F0F7FF" />
+              <ellipse cx="72" cy="50" rx="14" ry="12" fill="#E0F2FE" />
 
-        <Chip
-          label={`${sortedActivities.length} trạm`}
-          size="small"
-          sx={{
-            height: 24,
-            fontSize: '0.72rem',
-            fontWeight: 700,
-            bgcolor: '#EFF6FF',
-            color: '#1D4ED8',
-            border: '1px solid #BFDBFE',
-          }}
-        />
-      </Box>
-
-      {/* Danh sách các trạm dừng tuần tự */}
-      {sortedActivities.length === 0 ? (
-        <Typography
-          variant="body2"
-          sx={{ color: '#64748B', fontStyle: 'italic', fontSize: '0.84rem', py: 1 }}
-        >
-          Chưa có hoạt động nào trong ngày này.
-        </Typography>
-      ) : (
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 1,
-            bgcolor: '#F8FAFC',
-            p: 1.5,
-            borderRadius: '10px',
-            border: '1px solid #F1F5F9',
-          }}
-        >
-          <Typography
-            sx={{
-              fontSize: '0.72rem',
-              fontWeight: 700,
-              color: '#64748B',
-              textTransform: 'uppercase',
-              letterSpacing: '0.04em',
-              mb: 0.5,
-            }}
-          >
-            Thứ tự các trạm dừng:
-          </Typography>
-
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {sortedActivities.map((act, idx) => {
-              const hasMapUrl = Boolean(act.mapUrl && act.mapUrl.trim())
-              const hasLocationText = Boolean(act.location && act.location.trim())
-              const catColors = (act.type && ITINERARY_CATEGORY_COLORS[act.type]) || {
-                bg: '#F1F5F9',
-                text: '#475569',
-                border: '#E2E8F0',
-              }
-
-              return (
-                <Box
-                  key={act.id || idx}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 1,
-                    fontSize: '0.8rem',
-                  }}
-                >
-                  {/* Left: Number + Location/Title */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0, flex: 1 }}>
-                    <Box
-                      sx={{
-                        width: 20,
-                        height: 20,
-                        borderRadius: '50%',
-                        bgcolor: '#FFFFFF',
-                        border: '1px solid #CBD5E1',
-                        color: '#334155',
-                        fontSize: '0.7rem',
-                        fontWeight: 700,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      {idx + 1}
-                    </Box>
-
-                    {/* Tên trạm dừng */}
-                    <Box sx={{ minWidth: 0, flex: 1 }}>
-                      <Typography
-                        component="span"
-                        sx={{
-                          fontSize: '0.8rem',
-                          fontWeight: 600,
-                          color: '#1E293B',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          display: 'block',
-                        }}
-                        title={act.location || act.title}
-                      >
-                        {act.location || act.title}
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  {/* Right: Time, Category, and Map Status */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexShrink: 0 }}>
-                    <Typography
-                      sx={{
-                        fontFamily: 'monospace, inherit',
-                        fontSize: '0.75rem',
-                        color: '#64748B',
-                        fontWeight: 500,
-                      }}
-                    >
-                      {act.time}
-                    </Typography>
-
-                    {act.type && (
-                      <Box
-                        component="span"
-                        sx={{
-                          px: 0.75,
-                          py: 0.15,
-                          borderRadius: '4px',
-                          fontSize: '0.68rem',
-                          fontWeight: 600,
-                          bgcolor: catColors.bg,
-                          color: catColors.text,
-                          border: `1px solid ${catColors.border}`,
-                          lineHeight: 1.2,
-                        }}
-                      >
-                        {act.type}
-                      </Box>
-                    )}
-
-                    {/* Xử lý hiển thị trạng thái Google Map của trạm */}
-                    {hasMapUrl ? (
-                      <Tooltip title="Mở vị trí trạm này trên Google Maps" arrow placement="top">
-                        <Box
-                          component="a"
-                          href={act.mapUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          sx={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            color: '#2563EB',
-                            textDecoration: 'none',
-                            p: 0.25,
-                            borderRadius: '4px',
-                            '&:hover': {
-                              bgcolor: '#EFF6FF',
-                              color: '#1D4ED8',
-                            },
-                          }}
-                        >
-                          <LaunchOutlinedIcon sx={{ fontSize: 13 }} />
-                        </Box>
-                      </Tooltip>
-                    ) : hasLocationText ? (
-                      <Tooltip title="Đã có tên địa điểm, có thể nối đường trên bản đồ" arrow placement="top">
-                        <Box sx={{ display: 'inline-flex', alignItems: 'center', color: '#94A3B8' }}>
-                          <PlaceOutlinedIcon sx={{ fontSize: 14 }} />
-                        </Box>
-                      </Tooltip>
-                    ) : (
-                      <Tooltip title="Chưa có thông tin vị trí cho trạm này" arrow placement="top">
-                        <Box
-                          sx={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            color: '#CBD5E1',
-                          }}
-                        >
-                          <LocationOffOutlinedIcon sx={{ fontSize: 13 }} />
-                        </Box>
-                      </Tooltip>
-                    )}
-                  </Box>
-                </Box>
-              )
-            })}
-          </Box>
-        </Box>
-      )}
-
-      {/* Phân bổ các loại hình hoạt động */}
-      {categories.length > 0 && (
-        <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.75, pt: 0.25 }}>
-          <Typography sx={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 500, mr: 0.5 }}>
-            Phân bổ:
-          </Typography>
-          {categories.map(([label, count]) => {
-            const catColors = ITINERARY_CATEGORY_COLORS[label as keyof typeof ITINERARY_CATEGORY_COLORS] || {
-              bg: '#F1F5F9',
-              text: '#475569',
-              border: '#E2E8F0',
-            }
-            return (
-              <Chip
-                key={label}
-                label={`${count} ${label}`}
-                size="small"
-                sx={{
-                  height: 22,
-                  fontSize: '0.7rem',
-                  fontWeight: 600,
-                  bgcolor: catColors.bg,
-                  color: catColors.text,
-                  border: `1px solid ${catColors.border}`,
-                }}
+              {/* Green leaf on bottom left */}
+              <path
+                d="M34 54C34 54 24 55 21 50C18 45 23 39 27 40C31 41 34 47 34 54Z"
+                fill="#D1FAE5"
               />
-            )
-          })}
+              <path
+                d="M22 50C27 47 31 46 34 54"
+                stroke="#10B981"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+
+              {/* Sparkles / rays on top right */}
+              <path
+                d="M74 24L78 20"
+                stroke="#F59E0B"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+              <path
+                d="M78 28L84 28"
+                stroke="#F59E0B"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+
+              {/* Clipboard body */}
+              <rect
+                x="32"
+                y="22"
+                width="38"
+                height="48"
+                rx="8"
+                fill="#FFFFFF"
+                stroke="#3B82F6"
+                strokeWidth="2.5"
+              />
+
+              {/* Clip handle on top */}
+              <path
+                d="M44 23V19C44 17.3431 45.3431 16 47 16H51C52.6569 16 54 17.3431 54 19V23"
+                stroke="#3B82F6"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+              <rect
+                x="42"
+                y="19"
+                width="18"
+                height="7"
+                rx="2"
+                fill="#EFF6FF"
+                stroke="#3B82F6"
+                strokeWidth="2"
+              />
+
+              {/* Checkmark 1 + line */}
+              <path
+                d="M39 34L42 37L47 32"
+                stroke="#60A5FA"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M51 34H62"
+                stroke="#CBD5E1"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              />
+
+              {/* Checkmark 2 + line */}
+              <path
+                d="M39 44L42 47L47 42"
+                stroke="#60A5FA"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M51 44H62"
+                stroke="#CBD5E1"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              />
+
+              {/* Checkmark 3 + line */}
+              <path
+                d="M39 54L42 57L47 52"
+                stroke="#60A5FA"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M51 54H60"
+                stroke="#CBD5E1"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </Box>
+
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 700,
+              color: '#0F172A',
+              fontSize: '1rem',
+              mb: 0.75,
+              lineHeight: 1.3,
+            }}
+          >
+            Chưa có lưu ý trong ngày
+          </Typography>
+
+          <Typography
+            variant="body2"
+            sx={{
+              color: '#64748B',
+              fontSize: '0.85rem',
+              lineHeight: 1.55,
+              maxWidth: 300,
+              mx: 'auto',
+            }}
+          >
+            Hiện chưa có thông tin lưu ý đặc biệt cho ngày này. Bạn có thể tận hưởng hành trình theo lịch trình đã chuẩn bị.
+          </Typography>
         </Box>
       )}
 
-      {/* Nút mở toàn bộ cung đường trên Google Maps */}
-      <Box sx={{ pt: 0.5 }}>
-        {googleMapsRouteUrl ? (
-          <Button
-            component="a"
-            href={googleMapsRouteUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            variant="contained"
-            fullWidth
-            endIcon={<LaunchOutlinedIcon sx={{ fontSize: '1rem !important' }} />}
-            startIcon={<AltRouteOutlinedIcon sx={{ fontSize: '1.1rem !important' }} />}
-            sx={{
-              py: 1.1,
-              px: 2,
-              borderRadius: '10px',
-              bgcolor: '#2563EB',
-              color: '#FFFFFF',
-              fontWeight: 700,
-              fontSize: '0.84rem',
-              textTransform: 'none',
-              boxShadow: '0 2px 6px rgba(37, 99, 235, 0.2)',
-              '&:hover': {
-                bgcolor: '#1D4ED8',
-                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
-              },
-            }}
-          >
-            Mở toàn bộ cung đường trên Google Maps
-          </Button>
-        ) : (
-          <Button
-            disabled
-            variant="outlined"
-            fullWidth
-            startIcon={<LocationOffOutlinedIcon sx={{ fontSize: '1.1rem !important' }} />}
-            sx={{
-              py: 1.1,
-              px: 2,
-              borderRadius: '10px',
-              fontSize: '0.82rem',
-              textTransform: 'none',
+      {/* Nút "Mở toàn bộ cung đường trên Google Maps" nằm ngay phía dưới phần lưu ý */}
+      <Box sx={{ pt: 1, borderTop: '1px solid #F1F5F9', mt: 0.5 }}>
+        <Button
+          component="a"
+          href={googleMapsRouteUrl || '#'}
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="contained"
+          disabled={!googleMapsRouteUrl}
+          startIcon={<MapOutlinedIcon sx={{ fontSize: 20 }} />}
+          endIcon={<LaunchOutlinedIcon sx={{ fontSize: 16 }} />}
+          sx={{
+            width: '100%',
+            py: 1.35,
+            px: 2,
+            borderRadius: '10px',
+            fontWeight: 700,
+            fontSize: '0.86rem',
+            textTransform: 'none',
+            bgcolor: '#1976D2',
+            boxShadow: '0 2px 8px -1px rgba(25, 118, 210, 0.25)',
+            '&:hover': {
+              bgcolor: '#1565C0',
+              boxShadow: '0 4px 14px rgba(25, 118, 210, 0.35)',
+            },
+            '&.Mui-disabled': {
+              bgcolor: '#E2E8F0',
               color: '#94A3B8',
-              borderColor: '#E2E8F0',
-            }}
-          >
-            Chưa có vị trí để mở cung đường
-          </Button>
-        )}
+            },
+          }}
+        >
+          Mở toàn bộ cung đường trên Google Maps
+        </Button>
 
-        {/* Thông tin hỗ trợ về số trạm đã kết nối */}
-        {sortedActivities.length > 0 && (
+        {stopsWithLocation.length > 0 && (
           <Typography
+            variant="caption"
             sx={{
               display: 'block',
               textAlign: 'center',
-              fontSize: '0.7rem',
-              color: stopsWithLocation.length === sortedActivities.length ? '#64748B' : '#D97706',
+              color: '#64748B',
+              fontSize: '0.74rem',
               mt: 1,
+              fontWeight: 500,
             }}
           >
-            {stopsWithLocation.length === sortedActivities.length
-              ? `✓ Đã kết nối đầy đủ ${stopsWithLocation.length} trạm vào lộ trình`
-              : `⚠️ Đã kết nối ${stopsWithLocation.length}/${sortedActivities.length} trạm (trạm chưa có vị trí được tự động bỏ qua)`}
+            ✓ Tự động kết nối {stopsWithLocation.length} trạm dừng vào Google Maps Directions
           </Typography>
         )}
       </Box>

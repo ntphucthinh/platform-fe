@@ -29,6 +29,7 @@ export interface IItineraryDay {
   description?: string
   coverImage?: string
   activities: IItineraryActivity[]
+  dayTips?: string[]
 }
 
 export interface IItineraryHighlight {

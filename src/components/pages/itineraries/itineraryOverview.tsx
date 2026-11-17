@@ -132,7 +132,7 @@ export const ItineraryOverview: React.FC<ItineraryOverviewProps> = ({
                   display: 'flex',
                   flexDirection: { xs: 'row', sm: 'row' },
                   gap: { xs: 2, sm: 2.5 },
-                  alignItems: 'flex-start',
+                  alignItems: 'center',
                 }}
               >
                 {/* Cover thumbnail: Synchronized 4:3 aspect ratio matching Tab Ngày */}
