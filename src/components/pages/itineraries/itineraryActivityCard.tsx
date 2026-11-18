@@ -3,7 +3,10 @@ import { Box, Typography, Tooltip } from '@mui/material'
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined'
 import LaunchOutlinedIcon from '@mui/icons-material/LaunchOutlined'
 import type { IItineraryActivity } from '@/types/pages/itineraries/itinerary'
-import { ITINERARY_CATEGORY_COLORS } from '@/constants/itinerary'
+import {
+  getActivityCategoryStyle,
+  formatMinutesToDuration,
+} from '@/constants/itinerary'
 import { DEFAULT_NO_IMAGE } from '@/constants/homestay'
 
 interface ItineraryActivityCardProps {
@@ -14,11 +17,7 @@ interface ItineraryActivityCardProps {
 export const ItineraryActivityCard: React.FC<ItineraryActivityCardProps> = ({
   activity,
 }) => {
-  const colors = (activity.type && ITINERARY_CATEGORY_COLORS[activity.type]) || {
-    bg: '#F1F5F9',
-    text: '#475569',
-    border: '#E2E8F0',
-  }
+  const colors = getActivityCategoryStyle(activity.category || activity.type)
 
   return (
     <Box
@@ -93,7 +92,7 @@ export const ItineraryActivityCard: React.FC<ItineraryActivityCardProps> = ({
                     fontWeight: 500,
                   }}
                 >
-                  ({activity.duration})
+                  ({formatMinutesToDuration(activity.duration) || activity.duration})
                 </Typography>
               )}
 

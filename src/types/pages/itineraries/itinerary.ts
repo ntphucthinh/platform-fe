@@ -4,14 +4,17 @@ export type ItineraryActivityType =
   | "Thiên nhiên"
   | "Cà phê"
   | "Mua sắm"
-  | "Nghỉ ngơi";
+  | "Nghỉ ngơi"
+  | "Khác";
 
 export interface IItineraryActivity {
   id: string;
   time: string;
   title: string;
   type?: ItineraryActivityType;
+  category?: string;
   duration: string;
+  durationMinutes?: number;
   location: string;
   mapUrl?: string;
   description: string;

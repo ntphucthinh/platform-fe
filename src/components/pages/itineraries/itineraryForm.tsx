@@ -20,6 +20,12 @@ import {
   DialogActions,
   Autocomplete,
   CircularProgress,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  FormHelperText,
+  InputAdornment,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SaveIcon from "@mui/icons-material/Save";
@@ -49,8 +55,11 @@ import type {
 } from "@/types/pages/itineraries/itinerary";
 import { itinerarySchema } from "@/schemas/itineraries/itinerarySchema";
 import {
-  ITINERARY_CATEGORY_COLORS,
+  getActivityCategoryStyle,
+  ITINERARY_ACTIVITY_CATEGORIES,
   MOCK_DALAT_ITINERARY,
+  formatMinutesToDuration,
+  parseDurationToMinutes,
 } from "@/constants/itinerary";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 import { ItineraryHero } from "@/components/pages/itineraries/itineraryHero";
@@ -330,7 +339,8 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     }
     prevPreviewTabRef.current = previewActiveTab;
 
-    if (!previewContentRef.current || !previewScrollContainerRef.current) return;
+    if (!previewContentRef.current || !previewScrollContainerRef.current)
+      return;
 
     const contentRect = previewContentRef.current.getBoundingClientRect();
     const containerRect =
@@ -352,7 +362,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     activityIndex: number | null;
     time: string;
     title: string;
-    type?: ItineraryActivityType;
+    type: ItineraryActivityType;
     duration: string;
     location: string;
     mapUrl: string;
@@ -365,7 +375,8 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     activityIndex: null,
     time: "08:00",
     title: "",
-    duration: "1 giờ",
+    type: "Tham quan",
+    duration: "60",
     location: "",
     mapUrl: "",
     description: "",
@@ -422,8 +433,6 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
       setCustomThemeInput("");
     }
   };
-
-
 
   // Add Day manually
   const handleAddDay = () => {
@@ -501,7 +510,8 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
       activityIndex: null,
       time: "08:00",
       title: "",
-      duration: "1 giờ",
+      type: "Tham quan",
+      duration: "60",
       location: "",
       mapUrl: "",
       description: "",
@@ -515,14 +525,22 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     actIndex: number,
     act: IItineraryActivity,
   ) => {
+    const matchedCategory = ITINERARY_ACTIVITY_CATEGORIES.find(
+      (c) =>
+        c.label === act.type ||
+        (act.category !== undefined && c.value === act.category),
+    );
+
     setActivityModal({
       open: true,
       dayIndex,
       activityIndex: actIndex,
       time: act.time || "08:00",
       title: act.title || "",
-      type: act.type,
-      duration: act.duration || "1 giờ",
+      type: (matchedCategory?.label ||
+        act.type ||
+        "Tham quan") as ItineraryActivityType,
+      duration: parseDurationToMinutes(act.duration) || "60",
       location: act.location || "",
       mapUrl: act.mapUrl || "",
       description: act.description || "",
@@ -533,7 +551,13 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
 
   // Save Activity from Modal
   const handleSaveActivity = () => {
-    if (!activityModal.title.trim() || !activityModal.time.trim()) return;
+    if (
+      !activityModal.title.trim() ||
+      !activityModal.time.trim() ||
+      !activityModal.type
+    ) {
+      return;
+    }
 
     const {
       dayIndex,
@@ -549,6 +573,15 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
       image,
     } = activityModal;
 
+    const formattedDuration =
+      formatMinutesToDuration(duration) ||
+      (duration ? `${duration} phút` : "1 giờ");
+    const numMinutes = parseInt(duration, 10);
+
+    const matchedCategory = ITINERARY_ACTIVITY_CATEGORIES.find(
+      (c) => c.label === type,
+    );
+
     const newActivity: IItineraryActivity = {
       id:
         activityIndex !== null && days[dayIndex].activities[activityIndex]?.id
@@ -556,8 +589,13 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
           : `act-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       time: time.trim(),
       title: actTitle.trim(),
-      type,
-      duration: duration.trim() || "1 giờ",
+      type: (matchedCategory?.label ||
+        type ||
+        "Tham quan") as ItineraryActivityType,
+      category: matchedCategory?.value,
+      duration: formattedDuration,
+      durationMinutes:
+        !isNaN(numMinutes) && numMinutes > 0 ? numMinutes : undefined,
       location: location.trim(),
       mapUrl: mapUrl.trim(),
       description: actDesc.trim(),
@@ -599,6 +637,12 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
   // Validation & Submit via React Hook Form + Yup
   const handleSave = handleFormSubmit(
     (values) => {
+      const emptyTitleDayIndex = days.findIndex((d) => !d.title.trim());
+      if (emptyTitleDayIndex !== -1) {
+        setActiveDayIndex(emptyTitleDayIndex);
+        return;
+      }
+
       const resolvedLocationId =
         values.locationId ??
         (selectedLocation ? Number(selectedLocation.value) : null);
@@ -844,7 +888,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
           {/* Tên lịch trình (Full width) */}
           <TextField
-            label="Tên lịch trình *"
+            label="Tên lịch trình"
             placeholder="Ví dụ: Khám phá Đà Lạt – 3 ngày 2 đêm thơ mộng"
             {...register("title")}
             error={Boolean(errors.title)}
@@ -1410,6 +1454,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
               {/* Day Inputs: Title & Summary */}
               <TextField
                 label="Tiêu đề ngày"
+                required
                 value={currentActiveDay.title}
                 onChange={(e) =>
                   handleUpdateDayField(
@@ -1417,6 +1462,12 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                     "title",
                     e.target.value,
                   )
+                }
+                error={!currentActiveDay.title.trim()}
+                helperText={
+                  !currentActiveDay.title.trim()
+                    ? "Vui lòng nhập tiêu đề ngày"
+                    : undefined
                 }
                 size="small"
                 fullWidth
@@ -1511,9 +1562,9 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                   </Box>
                 ) : (
                   currentActiveDay.activities.map((act, actIndex) => {
-                    const catStyle =
-                      (act.type && ITINERARY_CATEGORY_COLORS[act.type]) ||
-                      ITINERARY_CATEGORY_COLORS["Tham quan"];
+                    const catStyle = getActivityCategoryStyle(
+                      act.category || act.type,
+                    );
                     return (
                       <Box
                         key={act.id || actIndex}
@@ -1615,12 +1666,18 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                                     : {})}
                                   variant="caption"
                                   sx={{
-                                    color: act.mapUrl ? "primary.main" : "#64748B",
+                                    color: act.mapUrl
+                                      ? "primary.main"
+                                      : "#64748B",
                                     display: "flex",
                                     alignItems: "center",
                                     gap: 0.25,
-                                    textDecoration: act.mapUrl ? "underline" : "none",
-                                    "&:hover": act.mapUrl ? { color: "primary.dark" } : {},
+                                    textDecoration: act.mapUrl
+                                      ? "underline"
+                                      : "none",
+                                    "&:hover": act.mapUrl
+                                      ? { color: "primary.dark" }
+                                      : {},
                                   }}
                                 >
                                   <PlaceOutlinedIcon sx={{ fontSize: 14 }} />
@@ -1632,7 +1689,9 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                                   variant="caption"
                                   sx={{ color: "#64748B" }}
                                 >
-                                  • {act.duration}
+                                  •{" "}
+                                  {formatMinutesToDuration(act.duration) ||
+                                    act.duration}
                                 </Typography>
                               )}
                             </Box>
@@ -1913,7 +1972,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
         >
           {/* Row 1: Tên hoạt động (Full width) */}
           <TextField
-            label="Tên hoạt động *"
+            label="Tên hoạt động"
             placeholder="Ví dụ: Ăn sáng tại chợ địa phương"
             value={activityModal.title}
             onChange={(e) =>
@@ -1924,7 +1983,37 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             fullWidth
           />
 
-          {/* Row 2: Giờ bắt đầu & Thời lượng dự kiến */}
+          {/* Row 2: Danh mục hoạt động (Category - không được null) */}
+          <FormControl fullWidth required error={!activityModal.type}>
+            <InputLabel id="activity-category-select-label">
+              Danh mục hoạt động
+            </InputLabel>
+            <Select
+              labelId="activity-category-select-label"
+              id="activity-category-select"
+              label="Danh mục hoạt động *"
+              value={
+                activityModal.type || ITINERARY_ACTIVITY_CATEGORIES[1].label
+              }
+              onChange={(e) =>
+                setActivityModal((prev) => ({
+                  ...prev,
+                  type: e.target.value as ItineraryActivityType,
+                }))
+              }
+            >
+              {ITINERARY_ACTIVITY_CATEGORIES.map((cat) => (
+                <MenuItem key={cat.value} value={cat.label}>
+                  {cat.label}
+                </MenuItem>
+              ))}
+            </Select>
+            {!activityModal.type && (
+              <FormHelperText>Vui lòng chọn danh mục hoạt động</FormHelperText>
+            )}
+          </FormControl>
+
+          {/* Row 3: Giờ bắt đầu & Thời lượng dự kiến */}
           <Box
             sx={{
               display: "grid",
@@ -1933,7 +2022,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             }}
           >
             <TimePicker
-              label="Giờ bắt đầu *"
+              label="Giờ bắt đầu"
               ampm={false}
               format="HH:mm"
               value={
@@ -1967,15 +2056,27 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             />
 
             <TextField
-              label="Thời lượng dự kiến"
-              placeholder="Ví dụ: 1 giờ, 1.5 giờ"
+              label="Thời lượng dự kiến (phút)"
+              placeholder="Ví dụ: 60, 70"
               value={activityModal.duration}
-              onChange={(e) =>
+              onChange={(e) => {
+                const numericOnly = e.target.value.replace(/\D/g, "");
                 setActivityModal((prev) => ({
                   ...prev,
-                  duration: e.target.value,
-                }))
-              }
+                  duration: numericOnly,
+                }));
+              }}
+              slotProps={{
+                htmlInput: {
+                  inputMode: "numeric",
+                  pattern: "[0-9]*",
+                },
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">phút</InputAdornment>
+                  ),
+                },
+              }}
               fullWidth
             />
           </Box>
@@ -2135,7 +2236,11 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             variant="contained"
             color="primary"
             onClick={handleSaveActivity}
-            disabled={!activityModal.title.trim() || !activityModal.time.trim()}
+            disabled={
+              !activityModal.title.trim() ||
+              !activityModal.time.trim() ||
+              !activityModal.type
+            }
             fullWidth
             sx={{
               borderRadius: "8px",
@@ -2333,7 +2438,11 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             <Box
               sx={{
                 display: "grid",
-                gridTemplateColumns: { xs: "1fr", lg: "1fr 340px", xl: "1fr 360px" },
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  lg: "1fr 340px",
+                  xl: "1fr 360px",
+                },
                 gap: 3,
                 alignItems: "stretch",
               }}
@@ -2350,7 +2459,8 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
                 duration={livePreviewItinerary.duration}
                 destination={livePreviewItinerary.destination}
                 suitableFor={
-                  livePreviewItinerary.suitableFor || "Cặp đôi, nhóm bạn, gia đình"
+                  livePreviewItinerary.suitableFor ||
+                  "Cặp đôi, nhóm bạn, gia đình"
                 }
                 totalActivities={liveTotalActivities}
                 themes={livePreviewItinerary.themes}
@@ -2384,7 +2494,11 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
               ref={previewContentRef}
               sx={{
                 display: "grid",
-                gridTemplateColumns: { xs: "1fr", lg: "1fr 340px", xl: "1fr 360px" },
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  lg: "1fr 340px",
+                  xl: "1fr 360px",
+                },
                 gap: 3,
                 alignItems: "start",
                 mt: { xs: 0.5, sm: 0 },
