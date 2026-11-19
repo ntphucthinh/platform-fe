@@ -80,7 +80,6 @@ export const HomestayDetailDialog: React.FC<HomestayDetailDialogProps> = ({
           sx: {
             borderRadius: "14px",
             overflow: "hidden",
-            p: 1,
             width: { xs: "100%", sm: "auto" },
             maxWidth: { xs: "100%", sm: "sm", md: "md" },
             m: 0,
@@ -101,8 +100,9 @@ export const HomestayDetailDialog: React.FC<HomestayDetailDialogProps> = ({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          pb: 1,
+          py: { xs: 1.75, sm: 2 },
           px: { xs: 2, sm: 3 },
+          flexShrink: 0,
         }}
       >
         <Box
@@ -138,7 +138,15 @@ export const HomestayDetailDialog: React.FC<HomestayDetailDialogProps> = ({
         </IconButton>
       </DialogTitle>
 
-      <DialogContent dividers sx={{ py: 2.5 }}>
+      <DialogContent
+        dividers
+        sx={{
+          py: 2.5,
+          flex: "1 1 auto",
+          overflowY: "auto",
+          minHeight: 0,
+        }}
+      >
         {/* Room Selector if multiple rooms */}
         {rooms.length > 1 && (
           <Box sx={{ mb: 2.5 }}>
@@ -235,7 +243,7 @@ export const HomestayDetailDialog: React.FC<HomestayDetailDialogProps> = ({
         </Grid>
       </DialogContent>
 
-      <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 2 }}>
+      <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 2, flexShrink: 0 }}>
         <Button
           onClick={onClose}
           variant="contained"

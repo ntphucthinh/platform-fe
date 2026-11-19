@@ -609,7 +609,6 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
             sx: {
               borderRadius: "16px",
               overflow: "hidden",
-              p: 1,
               width: { xs: "100%", sm: "auto" },
               maxWidth: { xs: "100%", sm: "sm", md: "md" },
               m: 0,
@@ -630,8 +629,9 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            pb: 1,
+            py: { xs: 1.75, sm: 2 },
             px: { xs: 2, sm: 3 },
+            flexShrink: 0,
           }}
         >
           <Typography
@@ -659,8 +659,24 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
           component="form"
           onSubmit={handleSubmit(handleFormSubmit)}
           noValidate
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            flex: "1 1 auto",
+            minHeight: 0,
+            overflow: "hidden",
+          }}
         >
-          <DialogContent dividers sx={{ py: 2.5 }}>
+          <DialogContent
+            dividers
+            sx={{
+              py: 2.5,
+              px: { xs: 2, sm: 3 },
+              flex: "1 1 auto",
+              overflowY: "auto",
+              minHeight: 0,
+            }}
+          >
             <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
               {/* SECTION A: SHARED HOMESTAY INFORMATION */}
               <Box>
@@ -1507,6 +1523,7 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
               py: 2,
               gap: 1,
               flexDirection: { xs: "column-reverse", sm: "row" },
+              flexShrink: 0,
             }}
           >
             <Button
