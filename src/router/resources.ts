@@ -27,7 +27,7 @@ export const resources: ResourceProps[] = [
   {
     name: 'itineraries',
     list: '/admin/itineraries',
-    show: '/admin/itineraries/preview',
+    show: '/admin/itineraries/:id/detail',
     meta: {
       label: 'Lịch trình du lịch',
     },

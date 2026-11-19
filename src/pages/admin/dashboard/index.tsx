@@ -27,7 +27,7 @@ import AddHomeWorkOutlinedIcon from "@mui/icons-material/AddHomeWorkOutlined";
 import AddPhotoAlternateOutlinedIcon from "@mui/icons-material/AddPhotoAlternateOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
-import { useItineraryList } from "@/hooks/itineraries/useItineraries";
+import { useItineraryList } from "@/hooks/itineraries/useItineraryList";
 import { useTravelMemoryList } from "@/hooks/travel-memories/useTravelMemoryList";
 import { useHomestayList } from "@/hooks/homestays/useHomestayList";
 import {
@@ -109,7 +109,7 @@ export function DashboardPage() {
           typeColor: "success",
           dateDisplay: parsed.isValid() ? parsed.format("DD/MM/YYYY") : timeStr,
           rawDate: parsed.isValid() ? parsed.valueOf() : 0,
-          targetUrl: `/admin/itineraries/${it.id}/preview`,
+          targetUrl: `/admin/itineraries/${it.id}/detail`,
         });
       }
     });

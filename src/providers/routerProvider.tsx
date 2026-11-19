@@ -21,7 +21,7 @@ import { HomestayListingPage } from "@/pages/homestay/listing";
 import { HomestayDetailPage } from "@/pages/homestay/detail";
 import { AdminHomestayPage } from "@/pages/admin/homestay/index";
 import { ItineraryListPage } from "@/pages/admin/itineraries/index";
-import { ItineraryPreviewPage } from "@/pages/admin/itineraries/preview";
+import { ItineraryDetailPage } from "@/pages/admin/itineraries/detail";
 import { ItineraryCreatePage } from "@/pages/admin/itineraries/create";
 import { ItineraryEditPage } from "@/pages/admin/itineraries/edit";
 import { TravelMemoryListPage } from "@/pages/admin/travel-memories/index";
@@ -101,9 +101,14 @@ export function AppProvider() {
                     <Route path="itineraries">
                       <Route index element={<ItineraryListPage />} />
                       <Route path="create" element={<ItineraryCreatePage />} />
+                      <Route path=":id" element={<ItineraryDetailPage />} />
+                      <Route
+                        path=":id/detail"
+                        element={<ItineraryDetailPage />}
+                      />
                       <Route
                         path=":id/preview"
-                        element={<ItineraryPreviewPage />}
+                        element={<ItineraryDetailPage />}
                       />
                       <Route path=":id/edit" element={<ItineraryEditPage />} />
                     </Route>

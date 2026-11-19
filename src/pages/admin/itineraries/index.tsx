@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -28,7 +28,7 @@ import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import { useNavigate } from "react-router-dom";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { tableSx } from "@/components/ui/table/tableStyles";
-import { useItineraryList } from "@/hooks/itineraries/useItineraries";
+import { useItineraryList } from "@/hooks/itineraries/useItineraryList";
 import { useTravelLocationSelection } from "@/hooks/selections/useTravelLocationSelection";
 import type { IItineraryListItem } from "@/types/pages/itineraries/itinerary";
 import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
@@ -61,10 +61,28 @@ function CustomNoRowsOverlay() {
 
 export const ItineraryListPage: React.FC = () => {
   const navigate = useNavigate();
-  const { data: itineraries, deleteItinerary } = useItineraryList();
-  const { travelLocationsSelections } = useTravelLocationSelection();
   const [searchTerm, setSearchTerm] = useState("");
   const [destinationFilter, setDestinationFilter] = useState("ALL");
+
+  const locationIdParam =
+    destinationFilter !== "ALL" && !isNaN(Number(destinationFilter))
+      ? Number(destinationFilter)
+      : undefined;
+
+  const {
+    data: itineraries,
+    total,
+    page,
+    perPage,
+    setPage,
+    paginationModel,
+    setPaginationModel,
+    isLoading,
+    deleteItinerary,
+  } = useItineraryList({
+    locationId: locationIdParam,
+  });
+  const { travelLocationsSelections } = useTravelLocationSelection();
 
   // Delete modal state
   const [itemToDelete, setItemToDelete] = useState<IItineraryListItem | null>(
@@ -82,63 +100,16 @@ export const ItineraryListPage: React.FC = () => {
     severity: "info",
   });
 
-  // Filtered dataset
-  const filteredItineraries = useMemo(() => {
-    const selectedLoc = travelLocationsSelections.find(
-      (opt) => String(opt.value) === destinationFilter,
-    );
+  // Filtered dataset: API handles filtering by locationId; name search is temporarily not handled
+  const filteredItineraries = itineraries;
 
-    return itineraries.filter((item) => {
-      const term = searchTerm.toLowerCase().trim();
-      const matchesSearch =
-        !term ||
-        item.title.toLowerCase().includes(term) ||
-        (item.destination && item.destination.toLowerCase().includes(term)) ||
-        item.description.toLowerCase().includes(term);
-
-      const matchesDestination =
-        destinationFilter === "ALL" ||
-        (item.locationId !== undefined &&
-          item.locationId !== null &&
-          String(item.locationId) === destinationFilter) ||
-        (Boolean(item.destination) &&
-          Boolean(selectedLoc) &&
-          (item.destination
-            ?.toLowerCase()
-            .includes(selectedLoc?.label.toLowerCase() || "") ||
-            selectedLoc?.label
-              .toLowerCase()
-              .includes(item.destination?.toLowerCase() || "")));
-
-      return matchesSearch && matchesDestination;
-    });
-  }, [itineraries, searchTerm, destinationFilter, travelLocationsSelections]);
-
-  // Mobile card view pagination (10 items / page, 2 cols x 5 rows)
-  const [mobilePage, setMobilePage] = useState(1);
-  const mobilePerPage = 10;
-  const totalMobileItems = filteredItineraries.length;
-  const totalMobilePages = Math.max(1, Math.ceil(totalMobileItems / mobilePerPage));
-
-  // Reset mobile page to 1 when search or filters change
-  const filterKey = `${searchTerm}_${destinationFilter}`;
-  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
-  if (filterKey !== prevFilterKey) {
-    setPrevFilterKey(filterKey);
-    setMobilePage(1);
-  }
-
-  const safeMobilePage = Math.min(mobilePage, totalMobilePages);
+  // Mobile card view pagination
+  const totalMobileItems = total;
+  const totalMobilePages = Math.max(1, Math.ceil(totalMobileItems / perPage));
   const startMobileItem =
-    totalMobileItems === 0 ? 0 : (safeMobilePage - 1) * mobilePerPage + 1;
-  const endMobileItem = Math.min(safeMobilePage * mobilePerPage, totalMobileItems);
-
-  const visibleMobileItineraries = useMemo(() => {
-    return filteredItineraries.slice(
-      (safeMobilePage - 1) * mobilePerPage,
-      safeMobilePage * mobilePerPage,
-    );
-  }, [filteredItineraries, safeMobilePage, mobilePerPage]);
+    totalMobileItems === 0 ? 0 : (page - 1) * perPage + 1;
+  const endMobileItem = Math.min(page * perPage, totalMobileItems);
+  const visibleMobileItineraries = filteredItineraries;
 
   const isFiltered =
     searchTerm !== "" ||
@@ -158,7 +129,7 @@ export const ItineraryListPage: React.FC = () => {
   };
 
   const handlePreview = (item: IItineraryListItem) => {
-    navigate(`/admin/itineraries/${item.id}/preview`);
+    navigate(`/admin/itineraries/${item.id}/detail`);
   };
 
   const handleConfirmDelete = () => {
@@ -514,10 +485,12 @@ export const ItineraryListPage: React.FC = () => {
           rows={filteredItineraries}
           columns={columns}
           getRowId={(row) => row.id}
-          pageSizeOptions={[5, 10, 25]}
-          initialState={{
-            pagination: { paginationModel: { pageSize: 10, page: 0 } },
-          }}
+          loading={isLoading}
+          paginationMode="server"
+          rowCount={total}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          pageSizeOptions={[5, 10, 20]}
           rowHeight={64}
           columnHeaderHeight={48}
           autoHeight
@@ -622,8 +595,8 @@ export const ItineraryListPage: React.FC = () => {
                     size="small"
                     variant="outlined"
                     startIcon={<ChevronLeftRoundedIcon />}
-                    disabled={safeMobilePage <= 1}
-                    onClick={() => setMobilePage((p) => Math.max(1, p - 1))}
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
                     aria-label="Trang trước"
                     sx={{
                       borderRadius: "8px",
@@ -659,16 +632,16 @@ export const ItineraryListPage: React.FC = () => {
                       textAlign: "center",
                     }}
                   >
-                    Trang {safeMobilePage} / {totalMobilePages}
+                    Trang {page} / {totalMobilePages}
                   </Typography>
 
                   <Button
                     size="small"
                     variant="outlined"
                     endIcon={<ChevronRightRoundedIcon />}
-                    disabled={safeMobilePage >= totalMobilePages}
+                    disabled={page >= totalMobilePages}
                     onClick={() =>
-                      setMobilePage((p) => Math.min(totalMobilePages, p + 1))
+                      setPage((p) => Math.min(totalMobilePages, p + 1))
                     }
                     aria-label="Trang sau"
                     sx={{

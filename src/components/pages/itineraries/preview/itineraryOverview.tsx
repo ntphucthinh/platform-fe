@@ -9,7 +9,7 @@ import {
 } from '@mui/material'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import type { ITravelItinerary } from '@/types/pages/itineraries/itinerary'
-import type { ItineraryTabKey } from '@/components/pages/itineraries/itineraryDayTabs'
+import type { ItineraryTabKey } from '@/components/pages/itineraries/preview/itineraryDayTabs'
 import { DEFAULT_NO_IMAGE } from '@/constants/homestay'
 
 interface ItineraryOverviewProps {

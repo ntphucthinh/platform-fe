@@ -1,7 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ItineraryForm } from '@/components/pages/itineraries/itineraryForm'
-import { useItineraryDetail } from '@/hooks/itineraries/useItineraries'
+import { useItineraryDetail } from '@/hooks/itineraries/useItineraryDetail'
 import type { ICreateItineraryInput } from '@/types/pages/itineraries/itinerary'
 
 export const ItineraryCreatePage: React.FC = () => {
@@ -10,7 +10,7 @@ export const ItineraryCreatePage: React.FC = () => {
 
   const handleSubmit = (formData: ICreateItineraryInput) => {
     const created = createItinerary(formData)
-    navigate(`/admin/itineraries/${created.id}/preview`)
+    navigate(`/admin/itineraries/${created.id}/detail`)
   }
 
   const handleCancel = () => {

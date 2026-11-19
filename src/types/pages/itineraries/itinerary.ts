@@ -7,29 +7,39 @@ export type ItineraryActivityType =
   | "Nghỉ ngơi"
   | "Khác";
 
+export interface IItineraryTheme {
+  id: number;
+  name: string;
+}
+
 export interface IItineraryActivity {
-  id: string;
+  id: number;
   time: string;
+  startTime?: string;
   title: string;
   type?: ItineraryActivityType;
   category?: string;
+  activityCategory?: string | null;
   duration: string;
   durationMinutes?: number;
   location: string;
   mapUrl?: string;
+  googleMapsUrl?: string | null;
   description: string;
   image: string;
+  imagePath?: string | null;
   notes?: string;
 }
 
 export interface IItineraryDay {
-  id?: string;
+  id?: number;
   dayNumber: number;
   title: string;
   subtitle?: string;
   date?: string;
   summary?: string;
   description?: string;
+  imagePath?: string | null;
   coverImage?: string;
   activities: IItineraryActivity[];
   dayTips?: string[];
@@ -37,41 +47,52 @@ export interface IItineraryDay {
 }
 
 export interface IItineraryGalleryImage {
-  id: string;
-  title: string;
+  id: number;
+  title?: string;
   url: string;
+  imagePath?: string;
   caption?: string;
 }
 
 export interface IItineraryListItem {
-  id: string;
+  id: number;
   locationId?: number | null;
+  locationName?: string | null;
+  itineraryName?: string;
   title: string;
   destination?: string;
   duration: string;
+  durationDays?: number;
+  durationNights?: number;
   daysCount: number;
   activityCount: number;
-  updatedAt: string;
+  updatedAt?: string;
   description: string;
+  coverImagePath?: string | null;
   coverImage: string;
   hasDetailPreview?: boolean;
 }
 
 export interface ITravelItinerary {
-  id: string;
+  id: number;
   locationId?: number | null;
+  locationName?: string | null;
+  itineraryName?: string;
   title: string;
   destination?: string;
   duration: string;
   durationDays?: number;
   durationNights?: number;
   description: string;
+  coverImagePath?: string | null;
   coverImage: string;
   suitableFor?: string;
   themes: string[];
+  themeObjects?: IItineraryTheme[];
   days: IItineraryDay[];
   featuredImages: IItineraryGalleryImage[];
   travelTips: string[];
+  activityCount?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -85,6 +106,7 @@ export interface ICreateItineraryInput {
   duration?: string;
   description: string;
   coverImage: string;
+  coverImagePath?: string | null;
   suitableFor?: string;
   themes: string[];
   days: IItineraryDay[];
@@ -98,6 +120,7 @@ export interface IUpdateItineraryInput extends Partial<ICreateItineraryInput> {
   locationId?: number | null;
   description?: string;
   coverImage?: string;
+  coverImagePath?: string | null;
 }
 
 export interface IItineraryFormData {

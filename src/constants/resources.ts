@@ -17,8 +17,13 @@ export enum AppResource {
   TravelMemory = "travel-memories",
   TravelMemoryID = "travel-memories/:id",
 
+  // Itinerary
+  Itinerary = "itineraries",
+  ItineraryID = "itineraries/:id",
+
   // Selections
   SelectionsTravelLocations = "selections/travel-locations",
+  SelectionsTravelThemes = "selections/travel-themes",
 
   // Upload
   Upload = "uploads",

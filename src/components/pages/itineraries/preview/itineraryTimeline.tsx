@@ -1,7 +1,8 @@
 import React from 'react'
 import { Box, Typography, Card } from '@mui/material'
 import type { IItineraryDay } from '@/types/pages/itineraries/itinerary'
-import { ItineraryActivityCard } from '@/components/pages/itineraries/itineraryActivityCard'
+import { ItineraryActivityCard } from '@/components/pages/itineraries/preview/itineraryActivityCard'
+import { DEFAULT_NO_IMAGE } from '@/constants/homestay'
 
 interface ItineraryTimelineProps {
   day: IItineraryDay
@@ -11,6 +12,12 @@ export const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ day }) => 
   // Ensure activities are sorted chronologically by time with safe fallbacks
   const sortedActivities = [...(day.activities || [])].sort((a, b) =>
     (a.time || '').localeCompare(b.time || ''),
+  )
+
+  const hasCoverImage = Boolean(
+    day.coverImage &&
+      day.coverImage.trim() !== '' &&
+      day.coverImage !== DEFAULT_NO_IMAGE,
   )
 
   return (
@@ -38,7 +45,7 @@ export const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ day }) => 
           mb: { xs: 2.5, sm: 3 },
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75, minWidth: 0 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75, minWidth: 0, flex: 1 }}>
           {/* Day number circle badge */}
           <Box
             sx={{
@@ -81,6 +88,25 @@ export const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ day }) => 
             )}
           </Box>
         </Box>
+
+        {hasCoverImage && (
+          <Box
+            component="img"
+            src={day.coverImage}
+            alt={day.title}
+            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+              e.currentTarget.style.display = 'none'
+            }}
+            sx={{
+              width: { xs: 70, sm: 100 },
+              height: { xs: 50, sm: 65 },
+              borderRadius: '8px',
+              objectFit: 'cover',
+              border: '1px solid #E2E8F0',
+              flexShrink: 0,
+            }}
+          />
+        )}
       </Card>
 
       {/* Timeline Activities List */}

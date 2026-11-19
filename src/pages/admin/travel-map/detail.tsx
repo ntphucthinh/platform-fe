@@ -975,7 +975,7 @@ export const TravelMapDetailPage: React.FC = () => {
               <Card
                 key={it.id}
                 elevation={0}
-                onClick={() => navigate(`/admin/itineraries/${it.id}/preview`)}
+                onClick={() => navigate(`/admin/itineraries/${it.id}/detail`)}
                 sx={{
                   borderRadius: "16px",
                   border: "1px solid #E2E8F0",

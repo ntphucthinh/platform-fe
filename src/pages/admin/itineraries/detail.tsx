@@ -7,30 +7,31 @@ import {
   Snackbar,
   Alert,
   Tooltip,
+  CircularProgress,
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import { useNavigate, useParams } from 'react-router-dom'
 import { HeaderTitle } from '@/components/ui/header/headerTitle'
-import { useItineraryDetail } from '@/hooks/itineraries/useItineraries'
+import { useItineraryDetail } from '@/hooks/itineraries/useItineraryDetail'
 import type { IItineraryDay } from '@/types/pages/itineraries/itinerary'
-import { ItineraryHero } from '@/components/pages/itineraries/itineraryHero'
-import { ItineraryInfoPanel } from '@/components/pages/itineraries/itineraryInfoPanel'
+import { ItineraryHero } from '@/components/pages/itineraries/preview/itineraryHero'
+import { ItineraryInfoPanel } from '@/components/pages/itineraries/preview/itineraryInfoPanel'
 import {
   ItineraryDayTabs,
   type ItineraryTabKey,
-} from '@/components/pages/itineraries/itineraryDayTabs'
-import { ItineraryOverview } from '@/components/pages/itineraries/itineraryOverview'
-import { ItineraryTimeline } from '@/components/pages/itineraries/itineraryTimeline'
-import { ItineraryImageGallery } from '@/components/pages/itineraries/itineraryImageGallery'
-import { ItineraryTravelTips } from '@/components/pages/itineraries/itineraryTravelTips'
-import { ItineraryDayRoute } from '@/components/pages/itineraries/itineraryDayRoute'
-import { ItineraryNotFound } from '@/components/pages/itineraries/itineraryNotFound'
+} from '@/components/pages/itineraries/preview/itineraryDayTabs'
+import { ItineraryOverview } from '@/components/pages/itineraries/preview/itineraryOverview'
+import { ItineraryTimeline } from '@/components/pages/itineraries/preview/itineraryTimeline'
+import { ItineraryImageGallery } from '@/components/pages/itineraries/preview/itineraryImageGallery'
+import { ItineraryTravelTips } from '@/components/pages/itineraries/preview/itineraryTravelTips'
+import { ItineraryDayRoute } from '@/components/pages/itineraries/preview/itineraryDayRoute'
+import { ItineraryNotFound } from '@/components/pages/itineraries/preview/itineraryNotFound'
 
-export const ItineraryPreviewPage: React.FC = () => {
+export const ItineraryDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { data: itinerary } = useItineraryDetail(id)
+  const { data: itinerary, isLoading } = useItineraryDetail(id)
 
   const [activeTab, setActiveTab] = useState<ItineraryTabKey>('overview')
   const contentRef = useRef<HTMLDivElement>(null)
@@ -110,6 +111,21 @@ export const ItineraryPreviewPage: React.FC = () => {
     const dayNumber = parseInt(match[1], 10)
     return (itinerary.days || []).find((d: IItineraryDay) => d.dayNumber === dayNumber) || null
   })()
+
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: 360,
+        }}
+      >
+        <CircularProgress size={36} color="primary" />
+      </Box>
+    )
+  }
 
   if (!itinerary) {
     return (
@@ -373,4 +389,4 @@ export const ItineraryPreviewPage: React.FC = () => {
   )
 }
 
-export default ItineraryPreviewPage
+export default ItineraryDetailPage

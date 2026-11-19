@@ -1080,7 +1080,7 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
                   key={it.id}
                   elevation={0}
                   onClick={() =>
-                    navigate(`/admin/itineraries/${it.id}/preview`)
+                    navigate(`/admin/itineraries/${it.id}/detail`)
                   }
                   sx={{
                     borderRadius: "10px",
