@@ -17,11 +17,11 @@ import type {
   IItineraryFormData,
 } from "@/types/pages/itineraries/itinerary";
 import { itinerarySchema } from "@/schemas/itineraries/itinerarySchema";
+import { ITINERARY_ACTIVITY_CATEGORIES } from "@/constants/itinerary";
 import {
-  ITINERARY_ACTIVITY_CATEGORIES,
   formatMinutesToDuration,
   parseDurationToMinutes,
-} from "@/constants/itinerary";
+} from "@/utils/itineraryUtils";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 import type { ITravelLocationSelectionItem } from "@/hooks/selections/useTravelLocationSelection";
 import type { ITravelThemeSelectionItem } from "@/hooks/selections/useTravelThemeSelection";

@@ -2,10 +2,8 @@ import { useState, useCallback } from "react";
 import { useUpdate } from "@refinedev/core";
 import { AppResource } from "@/constants/resources";
 import { useUploadFile } from "@/hooks/common/useUploadFile";
-import {
-  ITINERARY_ACTIVITY_CATEGORIES,
-  parseDurationToMinutes,
-} from "@/constants/itinerary";
+import { ITINERARY_ACTIVITY_CATEGORIES } from "@/constants/itinerary";
+import { parseDurationToMinutes } from "@/utils/itineraryUtils";
 import type {
   ICreateItineraryInput,
   IUpdateItineraryPayload,

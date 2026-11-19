@@ -24,7 +24,7 @@ import type {
 import {
   getActivityCategoryStyle,
   formatMinutesToDuration,
-} from "@/constants/itinerary";
+} from "@/utils/itineraryUtils";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 
 export interface ItineraryDaysSectionProps {
