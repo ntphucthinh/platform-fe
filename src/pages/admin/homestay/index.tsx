@@ -31,6 +31,8 @@ import type {
 import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
 import { HomestayFormDialog } from "@/components/pages/homestay/homestayFormDialog";
 import { HomestayDetailDialog } from "@/components/pages/homestay/homestayDetailDialog";
+import { AdminHomestayCard } from "@/components/pages/homestay/adminHomestayCard";
+import { CardPagination } from "@/components/ui/pagination/cardPagination";
 import { useHomestayList } from "@/hooks/homestays/useHomestayList";
 import { useCreateHomestay } from "@/hooks/homestays/useCreateHomestay";
 import { useUpdateHomestay } from "@/hooks/homestays/useUpdateHomestay";
@@ -66,6 +68,9 @@ export const AdminHomestayPage: React.FC = () => {
   const {
     data: homestays,
     total,
+    page,
+    pageSize,
+    setPage,
     paginationModel,
     setPaginationModel,
     isLoading,
@@ -446,9 +451,7 @@ export const AdminHomestayPage: React.FC = () => {
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
-            setPaginationModel((prev) =>
-              prev.page === 0 ? prev : { ...prev, page: 0 },
-            );
+            setPage(1);
           }}
           slotProps={{
             input: {
@@ -518,10 +521,11 @@ export const AdminHomestayPage: React.FC = () => {
         </Box>
       </Card>
 
-      {/* DataGrid */}
+      {/* DataGrid (Desktop sm+) */}
       <Card
         elevation={0}
         sx={{
+          display: { xs: "none", sm: "block" },
           width: "100%",
           bgcolor: "#FFFFFF",
           borderRadius: "12px",
@@ -565,6 +569,72 @@ export const AdminHomestayPage: React.FC = () => {
           sx={tableSx}
         />
       </Card>
+
+      {/* Mobile Card Grid & Pagination (xs only) */}
+      <Box
+        sx={{
+          display: { xs: "flex", sm: "none" },
+          flexDirection: "column",
+          gap: 1.5,
+          width: "100%",
+        }}
+      >
+        {filteredHomestays.length === 0 ? (
+          <Card
+            elevation={0}
+            sx={{
+              borderRadius: "12px",
+              border: "1px dashed #CBD5E1",
+              bgcolor: "#F8FAFC",
+              p: 4,
+              textAlign: "center",
+            }}
+          >
+            <Typography
+              variant="body1"
+              sx={{ fontWeight: 600, color: "text.primary" }}
+            >
+              Không tìm thấy homestay nào
+            </Typography>
+            <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
+              Chưa có dữ liệu homestay trong cơ sở dữ liệu hoặc từ khóa tìm kiếm không
+              khớp.
+            </Typography>
+          </Card>
+        ) : (
+          <>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, 1fr)",
+                gap: 1.25,
+                width: "100%",
+              }}
+            >
+              {filteredHomestays.map((item) => (
+                <AdminHomestayCard
+                  key={item.id}
+                  homestay={item}
+                  onView={handleOpenView}
+                  onEdit={handleOpenEdit}
+                  onDelete={(h) => setHomestayToDelete(h)}
+                />
+              ))}
+            </Box>
+
+            {/* Mobile Pagination */}
+            <CardPagination
+              mode="mobile-only"
+              page={page}
+              totalItems={searchTerm ? filteredHomestays.length : total}
+              perPage={pageSize}
+              itemLabel="homestay"
+              onPageChange={setPage}
+              isLoading={isLoading}
+            />
+          </>
+        )}
+      </Box>
 
       {/* Modals & Dialogs */}
       {formDialogOpen && (

@@ -22,8 +22,6 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
-import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
-import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import { useNavigate } from "react-router-dom";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { tableSx } from "@/components/ui/table/tableStyles";
@@ -34,6 +32,7 @@ import type { IItineraryListItem } from "@/types/pages/itineraries/itinerary";
 import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 import { ItineraryCard } from "@/components/pages/itineraries/itineraryCard";
+import { CardPagination } from "@/components/ui/pagination/cardPagination";
 
 function CustomNoRowsOverlay() {
   return (
@@ -94,13 +93,6 @@ export const ItineraryListPage: React.FC = () => {
 
   // Filtered dataset: API handles filtering by locationId; name search is temporarily not handled
   const filteredItineraries = itineraries;
-
-  // Mobile card view pagination
-  const totalMobileItems = total;
-  const totalMobilePages = Math.max(1, Math.ceil(totalMobileItems / perPage));
-  const startMobileItem =
-    totalMobileItems === 0 ? 0 : (page - 1) * perPage + 1;
-  const endMobileItem = Math.min(page * perPage, totalMobileItems);
   const visibleMobileItineraries = filteredItineraries;
 
   const isFiltered =
@@ -506,7 +498,7 @@ export const ItineraryListPage: React.FC = () => {
           width: "100%",
         }}
       >
-        {totalMobileItems === 0 ? (
+        {total === 0 ? (
           <Card
             elevation={0}
             sx={{
@@ -549,118 +541,15 @@ export const ItineraryListPage: React.FC = () => {
             </Box>
 
             {/* Mobile Pagination */}
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 1.25,
-                pt: 2,
-                mt: 1,
-                borderTop: "1px solid #E2E8F0",
-                width: "100%",
-              }}
-            >
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "text.secondary",
-                  fontSize: "0.85rem",
-                  fontWeight: 500,
-                  textAlign: "center",
-                }}
-              >
-                Đang xem {startMobileItem}–{endMobileItem} trong {totalMobileItems} lịch trình
-              </Typography>
-
-              {totalMobilePages > 1 && (
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 1,
-                    width: "100%",
-                  }}
-                >
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<ChevronLeftRoundedIcon />}
-                    disabled={page <= 1}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    aria-label="Trang trước"
-                    sx={{
-                      borderRadius: "8px",
-                      textTransform: "none",
-                      fontWeight: 600,
-                      fontSize: "0.825rem",
-                      borderColor: "#CBD5E1",
-                      color: "text.primary",
-                      minHeight: 40,
-                      minWidth: 80,
-                      px: 1.5,
-                      "&:hover": {
-                        borderColor: "primary.main",
-                        bgcolor: "#F8FAFC",
-                      },
-                      "&.Mui-disabled": {
-                        borderColor: "#E2E8F0",
-                        bgcolor: "#F8FAFC",
-                      },
-                    }}
-                  >
-                    Trước
-                  </Button>
-
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontWeight: 600,
-                      color: "text.secondary",
-                      px: 1.25,
-                      fontSize: "0.85rem",
-                      whiteSpace: "nowrap",
-                      textAlign: "center",
-                    }}
-                  >
-                    Trang {page} / {totalMobilePages}
-                  </Typography>
-
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    endIcon={<ChevronRightRoundedIcon />}
-                    disabled={page >= totalMobilePages}
-                    onClick={() =>
-                      setPage((p) => Math.min(totalMobilePages, p + 1))
-                    }
-                    aria-label="Trang sau"
-                    sx={{
-                      borderRadius: "8px",
-                      textTransform: "none",
-                      fontWeight: 600,
-                      fontSize: "0.825rem",
-                      borderColor: "#CBD5E1",
-                      color: "text.primary",
-                      minHeight: 40,
-                      minWidth: 80,
-                      px: 1.5,
-                      "&:hover": {
-                        borderColor: "primary.main",
-                        bgcolor: "#F8FAFC",
-                      },
-                      "&.Mui-disabled": {
-                        borderColor: "#E2E8F0",
-                        bgcolor: "#F8FAFC",
-                      },
-                    }}
-                  >
-                    Sau
-                  </Button>
-                </Box>
-              )}
-            </Box>
+            <CardPagination
+              mode="mobile-only"
+              page={page}
+              totalItems={total}
+              perPage={perPage}
+              itemLabel="lịch trình"
+              onPageChange={setPage}
+              isLoading={isLoading}
+            />
           </>
         )}
       </Box>

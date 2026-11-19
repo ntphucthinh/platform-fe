@@ -7,7 +7,6 @@ import {
   CardMedia,
   Chip,
   Button,
-  IconButton,
   useTheme,
   useMediaQuery,
 } from "@mui/material";
@@ -15,8 +14,6 @@ import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import CollectionsBookmarkOutlinedIcon from "@mui/icons-material/CollectionsBookmarkOutlined";
 import SearchOffOutlinedIcon from "@mui/icons-material/SearchOffOutlined";
-import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
-import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import dayjs from "dayjs";
 import type {
   ILocationWithDetails,
@@ -24,6 +21,10 @@ import type {
 } from "@/types/pages/travel-map/travelMap";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 import { LocationStatus } from "@/constants/travelMap";
+import {
+  CardPagination,
+  CardPaginationHeader,
+} from "@/components/ui/pagination/cardPagination";
 
 interface TravelMapListViewProps {
   locations: ILocationWithDetails[];
@@ -90,23 +91,6 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
   const visibleLocations = useMemo(() => {
     return locations.slice(startIndex, endIndex);
   }, [locations, startIndex, endIndex]);
-
-  const startItem = totalLocations === 0 ? 0 : startIndex + 1;
-  const endItem = endIndex;
-
-  const handlePrevGroup = () => {
-    if (currentGroup > 0) {
-      setSlideDirection("prev");
-      setCurrentGroup((prev) => Math.max(0, prev - 1));
-    }
-  };
-
-  const handleNextGroup = () => {
-    if (currentGroup < totalGroups - 1) {
-      setSlideDirection("next");
-      setCurrentGroup((prev) => Math.min(totalGroups - 1, prev + 1));
-    }
-  };
 
   const handleGoToGroup = (targetGroup: number) => {
     if (targetGroup === currentGroup) return;
@@ -192,90 +176,12 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
           Danh sách địa điểm ({totalLocations})
         </Typography>
 
-        {/* Navigation Controls: Previous / Next buttons (Desktop only in top bar) */}
-        {totalGroups > 1 && (
-          <Box
-            sx={{
-              display: { xs: "none", sm: "flex" },
-              alignItems: "center",
-              gap: 1,
-            }}
-          >
-            <IconButton
-              size="small"
-              onClick={handlePrevGroup}
-              disabled={currentGroup === 0}
-              aria-label="Trang trước"
-              sx={{
-                border: "1px solid",
-                borderColor: currentGroup === 0 ? "#E2E8F0" : "#CBD5E1",
-                bgcolor: "#FFFFFF",
-                borderRadius: "8px",
-                width: 36,
-                height: 36,
-                color: currentGroup === 0 ? "action.disabled" : "text.primary",
-                transition: "all 0.15s ease-in-out",
-                "&:hover": {
-                  bgcolor: "#F8FAFC",
-                  borderColor: "primary.main",
-                  color: "primary.main",
-                },
-                "&.Mui-disabled": {
-                  borderColor: "#E2E8F0",
-                  bgcolor: "#F8FAFC",
-                },
-              }}
-            >
-              <ChevronLeftRoundedIcon fontSize="small" />
-            </IconButton>
-
-            <Typography
-              variant="body2"
-              sx={{
-                color: "text.secondary",
-                fontWeight: 600,
-                fontSize: "0.85rem",
-                userSelect: "none",
-                whiteSpace: "nowrap",
-                px: 0.5,
-              }}
-            >
-              Trang {currentGroup + 1}/{totalGroups}
-            </Typography>
-
-            <IconButton
-              size="small"
-              onClick={handleNextGroup}
-              disabled={currentGroup >= totalGroups - 1}
-              aria-label="Trang sau"
-              sx={{
-                border: "1px solid",
-                borderColor:
-                  currentGroup >= totalGroups - 1 ? "#E2E8F0" : "#CBD5E1",
-                bgcolor: "#FFFFFF",
-                borderRadius: "8px",
-                width: 36,
-                height: 36,
-                color:
-                  currentGroup >= totalGroups - 1
-                    ? "action.disabled"
-                    : "text.primary",
-                transition: "all 0.15s ease-in-out",
-                "&:hover": {
-                  bgcolor: "#F8FAFC",
-                  borderColor: "primary.main",
-                  color: "primary.main",
-                },
-                "&.Mui-disabled": {
-                  borderColor: "#E2E8F0",
-                  bgcolor: "#F8FAFC",
-                },
-              }}
-            >
-              <ChevronRightRoundedIcon fontSize="small" />
-            </IconButton>
-          </Box>
-        )}
+        <CardPaginationHeader
+          page={currentGroup + 1}
+          totalItems={totalLocations}
+          perPage={itemsPerGroup}
+          onPageChange={(newPage) => handleGoToGroup(newPage - 1)}
+        />
       </Box>
 
       {/* Grid: 5 cols Desktop, 2 cols Tablet, 1 col Mobile */}
@@ -569,195 +475,13 @@ export const TravelMapListView: React.FC<TravelMapListViewProps> = ({
       </Box>
 
       {/* Unified Bottom Pagination */}
-      {totalLocations > 0 && (
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 1.5,
-            pt: { xs: 2.5, sm: 0 },
-            mt: { xs: 1.5, sm: 0.5 },
-            borderTop: { xs: "1px solid #E2E8F0", sm: "none" },
-            width: "100%",
-          }}
-        >
-          {/* Mobile Pagination Control: Active on xs */}
-          <Box
-            sx={{
-              display: { xs: "flex", sm: "none" },
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 1.25,
-              width: "100%",
-            }}
-          >
-            {/* Result count above pagination on mobile */}
-            <Typography
-              variant="body2"
-              sx={{
-                color: "text.secondary",
-                fontSize: "0.85rem",
-                fontWeight: 500,
-                textAlign: "center",
-              }}
-            >
-              Đang xem {startItem}–{endItem} trong {totalLocations} địa điểm
-            </Typography>
-
-            {/* Grouped Previous, Indicator, Next in one centered horizontal control */}
-            {totalGroups > 1 && (
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 1,
-                  width: "100%",
-                }}
-              >
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<ChevronLeftRoundedIcon />}
-                  disabled={currentGroup === 0}
-                  onClick={handlePrevGroup}
-                  aria-label="Trang trước"
-                  sx={{
-                    borderRadius: "8px",
-                    textTransform: "none",
-                    fontWeight: 600,
-                    fontSize: "0.825rem",
-                    borderColor: "#CBD5E1",
-                    color: "text.primary",
-                    minHeight: 40,
-                    minWidth: 80,
-                    px: 1.5,
-                    "&:hover": { borderColor: "primary.main", bgcolor: "#F8FAFC" },
-                    "&.Mui-disabled": {
-                      borderColor: "#E2E8F0",
-                      bgcolor: "#F8FAFC",
-                    },
-                  }}
-                >
-                  Trước
-                </Button>
-
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontWeight: 600,
-                    color: "text.secondary",
-                    px: 1.25,
-                    fontSize: "0.85rem",
-                    whiteSpace: "nowrap",
-                    textAlign: "center",
-                  }}
-                >
-                  Trang {currentGroup + 1} / {totalGroups}
-                </Typography>
-
-                <Button
-                  size="small"
-                  variant="outlined"
-                  endIcon={<ChevronRightRoundedIcon />}
-                  disabled={currentGroup >= totalGroups - 1}
-                  onClick={handleNextGroup}
-                  aria-label="Trang sau"
-                  sx={{
-                    borderRadius: "8px",
-                    textTransform: "none",
-                    fontWeight: 600,
-                    fontSize: "0.825rem",
-                    borderColor: "#CBD5E1",
-                    color: "text.primary",
-                    minHeight: 40,
-                    minWidth: 80,
-                    px: 1.5,
-                    "&:hover": { borderColor: "primary.main", bgcolor: "#F8FAFC" },
-                    "&.Mui-disabled": {
-                      borderColor: "#E2E8F0",
-                      bgcolor: "#F8FAFC",
-                    },
-                  }}
-                >
-                  Sau
-                </Button>
-              </Box>
-            )}
-          </Box>
-
-          {/* Desktop Progress dots if multiple groups with accessible touch targets */}
-          {totalGroups > 1 && totalGroups <= 12 && (
-            <Box
-              sx={{
-                display: { xs: "none", sm: "flex" },
-                alignItems: "center",
-                gap: 0.5,
-              }}
-            >
-              {Array.from({ length: totalGroups }).map((_, idx) => (
-                <Box
-                  key={idx}
-                  onClick={() => handleGoToGroup(idx)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      handleGoToGroup(idx);
-                    }
-                  }}
-                  aria-label={`Chuyển đến trang ${idx + 1}`}
-                  sx={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    minHeight: 32,
-                    minWidth: idx === currentGroup ? 32 : 20,
-                    px: 0.5,
-                    cursor: "pointer",
-                    borderRadius: "4px",
-                    "&:focus-visible": {
-                      outline: "2px solid #1976D2",
-                      outlineOffset: 2,
-                    },
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: idx === currentGroup ? 24 : 8,
-                      height: 8,
-                      borderRadius: "4px",
-                      bgcolor:
-                        idx === currentGroup ? "primary.main" : "text.disabled",
-                      transition: "all 0.25s cubic-bezier(0.22, 1, 0.36, 1)",
-                      "&:hover": {
-                        bgcolor:
-                          idx === currentGroup
-                            ? "primary.main"
-                            : "text.secondary",
-                      },
-                    }}
-                  />
-                </Box>
-              ))}
-            </Box>
-          )}
-
-          {/* Progress text indicator (Desktop only) */}
-          <Typography
-            variant="body2"
-            sx={{
-              color: "text.secondary",
-              fontWeight: 500,
-              display: { xs: "none", sm: "block" },
-            }}
-          >
-            Đang xem {startItem}–{endItem} trong {totalLocations} địa điểm
-          </Typography>
-        </Box>
-      )}
+      <CardPagination
+        page={currentGroup + 1}
+        totalItems={totalLocations}
+        perPage={itemsPerGroup}
+        itemLabel="địa điểm"
+        onPageChange={(newPage) => handleGoToGroup(newPage - 1)}
+      />
     </Box>
   );
 };
