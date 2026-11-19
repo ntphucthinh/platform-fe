@@ -25,10 +25,11 @@ import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { tableSx } from "@/components/ui/table/tableStyles";
 import { useItineraryList } from "@/hooks/itineraries/useItineraryList";
+import { useDeleteItinerary } from "@/hooks/itineraries/useDeleteItinerary";
 import { useTravelLocationSelection } from "@/hooks/selections/useTravelLocationSelection";
 import type { IItineraryListItem } from "@/types/pages/itineraries/itinerary";
 import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
@@ -61,6 +62,7 @@ function CustomNoRowsOverlay() {
 
 export const ItineraryListPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [destinationFilter, setDestinationFilter] = useState("ALL");
 
@@ -78,10 +80,11 @@ export const ItineraryListPage: React.FC = () => {
     paginationModel,
     setPaginationModel,
     isLoading,
-    deleteItinerary,
+    refetch,
   } = useItineraryList({
     locationId: locationIdParam,
   });
+  const { deleteItinerary, isLoading: isDeleting } = useDeleteItinerary();
   const { travelLocationsSelections } = useTravelLocationSelection();
 
   // Delete modal state
@@ -89,16 +92,20 @@ export const ItineraryListPage: React.FC = () => {
     null,
   );
 
+  const navSuccessMessage = (
+    location.state as { successMessage?: string } | null
+  )?.successMessage;
+
   // Toast notification state
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
     severity: "success" | "info" | "warning" | "error";
-  }>({
-    open: false,
-    message: "",
-    severity: "info",
-  });
+  }>(() => ({
+    open: Boolean(navSuccessMessage),
+    message: navSuccessMessage || "",
+    severity: "success",
+  }));
 
   // Filtered dataset: API handles filtering by locationId; name search is temporarily not handled
   const filteredItineraries = itineraries;
@@ -132,17 +139,25 @@ export const ItineraryListPage: React.FC = () => {
     navigate(`/admin/itineraries/${item.id}/detail`);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!itemToDelete) return;
-    const success = deleteItinerary(itemToDelete.id);
+    const { success, error: delError } = await deleteItinerary(itemToDelete.id);
     if (success) {
       setSnackbar({
         open: true,
-        message: "Đã xóa lịch trình thành công (mô phỏng UI).",
+        message: "Đã xóa lịch trình thành công.",
         severity: "success",
       });
+      setItemToDelete(null);
+      await refetch();
+    } else {
+      setSnackbar({
+        open: true,
+        message: delError || "Xóa lịch trình thất bại.",
+        severity: "error",
+      });
+      setItemToDelete(null);
     }
-    setItemToDelete(null);
   };
 
   const columns: GridColDef<IItineraryListItem>[] = [
@@ -678,6 +693,7 @@ export const ItineraryListPage: React.FC = () => {
         open={Boolean(itemToDelete)}
         title="Xóa Lịch Trình"
         message="Bạn có chắc chắn muốn xóa lịch trình này? Thao tác này không thể hoàn tác."
+        loading={isDeleting}
         onClose={() => setItemToDelete(null)}
         onConfirm={handleConfirmDelete}
       />

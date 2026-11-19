@@ -335,7 +335,12 @@ export const ItineraryActivityModal: React.FC<ItineraryActivityModalProps> = ({
                 size="small"
                 color="error"
                 onClick={() =>
-                  setActivityModal((prev) => ({ ...prev, image: "" }))
+                  setActivityModal((prev) => ({
+                    ...prev,
+                    image: "",
+                    imageFile: null,
+                    imagePath: null,
+                  }))
                 }
                 sx={{ textTransform: "none" }}
               >

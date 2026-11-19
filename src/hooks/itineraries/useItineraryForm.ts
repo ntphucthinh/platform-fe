@@ -39,11 +39,13 @@ export interface ActivityModalState {
   description: string;
   notes: string;
   image: string;
+  imageFile?: File | null;
+  imagePath?: string | null;
 }
 
 export interface UseItineraryFormOptions {
   initialData?: ITravelItinerary | null;
-  onSubmit: (formData: ICreateItineraryInput) => void;
+  onSubmit: (formData: ICreateItineraryInput) => void | Promise<void>;
   travelLocationsSelections?: { label: string; value: string | number }[];
   locationData?: ITravelLocationSelectionItem[];
   travelThemesSelections?: { label: string; value: string | number }[];
@@ -214,6 +216,12 @@ export function useItineraryForm({
     };
   }, []);
 
+  // 5b. Cover image file & storage path tracking
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [coverImagePath, setCoverImagePath] = useState<string | null>(
+    initialData?.coverImagePath ?? null,
+  );
+
   // 6. Days state
   const [days, setDays] = useState<IItineraryDay[]>(() => {
     if (initialData?.days && initialData.days.length > 0) {
@@ -224,13 +232,15 @@ export function useItineraryForm({
     }
     return [
       {
-        id: 1,
+        id: Date.now(),
         dayNumber: 1,
         title: "Ngày 1 – Bắt đầu hành trình",
         subtitle: "",
         date: "",
         summary: "",
         coverImage: "",
+        imagePath: null,
+        imageFile: null,
         activities: [],
         dayTips: [],
         dayTipsText: "",
@@ -289,6 +299,8 @@ export function useItineraryForm({
     description: "",
     notes: "",
     image: "",
+    imageFile: null,
+    imagePath: null,
   });
 
   // 11. Day Deletion Confirmation Dialog State
@@ -299,6 +311,8 @@ export function useItineraryForm({
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
       const previewUrl = registerObjectUrl(URL.createObjectURL(file));
+      setCoverImageFile(file);
+      setCoverImagePath(null);
       setValue("coverImage", previewUrl, { shouldDirty: true });
     }
     if (coverInputRef.current) {
@@ -313,6 +327,8 @@ export function useItineraryForm({
       setActivityModal((prev) => ({
         ...prev,
         image: previewUrl,
+        imageFile: file,
+        imagePath: null,
       }));
     }
     if (activityImageInputRef.current) {
@@ -324,7 +340,18 @@ export function useItineraryForm({
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
       const previewUrl = registerObjectUrl(URL.createObjectURL(file));
-      handleUpdateDayField(safeActiveDayIndex, "coverImage", previewUrl);
+      setDays((prev) =>
+        prev.map((d, idx) =>
+          idx === safeActiveDayIndex
+            ? {
+                ...d,
+                coverImage: previewUrl,
+                imageFile: file,
+                imagePath: null,
+              }
+            : d,
+        ),
+      );
     }
     if (dayImageInputRef.current) {
       dayImageInputRef.current.value = "";
@@ -351,6 +378,8 @@ export function useItineraryForm({
       date: "",
       summary: "Dành thời gian trải nghiệm thêm các địa điểm mới.",
       coverImage: "",
+      imagePath: null,
+      imageFile: null,
       activities: [],
       dayTips: [],
       dayTipsText: "",
@@ -406,6 +435,7 @@ export function useItineraryForm({
             ...d,
             coverImage: val,
             imagePath: val ? d.imagePath : null,
+            imageFile: val ? d.imageFile : null,
           };
         }
         return { ...d, [field]: val };
@@ -428,6 +458,8 @@ export function useItineraryForm({
       description: "",
       notes: "",
       image: "",
+      imageFile: null,
+      imagePath: null,
     });
   };
 
@@ -444,6 +476,10 @@ export function useItineraryForm({
         c.value.toLowerCase() === actCatLower,
     );
 
+    const hasValidActImage = Boolean(
+      act.image && act.image.trim() !== "" && act.image !== DEFAULT_NO_IMAGE,
+    );
+
     setActivityModal({
       open: true,
       dayIndex,
@@ -458,7 +494,9 @@ export function useItineraryForm({
       mapUrl: act.mapUrl || "",
       description: act.description || "",
       notes: act.notes || "",
-      image: act.image || "",
+      image: hasValidActImage ? act.image : "",
+      imageFile: act.imageFile ?? null,
+      imagePath: act.imagePath ?? null,
     });
   };
 
@@ -483,6 +521,8 @@ export function useItineraryForm({
       description: actDesc,
       notes,
       image,
+      imageFile,
+      imagePath,
     } = activityModal;
 
     const formattedDuration =
@@ -497,25 +537,32 @@ export function useItineraryForm({
         c.value.toLowerCase() === typeLower,
     );
 
+    const hasActImage = Boolean(image && image !== DEFAULT_NO_IMAGE);
+
     const newActivity: IItineraryActivity = {
       id:
         activityIndex !== null && days[dayIndex].activities[activityIndex]?.id
           ? days[dayIndex].activities[activityIndex].id
           : Date.now(),
       time: time.trim(),
+      startTime: time.trim(),
       title: actTitle.trim(),
       type: (matchedCategory?.label ||
         type ||
         "Tham quan") as ItineraryActivityType,
       category: matchedCategory?.value,
+      activityCategory: matchedCategory?.value,
       duration: formattedDuration,
       durationMinutes:
         !isNaN(numMinutes) && numMinutes > 0 ? numMinutes : undefined,
       location: location.trim(),
       mapUrl: mapUrl.trim(),
+      googleMapsUrl: mapUrl.trim(),
       description: actDesc.trim(),
       notes: notes.trim(),
-      image: image || DEFAULT_NO_IMAGE,
+      image: hasActImage ? image : DEFAULT_NO_IMAGE,
+      imageFile: hasActImage ? (imageFile ?? null) : null,
+      imagePath: hasActImage ? (imagePath ?? null) : null,
     };
 
     setDays((prev) =>
@@ -550,7 +597,7 @@ export function useItineraryForm({
 
   // 16. Validation & Submit via React Hook Form + Yup
   const handleSave = handleFormSubmit(
-    (values) => {
+    async (values) => {
       const emptyTitleDayIndex = days.findIndex((d) => !d.title.trim());
       if (emptyTitleDayIndex !== -1) {
         setActiveDayIndex(emptyTitleDayIndex);
@@ -566,6 +613,45 @@ export function useItineraryForm({
         .map((t) => t.trim())
         .filter(Boolean);
 
+      // Map selected theme names to numeric themeIds
+      const resolvedThemeIds: number[] = [];
+      const seenThemeIds = new Set<number>();
+      themes.forEach((themeName) => {
+        const normalized = themeName.trim().toLowerCase();
+        if (!normalized) return;
+
+        const matchedFromData = themeData.find(
+          (t) => t.name.trim().toLowerCase() === normalized,
+        );
+        const matchedFromSelections = travelThemesSelections.find(
+          (opt) => opt.label.trim().toLowerCase() === normalized,
+        );
+        const matchedFromInitial = initialData?.themeObjects?.find(
+          (t) => t.name.trim().toLowerCase() === normalized,
+        );
+
+        const rawId =
+          matchedFromData?.id ??
+          (matchedFromSelections
+            ? Number(matchedFromSelections.value)
+            : undefined) ??
+          matchedFromInitial?.id;
+
+        if (rawId !== undefined && !isNaN(Number(rawId)) && Number(rawId) > 0) {
+          const numId = Number(rawId);
+          if (!seenThemeIds.has(numId)) {
+            seenThemeIds.add(numId);
+            resolvedThemeIds.push(numId);
+          }
+        }
+      });
+
+      const hasValidCoverImage = Boolean(
+        values.coverImage &&
+          values.coverImage.trim() !== "" &&
+          values.coverImage !== DEFAULT_NO_IMAGE,
+      );
+
       const finalDays = days.length;
       const finalNights = Math.max(0, finalDays - 1);
 
@@ -576,14 +662,13 @@ export function useItineraryForm({
         durationDays: finalDays,
         durationNights: finalNights,
         duration: `${finalDays} ngày ${finalNights} đêm`,
-        description:
-          (values.description || "").trim() ||
-          (values.destination
-            ? `Khám phá vẻ đẹp tuyệt vời tại ${values.destination.trim()}.`
-            : "Khám phá vẻ đẹp tuyệt vời của chuyến đi."),
+        description: (values.description || "").trim(),
         coverImage: values.coverImage || DEFAULT_NO_IMAGE,
+        coverImagePath: hasValidCoverImage ? coverImagePath : null,
+        coverImageFile: hasValidCoverImage ? coverImageFile : null,
         suitableFor: values.suitableFor,
         themes,
+        themeIds: resolvedThemeIds,
         days,
         travelTips: tips,
         featuredImages: initialData?.featuredImages || [
@@ -596,7 +681,7 @@ export function useItineraryForm({
         ],
       };
 
-      onSubmit(payload);
+      await onSubmit(payload);
     },
     () => {
       window.scrollTo({ top: 0, behavior: "smooth" });

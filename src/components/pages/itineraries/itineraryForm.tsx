@@ -31,13 +31,15 @@ const ItineraryPreviewDialog = React.lazy(
 export interface ItineraryFormProps {
   initialData?: ITravelItinerary | null;
   isEdit?: boolean;
-  onSubmit: (formData: ICreateItineraryInput) => void;
+  isLoading?: boolean;
+  onSubmit: (formData: ICreateItineraryInput) => void | Promise<void>;
   onCancel: () => void;
 }
 
 export const ItineraryForm: React.FC<ItineraryFormProps> = ({
   initialData,
   isEdit = false,
+  isLoading = false,
   onSubmit,
   onCancel,
 }) => {
@@ -108,6 +110,8 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     travelThemesSelections,
     themeData,
   });
+
+  const isBusy = isSubmitting || isLoading;
 
   return (
     <Box
@@ -215,9 +219,9 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
           <Button
             variant="contained"
             color="primary"
-            disabled={isSubmitting}
+            disabled={isBusy}
             startIcon={
-              isSubmitting ? (
+              isBusy ? (
                 <CircularProgress size={18} color="inherit" />
               ) : (
                 <SaveIcon />
@@ -234,7 +238,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
               minHeight: 40,
             }}
           >
-            {isSubmitting
+            {isBusy
               ? "Đang lưu..."
               : isEdit
               ? "Lưu thay đổi"
@@ -315,10 +319,10 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
         <Button
           variant="contained"
           color="primary"
-          disabled={isSubmitting}
+          disabled={isBusy}
           fullWidth
           startIcon={
-            isSubmitting ? (
+            isBusy ? (
               <CircularProgress size={18} color="inherit" />
             ) : (
               <SaveIcon />
@@ -335,7 +339,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
             minHeight: 42,
           }}
         >
-          {isSubmitting
+          {isBusy
             ? "Đang lưu..."
             : isEdit
             ? "Lưu thay đổi"

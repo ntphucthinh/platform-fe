@@ -28,6 +28,7 @@ export interface IItineraryActivity {
   description: string;
   image: string;
   imagePath?: string | null;
+  imageFile?: File | null;
   notes?: string;
 }
 
@@ -40,6 +41,7 @@ export interface IItineraryDay {
   summary?: string;
   description?: string;
   imagePath?: string | null;
+  imageFile?: File | null;
   coverImage?: string;
   activities: IItineraryActivity[];
   dayTips?: string[];
@@ -107,8 +109,10 @@ export interface ICreateItineraryInput {
   description: string;
   coverImage: string;
   coverImagePath?: string | null;
+  coverImageFile?: File | null;
   suitableFor?: string;
   themes: string[];
+  themeIds?: number[];
   days: IItineraryDay[];
   featuredImages?: IItineraryGalleryImage[];
   travelTips?: string[];
@@ -121,6 +125,7 @@ export interface IUpdateItineraryInput extends Partial<ICreateItineraryInput> {
   description?: string;
   coverImage?: string;
   coverImagePath?: string | null;
+  coverImageFile?: File | null;
 }
 
 export interface IItineraryFormData {
@@ -132,4 +137,57 @@ export interface IItineraryFormData {
   suitableFor?: string;
   description?: string;
   coverImage: string;
+}
+
+// ---------------------------------------------------------------------------
+// API Request Payloads (POST /itineraries & PUT /itineraries/{itineraryID})
+// ---------------------------------------------------------------------------
+
+export interface ICreateItineraryActivityPayload {
+  startTime: string;
+  title: string;
+  activityCategory?: string | null;
+  durationMinutes?: number | null;
+  location?: string | null;
+  googleMapsUrl?: string | null;
+  description?: string | null;
+  notes?: string | null;
+  imagePath?: string | null;
+}
+
+export interface IUpdateItineraryActivityPayload
+  extends ICreateItineraryActivityPayload {
+  id?: number | null;
+}
+
+export interface ICreateItineraryDayPayload {
+  dayNumber: number;
+  title: string;
+  subtitle?: string | null;
+  summary?: string | null;
+  imagePath?: string | null;
+  dayTips?: string[];
+  activities?: ICreateItineraryActivityPayload[];
+}
+
+export interface IUpdateItineraryDayPayload
+  extends Omit<ICreateItineraryDayPayload, "activities"> {
+  id?: number | null;
+  activities?: IUpdateItineraryActivityPayload[];
+}
+
+export interface ICreateItineraryPayload {
+  itineraryName: string;
+  locationId?: number | null;
+  suitableFor?: string | null;
+  description?: string | null;
+  coverImagePath?: string | null;
+  travelTips?: string[];
+  themeIds?: number[];
+  days?: ICreateItineraryDayPayload[];
+}
+
+export interface IUpdateItineraryPayload
+  extends Omit<ICreateItineraryPayload, "days"> {
+  days?: IUpdateItineraryDayPayload[];
 }

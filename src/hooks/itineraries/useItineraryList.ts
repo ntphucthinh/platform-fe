@@ -29,7 +29,6 @@ export interface UseItineraryListResult {
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
-  deleteItinerary: (id: number | string) => boolean;
 }
 
 /**
@@ -119,11 +118,6 @@ export function useItineraryList(
     await query.refetch();
   };
 
-  const deleteItinerary = (id: number | string): boolean => {
-    // Temporary client-side mock delete until DELETE API is connected
-    return Boolean(id);
-  };
-
   return {
     data,
     total,
@@ -136,6 +130,5 @@ export function useItineraryList(
     isLoading: query.isLoading,
     error: query.error?.message || null,
     refetch,
-    deleteItinerary,
   };
 }
