@@ -6,11 +6,12 @@ import {
   Routes,
   Outlet,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import { CustomThemeProvider } from "@/components/theme/theme";
 import { HeaderTitleProvider } from "@/components/ui/header/headerTitle";
 import { AdminLayout } from "@/components/ui/layout/adminLayout";
-import { AdminAuthGuard } from "@/components/auth/adminAuthGuard";
+import { isAuthenticated } from "@/utils/auth";
 import { Login } from "@/pages/auth/login";
 import { DashboardPage } from "@/pages/admin/dashboard/index";
 import { UsersList } from "@/pages/users/list";
@@ -42,6 +43,25 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { viVN } from "@mui/x-date-pickers/locales";
 import "dayjs/locale/vi";
 import { dataProvider } from "@/providers/dataProvider";
+
+interface AdminAuthGuardProps {
+  children: React.ReactNode;
+}
+
+function AdminAuthGuard({ children }: AdminAuthGuardProps) {
+  const location = useLocation();
+
+  if (!isAuthenticated()) {
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+}
+
+function LoginRedirect() {
+  const location = useLocation();
+  return <Navigate to="/admin/login" state={location.state} replace />;
+}
 
 export function AppProvider() {
   return (
@@ -76,10 +96,7 @@ export function AppProvider() {
 
                 {/* Admin Authentication Route */}
                 <Route path="/admin/login" element={<Login />} />
-                <Route
-                  path="/login"
-                  element={<Navigate to="/admin/login" replace />}
-                />
+                <Route path="/login" element={<LoginRedirect />} />
 
                 {/* Protected Admin Dashboard & Management Routes */}
 

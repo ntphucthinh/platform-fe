@@ -27,14 +27,6 @@ export interface StoredAdminUser {
   fullName: string;
 }
 
-/**
- * Returns true only if the user is explicitly authenticated and a token exists.
- */
-export const isAuthenticated = (): boolean => {
-  const isAuth = localStorage.getItem(ADMIN_AUTH_KEY) === "true";
-  const hasToken = Boolean(localStorage.getItem(ADMIN_TOKEN_KEY));
-  return isAuth && hasToken;
-};
 
 /**
  * Persist authentication state, user profile, access token, refresh token, expiration, and CSRF token.
@@ -185,6 +177,29 @@ export const isTokenExpired = (bufferSeconds = 60): boolean => {
   }
 
   return false;
+};
+
+/**
+ * Returns true only if the user is explicitly authenticated, a token exists, and has not expired.
+ * Automatically clears invalid or expired authentication state.
+ */
+export const isAuthenticated = (): boolean => {
+  const isAuth = localStorage.getItem(ADMIN_AUTH_KEY) === "true";
+  const token = getStoredToken();
+
+  if (!isAuth || !token) {
+    if (isAuth || token) {
+      clearAdminAuthenticated();
+    }
+    return false;
+  }
+
+  if (isTokenExpired(0)) {
+    clearAdminAuthenticated();
+    return false;
+  }
+
+  return true;
 };
 
 /** Retrieve the stored user profile, or null if not authenticated. */

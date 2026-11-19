@@ -11,7 +11,11 @@ import {
 import type { ILoginFormData } from "@/types/pages/auth/login";
 
 export const authProvider: AuthProvider = {
-  login: async ({ email, password }: Partial<ILoginFormData>) => {
+  login: async ({
+    email,
+    password,
+    redirectTo,
+  }: Partial<ILoginFormData> & { redirectTo?: string }) => {
     if (!email || !password) {
       return {
         success: false,
@@ -57,7 +61,7 @@ export const authProvider: AuthProvider = {
 
       return {
         success: true,
-        redirectTo: "/admin/homestay",
+        redirectTo: redirectTo || "/admin/homestay",
       };
     } catch (err: unknown) {
       const message =
@@ -98,6 +102,20 @@ export const authProvider: AuthProvider = {
   },
 
   onError: async (error: unknown) => {
+    const status =
+      typeof error === "object" && error !== null
+        ? (error as { statusCode?: number; status?: number }).statusCode ??
+          (error as { statusCode?: number; status?: number }).status
+        : undefined;
+
+    if (status === 401) {
+      clearAdminAuthenticated();
+      return {
+        logout: true,
+        redirectTo: "/admin/login",
+      };
+    }
+
     const err =
       error instanceof Error ? error : new Error("Authentication error");
     return { error: err };

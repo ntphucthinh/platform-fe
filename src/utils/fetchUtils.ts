@@ -4,7 +4,7 @@
  */
 
 import { env } from "@/config/env";
-import { getValidAdminToken, getCsrfToken } from "@/utils/auth";
+import { getValidAdminToken, getCsrfToken, clearAdminAuthenticated } from "@/utils/auth";
 
 export async function fetcher(
   endpoint: string,
@@ -36,10 +36,16 @@ export async function fetcher(
     }
   }
 
-  return fetch(url, {
+  const response = await fetch(url, {
     ...init,
     headers,
     credentials: "include",
   });
+
+  if (response.status === 401) {
+    clearAdminAuthenticated();
+  }
+
+  return response;
 }
 

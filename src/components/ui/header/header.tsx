@@ -60,42 +60,150 @@ export const Header = ({ onToggleSidebar }: HeaderProps) => {
         overflow: "hidden",
       }}
     >
+      {/* Layered Wave Decorative SVG Background (Right Half) */}
       <Box
+        aria-hidden="true"
         sx={{
           position: "absolute",
           top: 0,
           right: 0,
           bottom: 0,
-          width: { xs: "70%", md: "55%" },
+          width: { xs: "56%", sm: "64%", md: "62%" },
           height: "100%",
           pointerEvents: "none",
+          userSelect: "none",
           overflow: "hidden",
           zIndex: 0,
         }}
       >
-        <svg
-          viewBox="0 0 500 64"
+        <Box
+          component="svg"
+          viewBox="0 0 640 64"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          style={{ width: "100%", height: "100%", display: "block" }}
           preserveAspectRatio="none"
+          sx={{
+            width: "100%",
+            height: "100%",
+            display: "block",
+          }}
         >
+          <defs>
+            {/* Layer 1: Soft ambient outer wave gradient */}
+            <linearGradient
+              id="headerWaveLayer1"
+              x1="40"
+              y1="32"
+              x2="640"
+              y2="16"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0" />
+              <stop offset="28%" stopColor="#E5F0FD" stopOpacity="0.11" />
+              <stop offset="72%" stopColor="#FFFFFF" stopOpacity="0.16" />
+              <stop offset="100%" stopColor="#E5F0FD" stopOpacity="0.1" />
+            </linearGradient>
+
+            {/* Layer 2: Central silky crest wave gradient */}
+            <linearGradient
+              id="headerWaveLayer2"
+              x1="320"
+              y1="8"
+              x2="320"
+              y2="64"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.22" />
+              <stop offset="55%" stopColor="#E5F0FD" stopOpacity="0.12" />
+              <stop offset="100%" stopColor="#58AAF8" stopOpacity="0.03" />
+            </linearGradient>
+
+            {/* Layer 3: Foreground sweeping ribbon wave gradient */}
+            <linearGradient
+              id="headerWaveLayer3"
+              x1="220"
+              y1="14"
+              x2="640"
+              y2="56"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0" />
+              <stop offset="35%" stopColor="#FFFFFF" stopOpacity="0.18" />
+              <stop offset="75%" stopColor="#E5F0FD" stopOpacity="0.14" />
+              <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.08" />
+            </linearGradient>
+
+            {/* Subtle luminous ridge stroke gradients */}
+            <linearGradient
+              id="headerWaveStroke1"
+              x1="40"
+              y1="30"
+              x2="620"
+              y2="4"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0" />
+              <stop offset="35%" stopColor="#FFFFFF" stopOpacity="0.18" />
+              <stop offset="78%" stopColor="#FFFFFF" stopOpacity="0.24" />
+              <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.08" />
+            </linearGradient>
+
+            <linearGradient
+              id="headerWaveStroke2"
+              x1="170"
+              y1="40"
+              x2="640"
+              y2="10"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0" />
+              <stop offset="30%" stopColor="#FFFFFF" stopOpacity="0.26" />
+              <stop offset="70%" stopColor="#FFFFFF" stopOpacity="0.22" />
+              <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.06" />
+            </linearGradient>
+          </defs>
+
+          {/* Wave Layer 1 (Back undulating wave - hidden on small mobile to reduce visual complexity) */}
+          <Box
+            component="g"
+            sx={{ display: { xs: "none", sm: "inline" } }}
+          >
+            <path
+              d="M 15 64 C 105 62, 165 25, 270 28 C 365 31, 430 6, 535 0 L 640 0 L 640 64 Z"
+              fill="url(#headerWaveLayer1)"
+            />
+            <path
+              d="M 15 64 C 105 62, 165 25, 270 28 C 365 31, 430 6, 535 0"
+              stroke="url(#headerWaveStroke1)"
+              strokeWidth="1.1"
+              fill="none"
+            />
+          </Box>
+
+          {/* Wave Layer 2 (Middle S-curve wave cresting and sweeping to top-right) */}
           <path
-            d="M 0 64 C 180 64, 340 25, 500 5 L 500 64 Z"
-            fill="#FFFFFF"
-            fillOpacity="0.10"
+            d="M 160 64 C 225 42, 275 34, 355 41 C 425 47, 485 11, 575 0 L 640 0 L 640 64 Z"
+            fill="url(#headerWaveLayer2)"
           />
           <path
-            d="M 80 64 C 260 55, 390 12, 500 0 L 500 64 Z"
-            fill="#FFFFFF"
-            fillOpacity="0.16"
+            d="M 160 64 C 225 42, 275 34, 355 41 C 425 47, 485 11, 575 0"
+            stroke="url(#headerWaveStroke2)"
+            strokeWidth="1.25"
+            fill="none"
+          />
+
+          {/* Wave Layer 3 (Foreground gentle intersecting wave ribbon) */}
+          <path
+            d="M 245 64 C 335 58, 415 21, 520 15 C 575 12, 612 18, 640 24 L 640 64 Z"
+            fill="url(#headerWaveLayer3)"
           />
           <path
-            d="M 170 64 C 310 42, 420 8, 500 0 L 500 28 C 410 32, 290 48, 170 64 Z"
-            fill="#FFFFFF"
-            fillOpacity="0.22"
+            d="M 245 64 C 335 58, 415 21, 520 15 C 575 12, 612 18, 640 24"
+            stroke="url(#headerWaveStroke1)"
+            strokeWidth="1"
+            fill="none"
           />
-        </svg>
+        </Box>
       </Box>
       <Toolbar
         sx={{
