@@ -724,9 +724,7 @@ export const HomestayFormDialog: React.FC<HomestayFormDialogProps> = ({
                     placeholder="https://maps.google.com/?q=..."
                     {...register("googleMapsUrl")}
                     error={!!errors.googleMapsUrl}
-                    helperText={
-                      errors.googleMapsUrl?.message ?? "Để trống nếu chưa có"
-                    }
+                    helperText={errors.googleMapsUrl?.message}
                     size="small"
                     disabled={isSubmittingAsync}
                   />

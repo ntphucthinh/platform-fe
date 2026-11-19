@@ -24,6 +24,7 @@ import type { ItineraryActivityType } from "@/types/pages/itineraries/itinerary"
 import { ITINERARY_ACTIVITY_CATEGORIES } from "@/constants/itinerary";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 import type { ActivityModalState } from "@/hooks/itineraries/useItineraryForm";
+import { validateItineraryActivity } from "@/schemas/itineraries/itinerarySchema";
 
 export interface ItineraryActivityModalProps {
   activityModal: ActivityModalState;
@@ -40,6 +41,8 @@ export const ItineraryActivityModal: React.FC<ItineraryActivityModalProps> = ({
   activityImageInputRef,
   handleActivityImageUpload,
 }) => {
+  const activityErrors = validateItineraryActivity(activityModal);
+
   return (
     <Dialog
       open={activityModal.open}
@@ -119,10 +122,12 @@ export const ItineraryActivityModal: React.FC<ItineraryActivityModalProps> = ({
           slotProps={{ htmlInput: { maxLength: 200 } }}
           required
           fullWidth
+          error={Boolean(activityErrors.title)}
+          helperText={activityErrors.title}
         />
 
         {/* Row 2: Danh mục hoạt động (Category - không được null) */}
-        <FormControl fullWidth required error={!activityModal.type}>
+        <FormControl fullWidth required error={Boolean(activityErrors.type)}>
           <InputLabel id="activity-category-select-label">
             Danh mục hoạt động
           </InputLabel>
@@ -144,8 +149,8 @@ export const ItineraryActivityModal: React.FC<ItineraryActivityModalProps> = ({
               </MenuItem>
             ))}
           </Select>
-          {!activityModal.type && (
-            <FormHelperText>Vui lòng chọn danh mục hoạt động</FormHelperText>
+          {activityErrors.type && (
+            <FormHelperText>{activityErrors.type}</FormHelperText>
           )}
         </FormControl>
 
@@ -183,10 +188,8 @@ export const ItineraryActivityModal: React.FC<ItineraryActivityModalProps> = ({
               textField: {
                 required: true,
                 fullWidth: true,
-                error: !activityModal.time.trim(),
-                helperText: !activityModal.time.trim()
-                  ? "Vui lòng chọn giờ bắt đầu"
-                  : undefined,
+                error: Boolean(activityErrors.time),
+                helperText: activityErrors.time,
               },
             }}
           />
@@ -242,6 +245,8 @@ export const ItineraryActivityModal: React.FC<ItineraryActivityModalProps> = ({
               mapUrl: e.target.value,
             }))
           }
+          error={Boolean(activityErrors.mapUrl)}
+          helperText={activityErrors.mapUrl}
           fullWidth
         />
 
@@ -377,11 +382,12 @@ export const ItineraryActivityModal: React.FC<ItineraryActivityModalProps> = ({
           variant="contained"
           color="primary"
           onClick={handleSaveActivity}
-          disabled={
-            !activityModal.title.trim() ||
-            !activityModal.time.trim() ||
-            !activityModal.type
-          }
+          disabled={Boolean(
+            activityErrors.title ||
+              activityErrors.time ||
+              activityErrors.type ||
+              activityErrors.mapUrl,
+          )}
           fullWidth
           sx={{
             borderRadius: "8px",

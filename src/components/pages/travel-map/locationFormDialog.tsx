@@ -37,6 +37,7 @@ import type {
   ILocationFormData,
 } from "@/types/pages/travel-map/travelMap";
 import { LocationStatus } from "@/constants/travelMap";
+import { validateLocationFormData } from "@/schemas/travel-map/travelLocationSchema";
 import {
   extractRelativeImagePath,
   getGoogleMapsUrl,
@@ -830,7 +831,14 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
           </Typography>
         </Box>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            flexWrap: "wrap",
+          }}
+        >
           {countryExistingLocations.length > 0 && (
             <Box
               sx={{
@@ -841,15 +849,31 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
                 color: "#64748B",
               }}
             >
-              <Typography sx={{ fontSize: "11px", color: "#64748B", fontWeight: 500 }}>
+              <Typography
+                sx={{ fontSize: "11px", color: "#64748B", fontWeight: 500 }}
+              >
                 {countryExistingLocations.length} điểm đã có:
               </Typography>
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "#059669" }} />
+                <Box
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    bgcolor: "#059669",
+                  }}
+                />
                 <span>Đã ghé thăm</span>
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "#D97706" }} />
+                <Box
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    bgcolor: "#D97706",
+                  }}
+                />
                 <span>Muốn đến</span>
               </Box>
             </Box>
@@ -939,7 +963,9 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
               <span>📍</span>
               <span>
                 {typeof latitude === "number" ? latitude.toFixed(6) : latitude},{" "}
-                {typeof longitude === "number" ? longitude.toFixed(6) : longitude}
+                {typeof longitude === "number"
+                  ? longitude.toFixed(6)
+                  : longitude}
               </span>
             </Box>
 
@@ -1002,10 +1028,12 @@ const DestinationMapPreview: React.FC<DestinationMapPreviewProps> = ({
                 <span>⚠️</span>
                 <span>{warning}</span>
               </Box>
-            ) : !isCoordsChangedFromInitial && (
-              <Typography sx={{ fontSize: "11.5px", color: "#64748B" }}>
-                (Nhấp vào bản đồ hoặc kéo ghim để đổi vị trí)
-              </Typography>
+            ) : (
+              !isCoordsChangedFromInitial && (
+                <Typography sx={{ fontSize: "11.5px", color: "#64748B" }}>
+                  (Nhấp vào bản đồ hoặc kéo ghim để đổi vị trí)
+                </Typography>
+              )
             )}
           </Box>
         ) : (
@@ -1137,7 +1165,10 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
   }, [initialData, findCountry, findLegacyDestination]);
 
   // Tọa độ gốc ban đầu khi chỉnh sửa địa điểm
-  const initialCoordinates = useMemo<{ lat: number; lng: number } | null>(() => {
+  const initialCoordinates = useMemo<{
+    lat: number;
+    lng: number;
+  } | null>(() => {
     if (
       initialData &&
       initialData.latitude !== null &&
@@ -1292,52 +1323,12 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
   }, []);
 
   const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!selectedCountry) {
-      newErrors.country = "Vui lòng chọn quốc gia";
-    }
-
-    if (!formData.locationName || !formData.locationName.trim()) {
-      newErrors.locationName = "Vui lòng nhập tên điểm đến";
-    }
-
-    if (!formData.status) {
-      newErrors.status = "Vui lòng chọn trạng thái";
-    }
-
-    if (formData.googleMapsUrl && formData.googleMapsUrl.trim()) {
-      try {
-        new URL(formData.googleMapsUrl.trim());
-      } catch {
-        newErrors.googleMapsUrl = "Đường dẫn Google Maps không hợp lệ";
-      }
-    }
-
-    const hasLat =
-      formData.latitude !== "" &&
-      formData.latitude !== null &&
-      formData.latitude !== undefined;
-    const hasLng =
-      formData.longitude !== "" &&
-      formData.longitude !== null &&
-      formData.longitude !== undefined;
-
-    if (hasLat !== hasLng) {
-      newErrors.coordinates =
-        "Vĩ độ và kinh độ phải cùng có giá trị hoặc cùng để trống";
-    } else if (hasLat && hasLng) {
-      const latNum = Number(formData.latitude);
-      const lngNum = Number(formData.longitude);
-      if (isNaN(latNum) || latNum < -90 || latNum > 90) {
-        newErrors.coordinates = "Vĩ độ phải nằm trong khoảng từ -90 đến 90";
-      } else if (isNaN(lngNum) || lngNum < -180 || lngNum > 180) {
-        newErrors.coordinates = "Kinh độ phải nằm trong khoảng từ -180 đến 180";
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const { isValid, errors: validationErrors } = validateLocationFormData(
+      formData,
+      selectedCountry,
+    );
+    setErrors(validationErrors);
+    return isValid;
   };
 
   const handleSave = async () => {
@@ -1422,7 +1413,16 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ px: { xs: 2, sm: 3 }, pt: "14px !important", pb: 2.5, flex: "1 1 auto", overflowY: "auto", minHeight: 0 }}>
+      <DialogContent
+        sx={{
+          px: { xs: 2, sm: 3 },
+          pt: "14px !important",
+          pb: 2.5,
+          flex: "1 1 auto",
+          overflowY: "auto",
+          minHeight: 0,
+        }}
+      >
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {/* BỘ CHỌN 2 TRƯỜNG CÙNG HÀNG: QUỐC GIA & TÊN ĐIỂM ĐẾN */}
           <Box
@@ -1594,10 +1594,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
                 }
               }}
               error={Boolean(errors.locationName)}
-              helperText={
-                errors.locationName ||
-                "Nhập tên điểm đến bạn muốn lưu (thành phố, địa danh...)"
-              }
+              helperText={errors.locationName}
               fullWidth
               size="small"
             />
@@ -1633,7 +1630,8 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
               }
               fullWidth
               size="small"
-              helperText="Chọn từ bản đồ (Không chỉnh sửa thủ công)"
+              error={Boolean(errors.coordinates)}
+              helperText={errors.coordinates}
               slotProps={{
                 input: {
                   readOnly: true,
@@ -1654,7 +1652,8 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
               }
               fullWidth
               size="small"
-              helperText="Chọn từ bản đồ (Không chỉnh sửa thủ công)"
+              error={Boolean(errors.coordinates)}
+              helperText={errors.coordinates}
               slotProps={{
                 input: {
                   readOnly: true,
@@ -1718,8 +1717,12 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
             <MenuItem value="" disabled sx={{ color: "#94A3B8" }}>
               <em>-- Chọn trạng thái --</em>
             </MenuItem>
-            <MenuItem value={LocationStatus.Visited}>Đã ghé thăm (Visited)</MenuItem>
-            <MenuItem value={LocationStatus.Wishlist}>Muốn đến (Wishlist)</MenuItem>
+            <MenuItem value={LocationStatus.Visited}>
+              Đã ghé thăm (Visited)
+            </MenuItem>
+            <MenuItem value={LocationStatus.Wishlist}>
+              Muốn đến (Wishlist)
+            </MenuItem>
           </TextField>
 
           {/* Đường dẫn Google Maps (1 hàng riêng, tùy chọn) */}
@@ -1736,10 +1739,7 @@ const LocationFormInner: React.FC<FormInnerProps> = ({
                 setErrors((prev) => ({ ...prev, googleMapsUrl: "" }));
             }}
             error={Boolean(errors.googleMapsUrl)}
-            helperText={
-              errors.googleMapsUrl ||
-              "Tùy chọn liên kết xem trên Google Maps (tự động tạo theo tọa độ nếu có)."
-            }
+            helperText={errors.googleMapsUrl}
             fullWidth
             size="small"
             slotProps={{

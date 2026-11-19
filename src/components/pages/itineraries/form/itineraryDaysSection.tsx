@@ -25,6 +25,7 @@ import {
   getActivityCategoryStyle,
   formatMinutesToDuration,
 } from "@/utils/itineraryUtils";
+import { getItineraryDayTitleError } from "@/schemas/itineraries/itinerarySchema";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 
 export interface ItineraryDaysSectionProps {
@@ -390,12 +391,8 @@ export const ItineraryDaysSection: React.FC<ItineraryDaysSectionProps> = ({
                   e.target.value,
                 )
               }
-              error={!currentActiveDay.title.trim()}
-              helperText={
-                !currentActiveDay.title.trim()
-                  ? "Vui lòng nhập tiêu đề ngày"
-                  : undefined
-              }
+              error={Boolean(getItineraryDayTitleError(currentActiveDay.title))}
+              helperText={getItineraryDayTitleError(currentActiveDay.title)}
               size="small"
               fullWidth
               sx={{ mb: 2.5 }}
