@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from "react";
+import { useCustomOpenNotification } from "@/hooks/common/useCustomOpenNotification";
 import {
   Box,
   Typography,
   Card,
   Button,
   IconButton,
-  Snackbar,
   Alert,
   useMediaQuery,
   CircularProgress,
@@ -19,7 +19,7 @@ import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
-import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import dayjs, { type Dayjs } from "dayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
@@ -34,7 +34,6 @@ import { countTotalPhotos } from "@/utils/travelMemoryUtils";
 
 export const TravelMemoryListPage: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Page query parameter (1-based, required by backend API)
@@ -207,23 +206,9 @@ export const TravelMemoryListPage: React.FC = () => {
     });
   };
 
+  const { showSuccess, handleShowError } = useCustomOpenNotification();
   // Delete modal state
   const [itemToDelete, setItemToDelete] = useState<ITravelMemory | null>(null);
-
-  // Toast feedback state
-  const navSuccessMessage = (
-    location.state as { successMessage?: string } | null
-  )?.successMessage;
-
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: "success" | "info" | "warning" | "error";
-  }>(() => ({
-    open: Boolean(navSuccessMessage),
-    message: navSuccessMessage || "",
-    severity: "success",
-  }));
 
   // Summary counts derived from live data
   const totalTrips = parsedYear
@@ -288,23 +273,15 @@ export const TravelMemoryListPage: React.FC = () => {
 
   const handleConfirmDelete = async () => {
     if (!itemToDelete) return;
-    const { success, error: delError } = await deleteTravelMemory(
+    const { success, error: delError, rawError } = await deleteTravelMemory(
       itemToDelete.id,
     );
     if (success) {
-      setSnackbar({
-        open: true,
-        message: "Đã xóa chuyến đi thành công.",
-        severity: "success",
-      });
+      showSuccess("Đã xóa chuyến đi thành công.");
       setItemToDelete(null);
       await refetch();
     } else {
-      setSnackbar({
-        open: true,
-        message: delError || "Xóa chuyến đi thất bại.",
-        severity: "error",
-      });
+      handleShowError(rawError || delError, "Xóa chuyến đi thất bại.");
       setItemToDelete(null);
     }
   };
@@ -1094,21 +1071,6 @@ export const TravelMemoryListPage: React.FC = () => {
         onClose={() => setItemToDelete(null)}
         onConfirm={handleConfirmDelete}
       />
-
-      {/* Toast Feedback */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
-          severity={snackbar.severity}
-          sx={{ width: "100%", borderRadius: "8px", fontWeight: 500 }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

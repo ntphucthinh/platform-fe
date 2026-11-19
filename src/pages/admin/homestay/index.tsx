@@ -1,5 +1,6 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
+import { useCustomOpenNotification } from "@/hooks/common/useCustomOpenNotification";
 import {
   Box,
   Typography,
@@ -8,7 +9,6 @@ import {
   InputAdornment,
   Button,
   Tooltip,
-  Snackbar,
   Alert,
   Avatar,
   Link,
@@ -96,27 +96,7 @@ export const AdminHomestayPage: React.FC = () => {
   const [homestayToDelete, setHomestayToDelete] =
     useState<IHomestayItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  // Toast notification state
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: "success" | "info" | "warning" | "error";
-  }>({
-    open: false,
-    message: "",
-    severity: "success",
-  });
-
-  const handleShowSnackbar = useCallback(
-    (
-      message: string,
-      severity: "success" | "info" | "warning" | "error" = "success",
-    ) => {
-      setSnackbar({ open: true, message, severity });
-    },
-    [],
-  );
+  const { showSuccess, handleShowError } = useCustomOpenNotification();
 
   // Client-side search filtering
   const filteredHomestays = homestays.filter((h) => {
@@ -165,14 +145,16 @@ export const AdminHomestayPage: React.FC = () => {
     if (!homestayToDelete) return;
     setIsDeleting(true);
     try {
-      const { success, error } = await deleteHomestay(homestayToDelete.id);
+      const { success, error, rawError } = await deleteHomestay(
+        homestayToDelete.id,
+      );
 
       if (success) {
-        handleShowSnackbar(`Đã xóa homestay thành công`, "success");
+        showSuccess(`Đã xóa homestay thành công`);
         setHomestayToDelete(null);
         await loadHomestays();
       } else {
-        handleShowSnackbar(error || `Không thể xóa homestay.`, "error");
+        handleShowError(rawError || error, `Không thể xóa homestay.`);
       }
     } finally {
       setIsDeleting(false);
@@ -186,7 +168,7 @@ export const AdminHomestayPage: React.FC = () => {
   ) => {
     if (selectedHomestay) {
       // Edit mode
-      const { error } = await updateHomestay(
+      const { error, rawError } = await updateHomestay(
         selectedHomestay.id,
         formData,
         selectedHomestay,
@@ -194,21 +176,21 @@ export const AdminHomestayPage: React.FC = () => {
       );
 
       if (error) {
-        handleShowSnackbar(error, "error");
+        handleShowError(rawError || error, "Không thể cập nhật homestay.");
         return;
       }
 
-      handleShowSnackbar(`Cập nhật homestay thành công`, "success");
+      showSuccess(`Cập nhật homestay thành công`);
     } else {
       // Create mode
-      const { error } = await createHomestay(formData, onProgress);
+      const { error, rawError } = await createHomestay(formData, onProgress);
 
       if (error) {
-        handleShowSnackbar(error, "error");
+        handleShowError(rawError || error, "Không thể tạo homestay.");
         return;
       }
 
-      handleShowSnackbar(`Tạo homestay thành công`, "success");
+      showSuccess(`Tạo homestay thành công`);
     }
 
     setFormDialogOpen(false);
@@ -347,7 +329,9 @@ export const AdminHomestayPage: React.FC = () => {
             </Link>
           </Tooltip>
         ) : (
-          <Typography sx={{ color: "text.secondary", fontSize: "12px" }}>—</Typography>
+          <Typography sx={{ color: "text.secondary", fontSize: "12px" }}>
+            —
+          </Typography>
         ),
     },
     {
@@ -421,7 +405,9 @@ export const AdminHomestayPage: React.FC = () => {
   ];
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: 1.5, sm: 2 } }}>
+    <Box
+      sx={{ display: "flex", flexDirection: "column", gap: { xs: 1.5, sm: 2 } }}
+    >
       <HeaderTitle>Quản Lý Homestay</HeaderTitle>
 
       {/* Error Banner if fetch failed */}
@@ -607,21 +593,6 @@ export const AdminHomestayPage: React.FC = () => {
         onClose={() => setHomestayToDelete(null)}
         onConfirm={handleConfirmDelete}
       />
-
-      {/* Toast Feedback */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
-          severity={snackbar.severity}
-          sx={{ width: "100%", borderRadius: "8px", fontWeight: 500 }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

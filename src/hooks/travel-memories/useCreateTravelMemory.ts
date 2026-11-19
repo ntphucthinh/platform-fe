@@ -13,7 +13,7 @@ export interface UseCreateTravelMemoryResult {
   createTravelMemory: (
     formData: ITravelMemoryFormSubmitData,
     onProgress?: (completed: number, total: number) => void,
-  ) => Promise<{ success: boolean; error: string | null }>;
+  ) => Promise<{ success: boolean; error: string | null; rawError?: unknown }>;
   isLoading: boolean;
   error: string | null;
 }
@@ -24,7 +24,10 @@ export interface UseCreateTravelMemoryResult {
  */
 export function useCreateTravelMemory(): UseCreateTravelMemoryResult {
   const { uploadFile, uploadBatch } = useUploadFile();
-  const { mutateAsync: createMutate, mutation } = useCreate<{ message: string }>();
+  const { mutateAsync: createMutate, mutation } = useCreate<{ message: string }>({
+    successNotification: false,
+    errorNotification: false,
+  });
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -122,17 +125,27 @@ export function useCreateTravelMemory(): UseCreateTravelMemoryResult {
         await createMutate({
           resource: AppResource.TravelMemory,
           values: payload,
+          successNotification: false,
+          errorNotification: false,
         });
 
         return { success: true, error: null };
       } catch (err: unknown) {
         setIsUploading(false);
+        const errObj = err as {
+          message?: string;
+          statusCode?: number;
+          body?: { error?: string; message?: string; msg?: string };
+        };
         const message =
-          err instanceof Error
-            ? err.message
-            : "Lỗi kết nối khi tạo mới kỷ niệm chuyến đi.";
+          errObj?.body?.error ||
+          errObj?.body?.message ||
+          errObj?.body?.msg ||
+          errObj?.message ||
+          (err instanceof Error ? err.message : null) ||
+          "Lỗi kết nối khi tạo mới kỷ niệm chuyến đi.";
         setError(message);
-        return { success: false, error: message };
+        return { success: false, error: message, rawError: err };
       }
     },
     [createMutate, uploadBatch, uploadFile],

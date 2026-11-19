@@ -16,7 +16,11 @@ export interface UseUpdateHomestayResult {
     formData: IHomestayFormData,
     originalData?: IHomestayItem,
     onProgress?: (completed: number, total: number) => void,
-  ) => Promise<{ data: IHomestayItem | null; error: string | null }>;
+  ) => Promise<{
+    data: IHomestayItem | null;
+    error: string | null;
+    rawError?: unknown;
+  }>;
   isLoading: boolean;
   error: string | null;
 }
@@ -26,7 +30,10 @@ export interface UseUpdateHomestayResult {
  */
 export function useUpdateHomestay(): UseUpdateHomestayResult {
   const { uploadBatch } = useUploadFile();
-  const { mutateAsync: updateMutate, mutation } = useUpdate<DbHomestay>();
+  const { mutateAsync: updateMutate, mutation } = useUpdate<DbHomestay>({
+    successNotification: false,
+    errorNotification: false,
+  });
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,7 +49,10 @@ export function useUpdateHomestay(): UseUpdateHomestayResult {
         const rooms = formData.rooms || [];
         if (rooms.length === 0) {
           setError("Homestay phải có ít nhất một loại phòng.");
-          return { data: null, error: "Homestay phải có ít nhất một loại phòng." };
+          return {
+            data: null,
+            error: "Homestay phải có ít nhất một loại phòng.",
+          };
         }
 
         for (const room of rooms) {
@@ -90,7 +100,9 @@ export function useUpdateHomestay(): UseUpdateHomestayResult {
           address: (formData.address || formData.location || "").trim(),
           description: formData.description?.trim() || null,
           googleMapsUrl:
-            formData.googleMapsUrl?.trim() || formData.googleMapLink?.trim() || null,
+            formData.googleMapsUrl?.trim() ||
+            formData.googleMapLink?.trim() ||
+            null,
           rooms: rooms.map((room, roomIdx) => {
             const roomId =
               typeof room.id === "number" && room.id > 0 ? room.id : null;
@@ -102,8 +114,9 @@ export function useUpdateHomestay(): UseUpdateHomestayResult {
                   : null;
               return {
                 ...(imageId ? { id: imageId } : {}),
-                imagePath: uploadedMap.get(img.id) || img.imagePath || img.url || "",
-                sortOrder: img.sortOrder ?? (imgIdx + 1),
+                imagePath:
+                  uploadedMap.get(img.id) || img.imagePath || img.url || "",
+                sortOrder: img.sortOrder ?? imgIdx + 1,
                 isCover: Boolean(img.isCover),
               };
             });
@@ -119,7 +132,7 @@ export function useUpdateHomestay(): UseUpdateHomestayResult {
                   ? Number(room.priceAmount)
                   : null,
               priceUnit: room.priceUnit || null,
-              sortOrder: room.sortOrder ?? (roomIdx + 1),
+              sortOrder: room.sortOrder ?? roomIdx + 1,
               images,
             };
           }),
@@ -129,6 +142,8 @@ export function useUpdateHomestay(): UseUpdateHomestayResult {
           resource: AppResource.Homestay,
           id,
           values: payload,
+          successNotification: false,
+          errorNotification: false,
         });
 
         const updatedItem = response.data
@@ -138,10 +153,20 @@ export function useUpdateHomestay(): UseUpdateHomestayResult {
         return { data: updatedItem, error: null };
       } catch (err: unknown) {
         setIsUploading(false);
+        const errObj = err as {
+          message?: string;
+          statusCode?: number;
+          body?: { error?: string; message?: string; msg?: string };
+        };
         const message =
-          err instanceof Error ? err.message : "Lỗi khi cập nhật homestay.";
+          errObj?.body?.error ||
+          errObj?.body?.message ||
+          errObj?.body?.msg ||
+          errObj?.message ||
+          (err instanceof Error ? err.message : null) ||
+          "Lỗi khi cập nhật homestay.";
         setError(message);
-        return { data: null, error: message };
+        return { data: null, error: message, rawError: err };
       }
     },
     [uploadBatch, updateMutate],

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useCustomOpenNotification } from "@/hooks/common/useCustomOpenNotification";
 import {
   Box,
   Typography,
@@ -7,8 +8,6 @@ import {
   CardContent,
   CardMedia,
   Chip,
-  Snackbar,
-  Alert,
   CircularProgress,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -67,36 +66,20 @@ export const TravelMapDetailPage: React.FC = () => {
   const { data: allLocations } = useTravelLocationList();
   const { updateLocation } = useUpdateTravelLocation();
 
+  const { showSuccess, handleShowError } = useCustomOpenNotification();
   const [formDialogOpen, setFormDialogOpen] = useState(false);
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: "success" | "info" | "error";
-  }>({
-    open: false,
-    message: "",
-    severity: "success",
-  });
 
   // Handle Edit Submit
   const handleEditSubmit = async (formData: ILocationFormData) => {
     if (!numericId) return { success: false, error: "ID không hợp lệ" };
-    const { data: updated, error } = await updateLocation(numericId, formData);
+    const { data: updated, error, rawError } = await updateLocation(numericId, formData);
     if (error) {
-      setSnackbar({
-        open: true,
-        message: error,
-        severity: "error",
-      });
+      handleShowError(rawError || error, "Không thể cập nhật địa điểm.");
       return { success: false, error };
     }
     if (updated) {
       await refetch();
-      setSnackbar({
-        open: true,
-        message: "Đã cập nhật địa điểm thành công!",
-        severity: "success",
-      });
+      showSuccess("Đã cập nhật địa điểm thành công!");
       return { success: true };
     }
     return { success: false, error: "Không thể cập nhật địa điểm" };
@@ -1179,21 +1162,6 @@ export const TravelMapDetailPage: React.FC = () => {
         onClose={() => setFormDialogOpen(false)}
         onSubmit={handleEditSubmit}
       />
-
-      {/* 8. Notification Feedback */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
-          severity={snackbar.severity}
-          sx={{ borderRadius: "10px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

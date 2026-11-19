@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useCustomOpenNotification } from "@/hooks/common/useCustomOpenNotification";
 import {
   Box,
   Typography,
@@ -7,8 +8,6 @@ import {
   InputAdornment,
   Button,
   Tooltip,
-  Snackbar,
-  Alert,
   Avatar,
   Chip,
   MenuItem,
@@ -25,7 +24,7 @@ import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { tableSx } from "@/components/ui/table/tableStyles";
 import { useItineraryList } from "@/hooks/itineraries/useItineraryList";
@@ -62,7 +61,6 @@ function CustomNoRowsOverlay() {
 
 export const ItineraryListPage: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [destinationFilter, setDestinationFilter] = useState("ALL");
 
@@ -87,25 +85,12 @@ export const ItineraryListPage: React.FC = () => {
   const { deleteItinerary, isLoading: isDeleting } = useDeleteItinerary();
   const { travelLocationsSelections } = useTravelLocationSelection();
 
+  const { showSuccess, handleShowError } = useCustomOpenNotification();
+
   // Delete modal state
   const [itemToDelete, setItemToDelete] = useState<IItineraryListItem | null>(
     null,
   );
-
-  const navSuccessMessage = (
-    location.state as { successMessage?: string } | null
-  )?.successMessage;
-
-  // Toast notification state
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: "success" | "info" | "warning" | "error";
-  }>(() => ({
-    open: Boolean(navSuccessMessage),
-    message: navSuccessMessage || "",
-    severity: "success",
-  }));
 
   // Filtered dataset: API handles filtering by locationId; name search is temporarily not handled
   const filteredItineraries = itineraries;
@@ -141,21 +126,13 @@ export const ItineraryListPage: React.FC = () => {
 
   const handleConfirmDelete = async () => {
     if (!itemToDelete) return;
-    const { success, error: delError } = await deleteItinerary(itemToDelete.id);
+    const { success, error: delError, rawError } = await deleteItinerary(itemToDelete.id);
     if (success) {
-      setSnackbar({
-        open: true,
-        message: "Đã xóa lịch trình thành công.",
-        severity: "success",
-      });
+      showSuccess("Đã xóa lịch trình thành công.");
       setItemToDelete(null);
       await refetch();
     } else {
-      setSnackbar({
-        open: true,
-        message: delError || "Xóa lịch trình thất bại.",
-        severity: "error",
-      });
+      handleShowError(rawError || delError, "Xóa lịch trình thất bại.");
       setItemToDelete(null);
     }
   };
@@ -697,21 +674,6 @@ export const ItineraryListPage: React.FC = () => {
         onClose={() => setItemToDelete(null)}
         onConfirm={handleConfirmDelete}
       />
-
-      {/* Toast Notification */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
-          severity={snackbar.severity}
-          sx={{ width: "100%", borderRadius: "8px", fontWeight: 500 }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

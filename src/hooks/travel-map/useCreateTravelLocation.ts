@@ -11,7 +11,7 @@ import type {
 export interface UseCreateTravelLocationResult {
   createLocation: (
     formData: ILocationFormData,
-  ) => Promise<{ data: ILocation | null; error: string | null }>;
+  ) => Promise<{ data: ILocation | null; error: string | null; rawError?: unknown }>;
   isLoading: boolean;
   error: string | null;
 }
@@ -22,7 +22,10 @@ export interface UseCreateTravelLocationResult {
  */
 export function useCreateTravelLocation(): UseCreateTravelLocationResult {
   const { uploadFile } = useUploadFile();
-  const { mutateAsync: createMutate, mutation } = useCreate<ILocation>();
+  const { mutateAsync: createMutate, mutation } = useCreate<ILocation>({
+    successNotification: false,
+    errorNotification: false,
+  });
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,18 +57,28 @@ export function useCreateTravelLocation(): UseCreateTravelLocationResult {
         const response = await createMutate({
           resource: AppResource.TravelLocation,
           values: payload,
+          successNotification: false,
+          errorNotification: false,
         });
 
         const createdItem = response.data || null;
         return { data: createdItem, error: null };
       } catch (err: unknown) {
         setIsUploading(false);
+        const errObj = err as {
+          message?: string;
+          statusCode?: number;
+          body?: { error?: string; message?: string; msg?: string };
+        };
         const message =
-          err instanceof Error
-            ? err.message
-            : "Lỗi kết nối khi tạo mới địa điểm.";
+          errObj?.body?.error ||
+          errObj?.body?.message ||
+          errObj?.body?.msg ||
+          errObj?.message ||
+          (err instanceof Error ? err.message : null) ||
+          "Lỗi kết nối khi tạo mới địa điểm.";
         setError(message);
-        return { data: null, error: message };
+        return { data: null, error: message, rawError: err };
       }
     },
     [createMutate, uploadFile],

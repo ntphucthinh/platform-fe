@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useCustomOpenNotification } from "@/hooks/common/useCustomOpenNotification";
 import {
   Box,
   Typography,
@@ -9,8 +10,6 @@ import {
   Collapse,
   IconButton,
   CircularProgress,
-  Snackbar,
-  Alert,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -21,7 +20,7 @@ import PhotoCameraBackOutlinedIcon from "@mui/icons-material/PhotoCameraBackOutl
 import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import CollectionsBookmarkOutlinedIcon from "@mui/icons-material/CollectionsBookmarkOutlined";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
 import { useTravelMemoryDetail } from "@/hooks/travel-memories/useTravelMemoryDetail";
 import { useDeleteTravelMemory } from "@/hooks/travel-memories/useDeleteTravelMemory";
@@ -66,39 +65,18 @@ export const TravelMemoryDetailPage: React.FC = () => {
     {},
   );
 
-  const location = useLocation();
+  const { showSuccess, handleShowError } = useCustomOpenNotification();
   const { deleteTravelMemory, isLoading: isDeleting } = useDeleteTravelMemory();
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
-  const navSuccessMessage = (
-    location.state as { successMessage?: string } | null
-  )?.successMessage;
-
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: "success" | "error";
-  }>(() => ({
-    open: Boolean(navSuccessMessage),
-    message: navSuccessMessage || "",
-    severity: "success",
-  }));
-
   const handleConfirmDelete = async () => {
     if (!numericId || !memory) return;
-    const { success, error: delError } = await deleteTravelMemory(numericId);
+    const { success, error: delError, rawError } = await deleteTravelMemory(numericId);
     if (success) {
-      navigate("/admin/travel-memories", {
-        state: {
-          successMessage: "Đã xóa chuyến đi thành công.",
-        },
-      });
+      showSuccess("Đã xóa chuyến đi thành công.");
+      navigate("/admin/travel-memories");
     } else {
-      setSnackbar({
-        open: true,
-        message: delError || "Xóa chuyến đi thất bại.",
-        severity: "error",
-      });
+      handleShowError(rawError || delError, "Xóa chuyến đi thất bại.");
       setOpenDeleteDialog(false);
     }
   };
@@ -704,21 +682,6 @@ export const TravelMemoryDetailPage: React.FC = () => {
         onClose={() => setOpenDeleteDialog(false)}
         onConfirm={handleConfirmDelete}
       />
-
-      {/* Toast Feedback */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
-          severity={snackbar.severity}
-          sx={{ width: "100%", borderRadius: "8px", fontWeight: 500 }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

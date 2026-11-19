@@ -14,7 +14,11 @@ export interface UseCreateHomestayResult {
   createHomestay: (
     formData: IHomestayFormData,
     onProgress?: (completed: number, total: number) => void,
-  ) => Promise<{ data: IHomestayItem | null; error: string | null }>;
+  ) => Promise<{
+    data: IHomestayItem | null;
+    error: string | null;
+    rawError?: unknown;
+  }>;
   isLoading: boolean;
   error: string | null;
 }
@@ -24,7 +28,10 @@ export interface UseCreateHomestayResult {
  */
 export function useCreateHomestay(): UseCreateHomestayResult {
   const { uploadBatch } = useUploadFile();
-  const { mutateAsync: createMutate, mutation } = useCreate<DbHomestay>();
+  const { mutateAsync: createMutate, mutation } = useCreate<DbHomestay>({
+    successNotification: false,
+    errorNotification: false,
+  });
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +45,10 @@ export function useCreateHomestay(): UseCreateHomestayResult {
         const rooms = formData.rooms || [];
         if (rooms.length === 0) {
           setError("Homestay phải có ít nhất một loại phòng.");
-          return { data: null, error: "Homestay phải có ít nhất một loại phòng." };
+          return {
+            data: null,
+            error: "Homestay phải có ít nhất một loại phòng.",
+          };
         }
 
         for (const room of rooms) {
@@ -86,12 +96,15 @@ export function useCreateHomestay(): UseCreateHomestayResult {
           address: (formData.address || formData.location || "").trim(),
           description: formData.description?.trim() || null,
           googleMapsUrl:
-            formData.googleMapsUrl?.trim() || formData.googleMapLink?.trim() || null,
+            formData.googleMapsUrl?.trim() ||
+            formData.googleMapLink?.trim() ||
+            null,
           rooms: rooms.map((room, roomIdx) => {
             const imageItems = room.imageItems || [];
             const images = imageItems.map((img, imgIdx) => ({
-              imagePath: uploadedMap.get(img.id) || img.imagePath || img.url || "",
-              sortOrder: img.sortOrder ?? (imgIdx + 1),
+              imagePath:
+                uploadedMap.get(img.id) || img.imagePath || img.url || "",
+              sortOrder: img.sortOrder ?? imgIdx + 1,
               isCover: Boolean(img.isCover),
             }));
 
@@ -105,7 +118,7 @@ export function useCreateHomestay(): UseCreateHomestayResult {
                   ? Number(room.priceAmount)
                   : null,
               priceUnit: room.priceUnit || null,
-              sortOrder: room.sortOrder ?? (roomIdx + 1),
+              sortOrder: room.sortOrder ?? roomIdx + 1,
               images,
             };
           }),
@@ -114,6 +127,8 @@ export function useCreateHomestay(): UseCreateHomestayResult {
         const response = await createMutate({
           resource: AppResource.Homestay,
           values: payload,
+          successNotification: false,
+          errorNotification: false,
         });
 
         const createdItem = response.data
@@ -123,10 +138,20 @@ export function useCreateHomestay(): UseCreateHomestayResult {
         return { data: createdItem, error: null };
       } catch (err: unknown) {
         setIsUploading(false);
+        const errObj = err as {
+          message?: string;
+          statusCode?: number;
+          body?: { error?: string; message?: string; msg?: string };
+        };
         const message =
-          err instanceof Error ? err.message : "Lỗi khi tạo homestay.";
+          errObj?.body?.error ||
+          errObj?.body?.message ||
+          errObj?.body?.msg ||
+          errObj?.message ||
+          (err instanceof Error ? err.message : null) ||
+          "Lỗi khi tạo homestay.";
         setError(message);
-        return { data: null, error: message };
+        return { data: null, error: message, rawError: err };
       }
     },
     [uploadBatch, createMutate],

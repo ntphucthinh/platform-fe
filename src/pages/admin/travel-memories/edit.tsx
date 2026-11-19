@@ -1,13 +1,12 @@
-import React, { useState } from "react";
+import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
   Button,
   CircularProgress,
-  Snackbar,
-  Alert,
 } from "@mui/material";
+import { useCustomOpenNotification } from "@/hooks/common/useCustomOpenNotification";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CollectionsBookmarkOutlinedIcon from "@mui/icons-material/CollectionsBookmarkOutlined";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
@@ -27,21 +26,12 @@ export const TravelMemoryEditPage: React.FC = () => {
     error: fetchError,
   } = useTravelMemoryDetail(numericId && !isNaN(numericId) ? numericId : null);
 
+  const { showSuccess, handleShowError } = useCustomOpenNotification();
   const {
     updateTravelMemory,
     isLoading: isUpdating,
     error: updateError,
   } = useUpdateTravelMemory();
-
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: "success" | "error";
-  }>({
-    open: false,
-    message: "",
-    severity: "success",
-  });
 
   if (isFetching) {
     return (
@@ -95,18 +85,13 @@ export const TravelMemoryEditPage: React.FC = () => {
   const handleSubmit = async (formData: ITravelMemoryFormSubmitData) => {
     const result = await updateTravelMemory(numericId, formData);
     if (result.success) {
-      navigate(`/admin/travel-memories/${numericId}`, {
-        state: {
-          successMessage: "Cập nhật kỷ niệm chuyến đi thành công.",
-        },
-      });
+      showSuccess("Cập nhật kỷ niệm chuyến đi thành công.");
+      navigate(`/admin/travel-memories/${numericId}`);
     } else {
-      setSnackbar({
-        open: true,
-        message:
-          result.error || updateError || "Cập nhật kỷ niệm chuyến đi thất bại.",
-        severity: "error",
-      });
+      handleShowError(
+        result.rawError || result.error || updateError,
+        "Cập nhật kỷ niệm chuyến đi thất bại."
+      );
     }
   };
 
@@ -115,30 +100,14 @@ export const TravelMemoryEditPage: React.FC = () => {
   };
 
   return (
-    <>
-      <TravelMemoryForm
-        key={memory.id}
-        initialData={memory}
-        isEdit
-        isLoading={isUpdating}
-        onSubmit={handleSubmit}
-        onCancel={handleCancel}
-      />
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
-          severity={snackbar.severity}
-          sx={{ width: "100%", borderRadius: "8px", fontWeight: 500 }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </>
+    <TravelMemoryForm
+      key={memory.id}
+      initialData={memory}
+      isEdit
+      isLoading={isUpdating}
+      onSubmit={handleSubmit}
+      onCancel={handleCancel}
+    />
   );
 };
 

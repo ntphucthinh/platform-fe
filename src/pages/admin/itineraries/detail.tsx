@@ -4,14 +4,12 @@ import {
   Typography,
   Button,
   IconButton,
-  Snackbar,
-  Alert,
   Tooltip,
   CircularProgress,
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
-import { useNavigate, useParams, useLocation } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { HeaderTitle } from '@/components/ui/header/headerTitle'
 import { useItineraryDetail } from '@/hooks/itineraries/useItineraryDetail'
 import type { IItineraryDay } from '@/types/pages/itineraries/itinerary'
@@ -31,7 +29,6 @@ import { ItineraryNotFound } from '@/components/pages/itineraries/preview/itiner
 export const ItineraryDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const location = useLocation()
   const { data: itinerary, isLoading } = useItineraryDetail(id)
 
   const [activeTab, setActiveTab] = useState<ItineraryTabKey>('overview')
@@ -84,21 +81,6 @@ export const ItineraryDetailPage: React.FC = () => {
     })
   }, [activeTab])
 
-  const navSuccessMessage = (
-    location.state as { successMessage?: string } | null
-  )?.successMessage
-
-  // Toast notification state
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean
-    message: string
-    severity: 'success' | 'info' | 'warning' | 'error'
-  }>(() => ({
-    open: Boolean(navSuccessMessage),
-    message: navSuccessMessage || '',
-    severity: 'success',
-  }))
-
   // Calculate total activities dynamically from record data
   const totalActivities = itinerary
     ? (itinerary.days || []).reduce(
@@ -146,10 +128,6 @@ export const ItineraryDetailPage: React.FC = () => {
 
   const handleEditClick = () => {
     navigate(`/admin/itineraries/${itinerary.id}/edit`)
-  }
-
-  const handleCloseSnackbar = () => {
-    setSnackbar((prev) => ({ ...prev, open: false }))
   }
 
   const durationLabel =
@@ -374,22 +352,6 @@ export const ItineraryDetailPage: React.FC = () => {
           ) : null}
         </Box>
       </Box>
-
-      {/* Global Snackbar Toast Feedback */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert
-          severity={snackbar.severity}
-          variant="filled"
-          sx={{ width: '100%', borderRadius: '8px', fontWeight: 600 }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   )
 }

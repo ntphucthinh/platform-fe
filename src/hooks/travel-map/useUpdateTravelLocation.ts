@@ -12,7 +12,7 @@ export interface UseUpdateTravelLocationResult {
   updateLocation: (
     id: number,
     formData: ILocationFormData,
-  ) => Promise<{ data: ILocation | null; error: string | null }>;
+  ) => Promise<{ data: ILocation | null; error: string | null; rawError?: unknown }>;
   isLoading: boolean;
   error: string | null;
 }
@@ -23,7 +23,10 @@ export interface UseUpdateTravelLocationResult {
  */
 export function useUpdateTravelLocation(): UseUpdateTravelLocationResult {
   const { uploadFile } = useUploadFile();
-  const { mutateAsync: updateMutate, mutation } = useUpdate<ILocation>();
+  const { mutateAsync: updateMutate, mutation } = useUpdate<ILocation>({
+    successNotification: false,
+    errorNotification: false,
+  });
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,18 +59,28 @@ export function useUpdateTravelLocation(): UseUpdateTravelLocationResult {
           resource: AppResource.TravelLocation,
           id,
           values: payload,
+          successNotification: false,
+          errorNotification: false,
         });
 
         const updatedItem = response.data || null;
         return { data: updatedItem, error: null };
       } catch (err: unknown) {
         setIsUploading(false);
+        const errObj = err as {
+          message?: string;
+          statusCode?: number;
+          body?: { error?: string; message?: string; msg?: string };
+        };
         const message =
-          err instanceof Error
-            ? err.message
-            : "Lỗi kết nối khi cập nhật địa điểm.";
+          errObj?.body?.error ||
+          errObj?.body?.message ||
+          errObj?.body?.msg ||
+          errObj?.message ||
+          (err instanceof Error ? err.message : null) ||
+          "Lỗi kết nối khi cập nhật địa điểm.";
         setError(message);
-        return { data: null, error: message };
+        return { data: null, error: message, rawError: err };
       }
     },
     [updateMutate, uploadFile],

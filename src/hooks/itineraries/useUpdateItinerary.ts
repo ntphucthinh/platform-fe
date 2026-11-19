@@ -15,7 +15,7 @@ export interface UseUpdateItineraryResult {
   updateItinerary: (
     id: number | string,
     formData: ICreateItineraryInput,
-  ) => Promise<{ success: boolean; error: string | null }>;
+  ) => Promise<{ success: boolean; error: string | null; rawError?: unknown }>;
   isLoading: boolean;
   error: string | null;
 }
@@ -29,7 +29,10 @@ export function useUpdateItinerary(): UseUpdateItineraryResult {
   const { uploadFile, uploadBatch } = useUploadFile();
   const { mutateAsync: updateMutate, mutation } = useUpdate<{
     message: string;
-  }>();
+  }>({
+    successNotification: false,
+    errorNotification: false,
+  });
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -245,17 +248,27 @@ export function useUpdateItinerary(): UseUpdateItineraryResult {
           resource: AppResource.Itinerary,
           id: numericId,
           values: payload,
+          successNotification: false,
+          errorNotification: false,
         });
 
         return { success: true, error: null };
       } catch (err: unknown) {
         setIsUploading(false);
+        const errObj = err as {
+          message?: string;
+          statusCode?: number;
+          body?: { error?: string; message?: string; msg?: string };
+        };
         const message =
-          err instanceof Error
-            ? err.message
-            : "Lỗi kết nối khi cập nhật lịch trình.";
+          errObj?.body?.error ||
+          errObj?.body?.message ||
+          errObj?.body?.msg ||
+          errObj?.message ||
+          (err instanceof Error ? err.message : null) ||
+          "Lỗi kết nối khi cập nhật lịch trình.";
         setError(message);
-        return { success: false, error: message };
+        return { success: false, error: message, rawError: err };
       }
     },
     [updateMutate, uploadBatch, uploadFile],

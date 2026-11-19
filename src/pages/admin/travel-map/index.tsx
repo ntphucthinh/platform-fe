@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useCustomOpenNotification } from "@/hooks/common/useCustomOpenNotification";
 import {
   Box,
-  Snackbar,
   Alert,
   useTheme,
   useMediaQuery,
@@ -111,21 +111,13 @@ export function TravelMapPage() {
     null,
   );
 
+  const { showSuccess, handleShowError } = useCustomOpenNotification();
+
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [locationToDelete, setLocationToDelete] = useState<{
     id: number;
     name?: string;
   } | null>(null);
-
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: "success" | "info" | "error";
-  }>({
-    open: false,
-    message: "",
-    severity: "success",
-  });
 
   // 4. Computed Derived Data: Thống kê trực tiếp từ danh sách địa điểm thực tế
   const counts = useMemo(() => {
@@ -191,46 +183,30 @@ export function TravelMapPage() {
 
   const handleFormSubmit = async (formData: ILocationFormData) => {
     if (editingLocation) {
-      const { data: updated, error } = await updateLocation(
+      const { data: updated, error, rawError } = await updateLocation(
         editingLocation.id,
         formData,
       );
       if (error) {
-        setSnackbar({
-          open: true,
-          message: error,
-          severity: "error",
-        });
+        handleShowError(rawError || error, "Không thể cập nhật địa điểm.");
         return { success: false, error };
       }
       if (updated) {
         await Promise.all([refetchLocations(), refetchDetail()]);
-        setSnackbar({
-          open: true,
-          message: `Đã cập nhật địa điểm thành công!`,
-          severity: "success",
-        });
+        showSuccess("Đã cập nhật địa điểm thành công!");
         return { success: true };
       }
       return { success: false, error: "Không thể cập nhật địa điểm" };
     } else {
-      const { data: created, error } = await createLocation(formData);
+      const { data: created, error, rawError } = await createLocation(formData);
       if (error) {
-        setSnackbar({
-          open: true,
-          message: error,
-          severity: "error",
-        });
+        handleShowError(rawError || error, "Không thể tạo mới địa điểm.");
         return { success: false, error };
       }
       if (created) {
         setSelectedLocationId(created.id);
         await refetchLocations();
-        setSnackbar({
-          open: true,
-          message: `Đã thêm địa điểm vào bản đồ!`,
-          severity: "success",
-        });
+        showSuccess("Đã thêm địa điểm vào bản đồ!");
         return { success: true };
       }
       return { success: false, error: "Không thể tạo mới địa điểm" };
@@ -249,23 +225,15 @@ export function TravelMapPage() {
 
   const handleConfirmDelete = async () => {
     if (locationToDelete) {
-      const { success, error } = await deleteLocation(locationToDelete.id);
+      const { success, error, rawError } = await deleteLocation(locationToDelete.id);
       if (error) {
-        setSnackbar({
-          open: true,
-          message: error,
-          severity: "error",
-        });
+        handleShowError(rawError || error, "Không thể xóa địa điểm.");
       } else if (success) {
         if (selectedLocationId === locationToDelete.id) {
           setSelectedLocationId(null);
         }
         await refetchLocations();
-        setSnackbar({
-          open: true,
-          message: `Đã xóa địa điểm thành công!`,
-          severity: "success",
-        });
+        showSuccess("Đã xóa địa điểm thành công!");
       }
     }
     setDeleteConfirmOpen(false);
@@ -449,21 +417,6 @@ export function TravelMapPage() {
         }}
         onConfirm={handleConfirmDelete}
       />
-
-      {/* 6. Feedback Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
-          severity={snackbar.severity}
-          sx={{ borderRadius: "10px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

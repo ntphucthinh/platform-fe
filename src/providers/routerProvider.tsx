@@ -32,7 +32,11 @@ import { TravelMapPage } from "@/pages/admin/travel-map/index";
 import { TravelMapDetailPage } from "@/pages/admin/travel-map/detail";
 import { resources } from "@/router/resources";
 import { authProvider } from "@/providers/authProvider";
-import { ErrorComponent } from "@refinedev/mui";
+import {
+  ErrorComponent,
+  RefineSnackbarProvider,
+  useNotificationProvider,
+} from "@refinedev/mui";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { viVN } from "@mui/x-date-pickers/locales";
@@ -42,26 +46,28 @@ import { dataProvider } from "@/providers/dataProvider";
 export function AppProvider() {
   return (
     <CustomThemeProvider>
-      <LocalizationProvider
-        dateAdapter={AdapterDayjs}
-        adapterLocale="vi"
-        localeText={
-          viVN.components.MuiLocalizationProvider.defaultProps.localeText
-        }
-      >
-        <HeaderTitleProvider>
-          <BrowserRouter>
-            <Refine
-              routerProvider={routerProvider}
-              dataProvider={dataProvider}
-              authProvider={authProvider}
-              options={{
-                syncWithLocation: true,
-                warnWhenUnsavedChanges: false,
-                projectId: "platform-fe",
-              }}
-              resources={resources}
-            >
+      <RefineSnackbarProvider>
+        <LocalizationProvider
+          dateAdapter={AdapterDayjs}
+          adapterLocale="vi"
+          localeText={
+            viVN.components.MuiLocalizationProvider.defaultProps.localeText
+          }
+        >
+          <HeaderTitleProvider>
+            <BrowserRouter>
+              <Refine
+                routerProvider={routerProvider}
+                dataProvider={dataProvider}
+                authProvider={authProvider}
+                notificationProvider={useNotificationProvider}
+                options={{
+                  syncWithLocation: true,
+                  warnWhenUnsavedChanges: false,
+                  projectId: "platform-fe",
+                }}
+                resources={resources}
+              >
               <Routes>
                 {/* Public Website Routes — Root '/' is the public main discovery page */}
                 <Route path="/" element={<HomestayListingPage />} />
@@ -154,6 +160,7 @@ export function AppProvider() {
           </BrowserRouter>
         </HeaderTitleProvider>
       </LocalizationProvider>
-    </CustomThemeProvider>
-  );
+    </RefineSnackbarProvider>
+  </CustomThemeProvider>
+);
 }
