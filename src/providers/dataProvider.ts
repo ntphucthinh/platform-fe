@@ -86,11 +86,13 @@ export const dataProvider: DataProvider = {
         (Array.isArray(list) ? list.length : 0),
     );
     const paginatorInfo = data?.paginatorInfo ?? [];
+    const statusCounts = data?.statusCounts ?? data?.data?.statusCounts;
 
     return {
       data: list,
       total,
       paginatorInfo,
+      statusCounts,
     };
   },
 

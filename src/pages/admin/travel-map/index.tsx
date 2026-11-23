@@ -62,6 +62,8 @@ export function TravelMapPage() {
   // 2. Data Hooks: Fetch locations list (hỗ trợ lọc trực tiếp từ backend khi có filter)
   const {
     data: locations,
+    total: apiTotalLocations,
+    statusCounts: apiStatusCounts,
     isLoading: isLoadingLocations,
     error: locationsError,
     refetch: refetchLocations,
@@ -119,8 +121,21 @@ export function TravelMapPage() {
     name?: string;
   } | null>(null);
 
-  // 4. Computed Derived Data: Thống kê trực tiếp từ danh sách địa điểm thực tế
+  // 4. Counts: Always prioritize API returned statusCounts & total
   const counts = useMemo(() => {
+    if (apiStatusCounts) {
+      const total =
+        typeof apiTotalLocations === "number" && apiTotalLocations > 0
+          ? apiTotalLocations
+          : (apiStatusCounts.visited ?? 0) + (apiStatusCounts.wishlist ?? 0);
+
+      return {
+        total,
+        visited: apiStatusCounts.visited ?? 0,
+        wishlist: apiStatusCounts.wishlist ?? 0,
+      };
+    }
+
     let visited = 0;
     let wishlist = 0;
     for (const loc of locations) {
@@ -132,7 +147,7 @@ export function TravelMapPage() {
       visited,
       wishlist,
     };
-  }, [locations]);
+  }, [apiStatusCounts, apiTotalLocations, locations]);
 
   // Filtered locations (client-side fallback / local filter)
   const filteredLocations = useMemo(
@@ -156,8 +171,16 @@ export function TravelMapPage() {
     if (!target) return detail;
 
     return {
-      ...detail,
       ...target,
+      ...detail,
+      memories:
+        detail.memories && detail.memories.length > 0
+          ? detail.memories
+          : target.memories,
+      itineraries:
+        detail.itineraries && detail.itineraries.length > 0
+          ? detail.itineraries
+          : target.itineraries,
     };
   }, [selectedLocationId, detailData, locations]);
 
@@ -312,7 +335,12 @@ export function TravelMapPage() {
               sm: "calc(100dvh - 235px)",
               md: "calc(100vh - 185px)",
             },
+            maxHeight: {
+              md: "calc(100vh - 185px)",
+            },
+            alignItems: "stretch",
             position: "relative",
+            overflow: "hidden",
           }}
         >
           {/* Leaflet Map Canvas (70% width on desktop when panel open, 100% when closed) */}
@@ -326,6 +354,8 @@ export function TravelMapPage() {
                 : "100%",
               minWidth: 0,
               height: "100%",
+              maxHeight: "100%",
+              minHeight: 0,
               display: "flex",
               flexDirection: "column",
               transition: prefersReducedMotion

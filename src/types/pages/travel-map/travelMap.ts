@@ -2,6 +2,17 @@ import type { ITravelMemory } from "@/types/pages/travel-memories/travelMemory";
 import type { ITravelItinerary } from "@/types/pages/itineraries/itinerary";
 import type { LocationStatus } from "@/constants/travelMap";
 
+export interface ILocationStatusCounts {
+  visited: number;
+  wishlist: number;
+}
+
+export interface ITravelLocationListApiResponse {
+  data: ILocation[];
+  statusCounts?: ILocationStatusCounts;
+  total?: number;
+}
+
 export interface ILocation {
   id: number;
   countryCode: string;
@@ -19,6 +30,10 @@ export interface ILocation {
   googleMapsUrl?: string | null;
   visitCount?: number;
   itineraryCount?: number;
+  latestVisitDate?: string | null;
+  totalPhotos?: number;
+  memories?: ITravelMemory[];
+  itineraries?: ITravelItinerary[];
 }
 
 export interface ILocationPayload {

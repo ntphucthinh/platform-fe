@@ -43,6 +43,8 @@ export interface ITravelMemory {
   description?: string | null;
   coverImagePath?: string;
   coverImage: string;
+  photoCount?: number;
+  totalPhotos?: number;
   days: ITravelMemoryDay[];
 }
 

@@ -391,7 +391,9 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
         display: "flex",
         flexDirection: "column",
         height: "100%",
+        maxHeight: "100%",
         minHeight: 0,
+        flex: 1,
         bgcolor: "#FFFFFF",
         overflow: "hidden",
         animation: prefersReducedMotion
@@ -623,7 +625,7 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
         ref={scrollContainerRef}
         sx={{
           p: { xs: 2, sm: 2.5 },
-          flex: 1,
+          flex: "1 1 auto",
           minHeight: 0,
           overflowY: "auto",
           overflowX: "hidden",
@@ -634,6 +636,21 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
           flexDirection: "column",
           gap: 2.5,
           pb: "calc(32px + env(safe-area-inset-bottom, 20px))",
+          "&::-webkit-scrollbar": {
+            width: "6px",
+          },
+          "&::-webkit-scrollbar-track": {
+            backgroundColor: "transparent",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "#CBD5E1",
+            borderRadius: "4px",
+          },
+          "&::-webkit-scrollbar-thumb:hover": {
+            backgroundColor: "#94A3B8",
+          },
+          scrollbarWidth: "thin",
+          scrollbarColor: "#CBD5E1 transparent",
         }}
       >
         {/* Title & Address */}
@@ -940,9 +957,38 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
               </Button>
             </Card>
           ) : (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 1.5,
+                ...(location.memories.length > 2 && {
+                  maxHeight: 280,
+                  overflowY: "auto",
+                  pr: 0.5,
+                  "&::-webkit-scrollbar": {
+                    width: "4px",
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    backgroundColor: "transparent",
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    backgroundColor: "#CBD5E1",
+                    borderRadius: "4px",
+                  },
+                  "&::-webkit-scrollbar-thumb:hover": {
+                    backgroundColor: "#94A3B8",
+                  },
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "#CBD5E1 transparent",
+                }),
+              }}
+            >
               {location.memories.map((mem) => {
-                const photosCount = countTotalPhotos(mem.days);
+                const photosCount =
+                  typeof mem.photoCount === "number"
+                    ? mem.photoCount
+                    : countTotalPhotos(mem.days);
                 const dateText = formatDateRangeVietnamese(
                   mem.startDate,
                   mem.endDate,
@@ -1074,7 +1120,33 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
               </Typography>
             </Box>
 
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 1.25,
+                ...(location.itineraries.length > 2 && {
+                  maxHeight: 240,
+                  overflowY: "auto",
+                  pr: 0.5,
+                  "&::-webkit-scrollbar": {
+                    width: "4px",
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    backgroundColor: "transparent",
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    backgroundColor: "#CBD5E1",
+                    borderRadius: "4px",
+                  },
+                  "&::-webkit-scrollbar-thumb:hover": {
+                    backgroundColor: "#94A3B8",
+                  },
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "#CBD5E1 transparent",
+                }),
+              }}
+            >
               {location.itineraries.map((it) => (
                 <Card
                   key={it.id}
@@ -1237,6 +1309,10 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
         overflow: "hidden",
         flexShrink: 0,
         height: "100%",
+        maxHeight: "100%",
+        minHeight: 0,
+        display: "flex",
+        flexDirection: "column",
         pointerEvents: isEntered ? "auto" : "none",
       }}
     >
@@ -1245,6 +1321,11 @@ export const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
           width: "100%",
           minWidth: { md: 280 },
           height: "100%",
+          maxHeight: "100%",
+          minHeight: 0,
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
           flexShrink: 0,
           bgcolor: "#FFFFFF",
           borderRadius: "16px",

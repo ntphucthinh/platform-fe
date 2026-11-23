@@ -6,7 +6,13 @@ import type {
   ILocationWithDetails,
   ITravelMapSummary,
 } from "@/types/pages/travel-map/travelMap";
+import type {
+  ITravelMemory,
+  ITravelMemoryDay,
+} from "@/types/pages/travel-memories/travelMemory";
+import type { ITravelItinerary } from "@/types/pages/itineraries/itinerary";
 import { getPublicImageUrl } from "@/utils/homestayUtils";
+import { countTotalPhotos } from "@/utils/travelMemoryUtils";
 import { findCountryByCode } from "@/hooks/common/useGlobalGeo";
 import { Country } from "country-state-city";
 import {
@@ -39,10 +45,9 @@ export const getGoogleMapsUrl = (
 /**
  * Maps/normalizes a travel location to frontend ILocationWithDetails.
  * Ensures id is preserved strictly as a number.
+ * Maps associated memories and itineraries returned by detail API.
  */
-export function mapApiLocationToItem(
-  raw: ILocation,
-): ILocationWithDetails {
+export function mapApiLocationToItem(raw: ILocation): ILocationWithDetails {
   const status: LocationStatus =
     raw.status === LocationStatus.Wishlist ||
     raw.status?.toLowerCase() === LocationStatus.Wishlist
@@ -50,6 +55,112 @@ export function mapApiLocationToItem(
       : LocationStatus.Visited;
   const locName = raw.locationName || "";
   const dynamicMapUrl = getGoogleMapsUrl(raw.latitude, raw.longitude);
+
+  // Map memories list
+  const memories: ITravelMemory[] = Array.isArray(raw.memories)
+    ? raw.memories.map((mem) => {
+        const rawCover = mem.coverImage || mem.coverImagePath || "";
+        const coverImage = rawCover ? getPublicImageUrl(rawCover) : "";
+        const rawPhotoCount =
+          typeof mem.photoCount === "number"
+            ? mem.photoCount
+            : typeof mem.totalPhotos === "number"
+            ? mem.totalPhotos
+            : 0;
+
+        const days: ITravelMemoryDay[] =
+          Array.isArray(mem.days) && mem.days.length > 0
+            ? mem.days
+            : rawPhotoCount > 0
+            ? [
+                {
+                  date: mem.startDate || "",
+                  photos: Array.from({ length: rawPhotoCount }, (_, idx) => ({
+                    id: idx + 1,
+                  })),
+                },
+              ]
+            : [];
+
+        return {
+          id: mem.id,
+          locationId: mem.locationId ?? raw.id,
+          locationName: mem.locationName ?? locName,
+          location: mem.location,
+          title: mem.title || "",
+          destination: mem.destination || locName,
+          countryCode: mem.countryCode || raw.countryCode,
+          startDate: mem.startDate || "",
+          endDate: mem.endDate || "",
+          description: mem.description ?? null,
+          coverImagePath: mem.coverImagePath || undefined,
+          coverImage,
+          photoCount: rawPhotoCount || countTotalPhotos(days),
+          totalPhotos: rawPhotoCount || countTotalPhotos(days),
+          days,
+        };
+      })
+    : [];
+
+  // Map itineraries list
+  const itineraries: ITravelItinerary[] = Array.isArray(raw.itineraries)
+    ? raw.itineraries.map((it) => {
+        const title = it.title || it.itineraryName || "";
+        const rawCover = it.coverImage || it.coverImagePath || "";
+        const coverImage = rawCover ? getPublicImageUrl(rawCover) : "";
+        const duration =
+          it.duration ||
+          (typeof it.durationDays === "number"
+            ? `${it.durationDays} ngày`
+            : "");
+
+        return {
+          id: it.id,
+          locationId: it.locationId ?? raw.id,
+          locationName: it.locationName ?? locName,
+          title,
+          destination: it.destination || locName,
+          duration,
+          durationDays: it.durationDays,
+          durationNights: it.durationNights,
+          description: it.description || "",
+          coverImagePath: it.coverImagePath ?? null,
+          coverImage,
+          themes: it.themes || [],
+          days: it.days || [],
+          featuredImages: it.featuredImages || [],
+          travelTips: it.travelTips || [],
+        };
+      })
+    : [];
+
+  const visitCount =
+    typeof raw.visitCount === "number" && raw.visitCount > 0
+      ? raw.visitCount
+      : memories.length;
+
+  const itineraryCount =
+    typeof raw.itineraryCount === "number" && raw.itineraryCount > 0
+      ? raw.itineraryCount
+      : itineraries.length;
+
+  const latestVisitDate =
+    raw.latestVisitDate ||
+    (memories.length > 0
+      ? memories[0].endDate || memories[0].startDate || null
+      : null);
+
+  const totalPhotos =
+    typeof raw.totalPhotos === "number"
+      ? raw.totalPhotos
+      : memories.reduce(
+          (sum, m) =>
+            sum +
+            (typeof m.photoCount === "number"
+              ? m.photoCount
+              : countTotalPhotos(m.days)),
+          0,
+        );
 
   return {
     id: raw.id, // Strictly number, not converted to string
@@ -66,12 +177,12 @@ export function mapApiLocationToItem(
     description: raw.description || "",
     notes: raw.notes || "",
     googleMapsUrl: raw.googleMapsUrl || dynamicMapUrl || "",
-    visitCount: raw.visitCount ?? 0,
-    itineraryCount: raw.itineraryCount ?? 0,
-    latestVisitDate: null,
-    totalPhotos: 0,
-    memories: [],
-    itineraries: [],
+    visitCount,
+    itineraryCount,
+    latestVisitDate,
+    totalPhotos,
+    memories,
+    itineraries,
   };
 }
 

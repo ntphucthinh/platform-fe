@@ -733,7 +733,10 @@ export const TravelMapDetailPage: React.FC = () => {
         ) : (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {details.memories.map((mem) => {
-              const photoCount = countTotalPhotos(mem.days);
+              const photoCount =
+                typeof mem.photoCount === "number"
+                  ? mem.photoCount
+                  : countTotalPhotos(mem.days);
               const duration = calculateCalendarDuration(
                 mem.startDate,
                 mem.endDate,
