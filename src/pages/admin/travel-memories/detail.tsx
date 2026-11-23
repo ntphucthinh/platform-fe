@@ -1,27 +1,8 @@
 import React, { useState } from "react";
-import { useCustomOpenNotification } from "@/hooks/common/useCustomOpenNotification";
-import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Button,
-  Chip,
-  Collapse,
-  IconButton,
-  CircularProgress,
-} from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
-import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
-import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
-import PhotoCameraBackOutlinedIcon from "@mui/icons-material/PhotoCameraBackOutlined";
-import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
-import CollectionsBookmarkOutlinedIcon from "@mui/icons-material/CollectionsBookmarkOutlined";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useParams, useNavigate } from "react-router-dom";
+import { Box, Typography, CircularProgress } from "@mui/material";
 import { HeaderTitle } from "@/components/ui/header/headerTitle";
+import { useCustomOpenNotification } from "@/hooks/common/useCustomOpenNotification";
 import { useTravelMemoryDetail } from "@/hooks/travel-memories/useTravelMemoryDetail";
 import { useDeleteTravelMemory } from "@/hooks/travel-memories/useDeleteTravelMemory";
 import { DeleteConfirmDialog } from "@/components/common/deleteConfirmDialog";
@@ -29,12 +10,13 @@ import {
   calculateCalendarDuration,
   countTotalPhotos,
   formatDateRangeVietnamese,
-  formatDateVietnamese,
 } from "@/utils/travelMemoryUtils";
-import { TravelMemoryPhotoGrid } from "@/components/pages/travel-memories/travelMemoryPhotoGrid";
-import { TravelMemoryPhotoLightbox } from "@/components/pages/travel-memories/travelMemoryPhotoLightbox";
-import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 import type { ITravelMemoryPhoto } from "@/types/pages/travel-memories/travelMemory";
+import { TravelMemoryPhotoLightbox } from "@/components/pages/travel-memories/travelMemoryPhotoLightbox";
+import { TravelMemoryDetailHeader } from "@/components/pages/travel-memories/detail/travelMemoryDetailHeader";
+import { TravelMemoryHero } from "@/components/pages/travel-memories/detail/travelMemoryHero";
+import { TravelMemoryDayAlbums } from "@/components/pages/travel-memories/detail/travelMemoryDayAlbums";
+import { TravelMemoryNotFound } from "@/components/pages/travel-memories/detail/travelMemoryNotFound";
 
 export const TravelMemoryDetailPage: React.FC = () => {
   const { id } = useParams();
@@ -111,58 +93,11 @@ export const TravelMemoryDetailPage: React.FC = () => {
 
   if (error || !memory) {
     return (
-      <Box sx={{ py: 6, textAlign: "center" }}>
-        <HeaderTitle>Không tìm thấy kỷ niệm</HeaderTitle>
-        <CollectionsBookmarkOutlinedIcon
-          sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
-        />
-        <Typography
-          variant="h6"
-          sx={{ fontWeight: 600, color: "text.primary" }}
-        >
-          {error || "Chuyến đi không tồn tại hoặc đã bị xóa"}
-        </Typography>
-        <Typography
-          variant="body2"
-          sx={{ color: "text.secondary", mt: 1, mb: 3 }}
-        >
-          {error
-            ? "Không thể tải dữ liệu từ máy chủ. Vui lòng thử lại hoặc quay lại danh sách."
-            : "Không tìm thấy dữ liệu kỷ niệm chuyến đi phù hợp với mã định danh này."}
-        </Typography>
-        <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
-          <Button
-            variant="outlined"
-            startIcon={<ArrowBackIcon />}
-            onClick={() => navigate("/admin/travel-memories")}
-            sx={{
-              borderRadius: "8px",
-              textTransform: "none",
-              fontWeight: 600,
-              "&:focus-visible": {
-                outline: "2px solid #1976D2",
-                outlineOffset: 2,
-              },
-            }}
-          >
-            Quay lại danh sách
-          </Button>
-          {error && (
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => void refetch()}
-              sx={{
-                borderRadius: "8px",
-                textTransform: "none",
-                fontWeight: 600,
-              }}
-            >
-              Thử lại
-            </Button>
-          )}
-        </Box>
-      </Box>
+      <TravelMemoryNotFound
+        error={error}
+        onBack={() => navigate("/admin/travel-memories")}
+        onRetry={() => refetch()}
+      />
     );
   }
 
@@ -174,8 +109,8 @@ export const TravelMemoryDetailPage: React.FC = () => {
   );
 
   const allCollapsed =
-    (memory.days || []).length > 0 &&
-    (memory.days || []).every((day) => collapsedDays[day.date] === true);
+    memory.days.length > 0 &&
+    memory.days.every((day) => collapsedDays[day.date] === true);
 
   const toggleAllDays = () => {
     const nextState: Record<string, boolean> = {};
@@ -186,480 +121,50 @@ export const TravelMemoryDetailPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: 1.5, sm: 2 }, pb: { xs: 3, sm: 4 } }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: { xs: 1.5, sm: 2 },
+        pb: { xs: 3, sm: 4 },
+      }}
+    >
       <HeaderTitle>{memory.title}</HeaderTitle>
 
       {/* Top Navigation & Actions */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 2,
-        }}
-      >
-        <Button
-          variant="outlined"
-          color="inherit"
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate("/admin/travel-memories")}
-          sx={{
-            borderRadius: "8px",
-            textTransform: "none",
-            fontWeight: 600,
-            borderColor: "divider",
-            color: "text.secondary",
-            width: { xs: "100%", sm: "auto" },
-            minHeight: 40,
-            "&:focus-visible": {
-              outline: "2px solid #1976D2",
-              outlineOffset: 2,
-            },
-          }}
-        >
-          Quay lại danh sách
-        </Button>
-
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1.5,
-            width: { xs: "100%", sm: "auto" },
-          }}
-        >
-          <Button
-            variant="outlined"
-            color="error"
-            startIcon={<DeleteOutlinedIcon />}
-            onClick={() => setOpenDeleteDialog(true)}
-            sx={{
-              borderRadius: "8px",
-              textTransform: "none",
-              fontWeight: 600,
-              flex: { xs: 1, sm: "initial" },
-              minHeight: 40,
-              "&:focus-visible": {
-                outline: "2px solid #DC2626",
-                outlineOffset: 2,
-              },
-            }}
-          >
-            Xóa chuyến đi
-          </Button>
-
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<EditOutlinedIcon />}
-            onClick={() => navigate(`/admin/travel-memories/${memory.id}/edit`)}
-            sx={{
-              borderRadius: "8px",
-              textTransform: "none",
-              fontWeight: 600,
-              boxShadow: "none",
-              flex: { xs: 1, sm: "initial" },
-              minHeight: 40,
-              "&:focus-visible": {
-                outline: "2px solid #1976D2",
-                outlineOffset: 2,
-              },
-            }}
-          >
-            Chỉnh sửa chuyến đi
-          </Button>
-        </Box>
-      </Box>
+      <TravelMemoryDetailHeader
+        onBack={() => navigate("/admin/travel-memories")}
+        onEdit={() => navigate(`/admin/travel-memories/${memory.id}/edit`)}
+        onDelete={() => setOpenDeleteDialog(true)}
+      />
 
       {/* Hero Banner & Trip Overview */}
-      <Card
-        elevation={1}
-        sx={{
-          borderRadius: "14px",
-          border: "1px solid",
-          borderColor: "divider",
-          bgcolor: "background.paper",
-          overflow: "hidden",
+      <TravelMemoryHero
+        title={memory.title}
+        coverImage={memory.coverImage}
+        destination={memory.destination}
+        durationLabel={duration.label}
+        dateRangeLabel={dateRangeLabel}
+        totalPhotos={totalPhotos}
+        description={memory.description}
+      />
+
+      {/* Daily Photo Albums */}
+      <TravelMemoryDayAlbums
+        days={memory.days}
+        collapsedDays={collapsedDays}
+        onToggleDayCollapse={toggleDayCollapse}
+        onToggleAllDays={toggleAllDays}
+        allCollapsed={allCollapsed}
+        onPhotoClick={(dayNumber, formattedDate, photos, photoIdx) => {
+          setLightboxState({
+            open: true,
+            photos,
+            currentIndex: photoIdx,
+            dateLabel: `Ngày ${dayNumber} · ${formattedDate}`,
+          });
         }}
-      >
-        {/* Cover Image Banner */}
-        <Box
-          sx={{
-            position: "relative",
-            width: "100%",
-            height: { xs: 240, sm: 360, md: 420 },
-            bgcolor: "#0F172A",
-          }}
-        >
-          <Box
-            component="img"
-            src={memory.coverImage || DEFAULT_NO_IMAGE}
-            alt={memory.title}
-            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-              e.currentTarget.src = DEFAULT_NO_IMAGE;
-            }}
-            sx={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-            }}
-          />
-
-          {/* Dark Gradient Overlay */}
-          <Box
-            sx={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(to top, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.3) 60%, rgba(15, 23, 42, 0.1) 100%)",
-            }}
-          />
-
-          {/* Banner Floating Details */}
-          <Box
-            sx={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              p: { xs: 2.5, sm: 4 },
-              color: "#FFFFFF",
-            }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 1.2,
-                mb: 1.5,
-              }}
-            >
-              <Chip
-                icon={
-                  <AccessTimeOutlinedIcon
-                    sx={{
-                      fontSize: "15px !important",
-                      color: "#FFFFFF !important",
-                    }}
-                  />
-                }
-                label={duration.label}
-                size="small"
-                sx={{
-                  bgcolor: "rgba(255, 255, 255, 0.2)",
-                  color: "#FFFFFF",
-                  backdropFilter: "blur(6px)",
-                  fontWeight: 600,
-                  fontSize: "0.75rem",
-                  borderRadius: "4px",
-                }}
-              />
-              <Chip
-                icon={
-                  <PhotoCameraBackOutlinedIcon
-                    sx={{
-                      fontSize: "15px !important",
-                      color: "#FFFFFF !important",
-                    }}
-                  />
-                }
-                label={`${totalPhotos} hình ảnh`}
-                size="small"
-                sx={{
-                  bgcolor: "rgba(255, 255, 255, 0.2)",
-                  color: "#FFFFFF",
-                  backdropFilter: "blur(6px)",
-                  fontWeight: 600,
-                  fontSize: "0.75rem",
-                  borderRadius: "4px",
-                }}
-              />
-            </Box>
-
-            <Typography
-              variant="h4"
-              component="h1"
-              sx={{
-                fontWeight: 800,
-                color: "#FFFFFF",
-                fontSize: { xs: "1.5rem", sm: "2.1rem" },
-                lineHeight: 1.25,
-                mb: 1.5,
-                wordBreak: "break-word",
-              }}
-            >
-              {memory.title}
-            </Typography>
-
-            <Box
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "center",
-                gap: 2.5,
-                color: "#E2E8F0",
-                fontSize: "0.92rem",
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.8, minWidth: 0 }}>
-                <LocationOnOutlinedIcon
-                  sx={{ fontSize: 20, color: "#60A5FA", flexShrink: 0 }}
-                />
-                <Typography variant="body2" sx={{ fontWeight: 600, wordBreak: "break-word" }}>
-                  {memory.destination}
-                </Typography>
-              </Box>
-
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
-                <CalendarMonthOutlinedIcon
-                  sx={{ fontSize: 19, color: "#93C5FD", flexShrink: 0 }}
-                />
-                <Typography variant="body2">{dateRangeLabel}</Typography>
-              </Box>
-            </Box>
-          </Box>
-        </Box>
-
-        {/* Description Section */}
-        {memory.description && (
-          <CardContent sx={{ p: { xs: 2.5, sm: 3.5 } }}>
-            <Typography
-              variant="subtitle2"
-              sx={{
-                color: "text.secondary",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                mb: 1,
-              }}
-            >
-              Nhật ký chuyến đi
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                color: "#334155",
-                lineHeight: 1.7,
-                fontSize: "0.98rem",
-                whiteSpace: "pre-line",
-                wordBreak: "break-word",
-              }}
-            >
-              {memory.description}
-            </Typography>
-          </CardContent>
-        )}
-      </Card>
-
-      {/* 7.2 Daily Photo Albums */}
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: { xs: "flex-start", sm: "center" },
-            flexDirection: { xs: "column", sm: "row" },
-            gap: 1.5,
-          }}
-        >
-          <Box>
-            <Typography variant="h5" sx={{ fontWeight: 700, color: "#172033" }}>
-              Album ảnh theo từng ngày
-            </Typography>
-            <Typography variant="body2" sx={{ color: "#64748B", mt: 0.5 }}>
-              Bấm vào tiêu đề ngày để đóng/mở danh sách ảnh hoặc bấm vào ảnh để
-              phóng to.
-            </Typography>
-          </Box>
-
-          {memory.days.length > 1 && (
-            <Button
-              size="small"
-              variant="text"
-              onClick={toggleAllDays}
-              sx={{
-                textTransform: "none",
-                fontWeight: 600,
-                color: "primary.main",
-                "&:hover": { bgcolor: "action.hover" },
-                "&:focus-visible": {
-                  outline: "2px solid #1976D2",
-                  outlineOffset: 2,
-                },
-              }}
-            >
-              {allCollapsed ? "Mở rộng tất cả" : "Thu gọn tất cả"}
-            </Button>
-          )}
-        </Box>
-
-        {memory.days.map((day, index) => {
-          const dayNumber = index + 1;
-          const formattedDate = formatDateVietnamese(day.date);
-          const photoCount = day.photos.length;
-          const isCollapsed = collapsedDays[day.date] === true;
-
-          return (
-            <Card
-              key={day.date}
-              elevation={1}
-              sx={{
-                borderRadius: "14px",
-                border: "1px solid",
-                borderColor: "divider",
-                bgcolor: "background.paper",
-                overflow: "hidden",
-              }}
-            >
-              {/* Day Header */}
-              <Box
-                sx={{
-                  px: { xs: 2, sm: 3 },
-                  py: 1.8,
-                  bgcolor: "background.default",
-                  borderBottom: isCollapsed ? "none" : "1px solid",
-                  borderColor: "divider",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  cursor: "pointer",
-                  userSelect: "none",
-                  transition: "background-color 0.15s",
-                  "&:hover": {
-                    bgcolor: "action.hover",
-                  },
-                  "&:focus-visible": {
-                    outline: "2px solid #1976D2",
-                    outlineOffset: -2,
-                  },
-                }}
-                role="button"
-                tabIndex={0}
-                aria-expanded={!isCollapsed}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    toggleDayCollapse(day.date);
-                  }
-                }}
-                onClick={() => toggleDayCollapse(day.date)}
-              >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <Box
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: "8px",
-                      bgcolor: "primary.main",
-                      color: "#FFFFFF",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: 700,
-                      fontSize: "0.9rem",
-                    }}
-                  >
-                    {dayNumber}
-                  </Box>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 700,
-                      color: "#1E293B",
-                      fontSize: "1.05rem",
-                    }}
-                  >
-                    Ngày {dayNumber} · {formattedDate}
-                  </Typography>
-                </Box>
-
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <Chip
-                    label={`${photoCount} ảnh`}
-                    size="small"
-                    sx={{
-                      bgcolor: photoCount > 0 ? "#EFF6FF" : "#F1F5F9",
-                      color: photoCount > 0 ? "#1D4ED8" : "#64748B",
-                      fontWeight: 700,
-                      fontSize: "0.75rem",
-                      borderRadius: "6px",
-                    }}
-                  />
-                  <IconButton
-                    size="small"
-                    sx={{
-                      color: "#64748B",
-                      transform: isCollapsed
-                        ? "rotate(-90deg)"
-                        : "rotate(0deg)",
-                      transition: "transform 0.2s",
-                    }}
-                    tabIndex={-1}
-                    aria-label={isCollapsed ? "Mở rộng ngày" : "Thu gọn ngày"}
-                  >
-                    <KeyboardArrowDownIcon fontSize="small" />
-                  </IconButton>
-                </Box>
-              </Box>
-
-              {/* Collapsible Content */}
-              <Collapse in={!isCollapsed} timeout={200}>
-                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                  {day.description && (
-                    <Box
-                      sx={{
-                        mb: 2.5,
-                        p: 2,
-                        borderRadius: "10px",
-                        bgcolor: "#F8FAFC",
-                        border: "1px solid #E2E8F0",
-                      }}
-                    >
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          display: "block",
-                          fontWeight: 700,
-                          color: "#2563EB",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.05em",
-                          mb: 0.5,
-                        }}
-                      >
-                        Nhật ký ngày {dayNumber}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: "#334155",
-                          lineHeight: 1.65,
-                          whiteSpace: "pre-line",
-                        }}
-                      >
-                        {day.description}
-                      </Typography>
-                    </Box>
-                  )}
-
-                  <TravelMemoryPhotoGrid
-                    photos={day.photos}
-                    readOnly
-                    onPhotoClick={(photoIdx) => {
-                      setLightboxState({
-                        open: true,
-                        photos: day.photos,
-                        currentIndex: photoIdx,
-                        dateLabel: `Ngày ${dayNumber} · ${formattedDate}`,
-                      });
-                    }}
-                    emptyMessage="Ngày này chưa có hình ảnh kỷ niệm."
-                  />
-                </CardContent>
-              </Collapse>
-            </Card>
-          );
-        })}
-      </Box>
+      />
 
       {/* Lightbox Modal */}
       <TravelMemoryPhotoLightbox
