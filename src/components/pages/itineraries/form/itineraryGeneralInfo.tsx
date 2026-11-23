@@ -4,7 +4,6 @@ import {
   Typography,
   Box,
   TextField,
-  Autocomplete,
   CircularProgress,
   Chip,
   Button,
@@ -20,6 +19,7 @@ import type {
 } from "react-hook-form";
 import type { IItineraryFormData } from "@/types/pages/itineraries/itinerary";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
+import { TravelLocationSelect } from "@/components/common/travelLocationSelect";
 
 export interface ItineraryGeneralInfoProps {
   register: UseFormRegister<IItineraryFormData>;
@@ -28,6 +28,7 @@ export interface ItineraryGeneralInfoProps {
   isLoadingLocations: boolean;
   travelLocationsSelections: { label: string; value: string | number }[];
   selectedLocation: { label: string; value: string | number } | null;
+  onRefetchLocations?: () => Promise<unknown> | void;
   isLoadingThemes: boolean;
   displayedThemes: string[];
   themes: string[];
@@ -50,6 +51,7 @@ export const ItineraryGeneralInfo: React.FC<ItineraryGeneralInfoProps> = ({
   isLoadingLocations,
   travelLocationsSelections,
   selectedLocation,
+  onRefetchLocations,
   isLoadingThemes,
   displayedThemes,
   themes,
@@ -95,23 +97,11 @@ export const ItineraryGeneralInfo: React.FC<ItineraryGeneralInfoProps> = ({
         />
 
         {/* Row 2: Địa điểm Selectbox */}
-        <Autocomplete<
-          { label: string; value: string | number },
-          false,
-          false,
-          false
-        >
-          fullWidth
-          loading={isLoadingLocations}
-          options={travelLocationsSelections}
-          getOptionLabel={(option) => option.label || ""}
+        <TravelLocationSelect
           value={selectedLocation}
-          isOptionEqualToValue={(option, value) =>
-            Number(option.value) === Number(value.value)
-          }
-          onChange={(_, newValue) => {
-            const nextId = newValue ? Number(newValue.value) : null;
-            const nextLabel = newValue ? newValue.label : "";
+          onChange={(newVal) => {
+            const nextId = newVal ? Number(newVal.value) : null;
+            const nextLabel = newVal ? newVal.label : "";
             setValue("locationId", nextId, {
               shouldDirty: true,
               shouldValidate: true,
@@ -121,17 +111,13 @@ export const ItineraryGeneralInfo: React.FC<ItineraryGeneralInfoProps> = ({
               shouldValidate: true,
             });
           }}
-          noOptionsText="Không tìm thấy địa điểm"
-          loadingText="Đang tải danh sách địa điểm..."
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Địa điểm"
-              placeholder="Chọn địa điểm (không bắt buộc)..."
-              error={Boolean(errors.destination)}
-              helperText={errors.destination?.message}
-            />
-          )}
+          options={travelLocationsSelections}
+          isLoading={isLoadingLocations}
+          onRefetchOptions={onRefetchLocations}
+          label="Địa điểm"
+          placeholder="Chọn địa điểm (không bắt buộc)..."
+          error={Boolean(errors.destination)}
+          helperText={errors.destination?.message}
         />
 
         {/* Row 3: Đối tượng phù hợp */}

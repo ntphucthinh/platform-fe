@@ -39,6 +39,7 @@ const useTravelLocationSelection = (props?: Props) => {
     travelLocationsSelections,
     data: (query.data?.data ?? []) as ITravelLocationSelectionItem[],
     isLoading: query.isLoading,
+    refetch: query.refetch,
   };
 };
 

@@ -16,7 +16,6 @@ import {
   Chip,
   Collapse,
   IconButton,
-  Autocomplete,
   CircularProgress,
   Snackbar,
 } from "@mui/material";
@@ -54,6 +53,7 @@ import { TravelMemoryPhotoLightbox } from "@/components/pages/travel-memories/tr
 import { TravelMemoryDateConfirmDialog } from "@/components/pages/travel-memories/travelMemoryDateConfirmDialog";
 import { DEFAULT_NO_IMAGE } from "@/constants/homestay";
 import useTravelLocationSelection from "@/hooks/selections/useTravelLocationSelection";
+import { TravelLocationSelect } from "@/components/common/travelLocationSelect";
 
 export interface TravelMemoryFormProps {
   initialData?: ITravelMemory | null;
@@ -75,6 +75,7 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
     travelLocationsSelections,
     data: locationData,
     isLoading: isLoadingLocations,
+    refetch: refetchLocations,
   } = useTravelLocationSelection();
 
   // React Hook Form + Yup Resolver
@@ -712,23 +713,12 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
 
           {/* Destination / Location Selectbox - Full Width */}
           <Grid sx={{ width: "100%" }}>
-            <Autocomplete<
-              { label: string; value: string | number },
-              false,
-              false,
-              false
-            >
-              fullWidth
-              loading={isLoadingLocations}
-              options={travelLocationsSelections}
-              getOptionLabel={(option) => option.label || ""}
+            <TravelLocationSelect
+              required
               value={selectedLocation}
-              isOptionEqualToValue={(option, value) =>
-                Number(option.value) === Number(value.value)
-              }
-              onChange={(_, newValue) => {
-                const nextId = newValue ? Number(newValue.value) : null;
-                const nextLabel = newValue ? newValue.label : "";
+              onChange={(newVal) => {
+                const nextId = newVal ? Number(newVal.value) : null;
+                const nextLabel = newVal ? newVal.label : "";
                 setValue("locationId", nextId, {
                   shouldDirty: true,
                   shouldValidate: true,
@@ -738,20 +728,15 @@ export const TravelMemoryForm: React.FC<TravelMemoryFormProps> = ({
                   shouldValidate: true,
                 });
               }}
-              noOptionsText="Không tìm thấy địa điểm"
-              loadingText="Đang tải danh sách địa điểm..."
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  required
-                  label="Địa điểm"
-                  placeholder="Chọn địa điểm..."
-                  error={Boolean(errors.locationId || errors.destination)}
-                  helperText={
-                    errors.locationId?.message || errors.destination?.message
-                  }
-                />
-              )}
+              options={travelLocationsSelections}
+              isLoading={isLoadingLocations}
+              onRefetchOptions={refetchLocations}
+              label="Địa điểm"
+              placeholder="Chọn địa điểm..."
+              error={Boolean(errors.locationId || errors.destination)}
+              helperText={
+                errors.locationId?.message || errors.destination?.message
+              }
             />
           </Grid>
 

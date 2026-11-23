@@ -48,6 +48,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
     travelLocationsSelections,
     data: locationData,
     isLoading: isLoadingLocations,
+    refetch: refetchLocations,
   } = useTravelLocationSelection();
 
   // Hook selection travel themes
@@ -255,6 +256,7 @@ export const ItineraryForm: React.FC<ItineraryFormProps> = ({
         isLoadingLocations={isLoadingLocations}
         travelLocationsSelections={travelLocationsSelections}
         selectedLocation={selectedLocation}
+        onRefetchLocations={refetchLocations}
         isLoadingThemes={isLoadingThemes}
         displayedThemes={displayedThemes}
         themes={themes}
