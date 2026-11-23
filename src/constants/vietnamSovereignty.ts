@@ -9,27 +9,49 @@ export interface IVNMaritimeLabel {
   lat: number;
   lng: number;
   text: string;
-  styleType: "title" | "province";
+  subText?: string;
+  styleType: "title" | "province" | "subgroup";
+  minZoom?: number;
   tooltip?: string;
 }
 
 /**
- * 3 Nhãn danh xưng bản đồ chuẩn xác (như trên bản đồ hành chính Việt Nam)
+ * Nhãn danh xưng bản đồ chuẩn xác (như trên bản đồ hành chính Việt Nam)
  */
 export const VN_MARITIME_LABELS: IVNMaritimeLabel[] = [
   {
     id: "label-hoang-sa",
-    lat: 16.48,
-    lng: 111.75,
+    lat: 16.52,
+    lng: 111.92,
     text: "Quần đảo Hoàng Sa",
+    subText: "TP. Đà Nẵng - Việt Nam",
     styleType: "title",
     tooltip: "Quần đảo Hoàng Sa — Huyện Hoàng Sa, TP. Đà Nẵng, Việt Nam",
+  },
+  {
+    id: "label-hoang-sa-an-vinh",
+    lat: 16.92,
+    lng: 112.26,
+    text: "Nhóm đảo An Vĩnh",
+    styleType: "subgroup",
+    minZoom: 8,
+    tooltip: "Nhóm đảo An Vĩnh — Quần đảo Hoàng Sa, TP. Đà Nẵng, Việt Nam",
+  },
+  {
+    id: "label-hoang-sa-luoi-liem",
+    lat: 16.36,
+    lng: 111.64,
+    text: "Nhóm đảo Lưỡi Liềm",
+    styleType: "subgroup",
+    minZoom: 8,
+    tooltip: "Nhóm đảo Lưỡi Liềm — Quần đảo Hoàng Sa, TP. Đà Nẵng, Việt Nam",
   },
   {
     id: "label-truong-sa",
     lat: 9.75,
     lng: 113.15,
     text: "Quần đảo Trường Sa",
+    subText: "Tỉnh Khánh Hòa - Việt Nam",
     styleType: "title",
     tooltip: "Quần đảo Trường Sa — Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
   },
@@ -42,6 +64,65 @@ export const VN_MARITIME_LABELS: IVNMaritimeLabel[] = [
     tooltip: "Khu vực biển đảo thuộc Tỉnh Khánh Hòa, Việt Nam",
   },
 ];
+
+/**
+ * Lớp phủ mặt nước biển (Water Masking Overlay) đồng màu chuẩn với nước biển OpenStreetMap (#aad3df)
+ * Dùng để che phủ triệt để 100% các nhãn chữ Trung Quốc và đường biên/đường tàu phi pháp
+ * bị render sẵn trên các mảnh ảnh PNG của OpenStreetMap tại khu vực Hoàng Sa & Trường Sa.
+ */
+export const VN_OCEAN_MASK_GEOJSON: FeatureCollection<MultiPolygon> = {
+  type: "FeatureCollection",
+  features: [
+    {
+      type: "Feature",
+      properties: {
+        id: "MASK_HOANG_SA",
+        name: "Vùng biển Quần đảo Hoàng Sa",
+      },
+      geometry: {
+        type: "MultiPolygon",
+        coordinates: [
+          [
+            [
+              [110.75, 15.15],
+              [115.25, 15.15],
+              [115.25, 17.55],
+              [110.75, 17.55],
+              [110.75, 15.15],
+            ],
+          ],
+        ],
+      },
+    },
+    {
+      type: "Feature",
+      properties: {
+        id: "MASK_TRUONG_SA",
+        name: "Vùng biển Quần đảo Trường Sa",
+      },
+      geometry: {
+        type: "MultiPolygon",
+        coordinates: [
+          [
+            [
+              [111.15, 8.15],
+              [111.15, 11.95],
+              [114.0, 12.2],
+              [116.75, 11.95],
+              [117.25, 11.2],
+              [116.8, 9.8],
+              [116.1, 8.5],
+              [115.5, 7.55],
+              [114.2, 6.95],
+              [112.4, 7.15],
+              [111.15, 8.15],
+            ],
+          ],
+        ],
+      },
+    },
+  ],
+};
 
 /**
  * Ranh giới lãnh thổ vùng biển đảo Hoàng Sa & Trường Sa
@@ -659,13 +740,11 @@ export interface IVNIslandSpot {
   noteVi: string;
   noteEn?: string;
   archipelago: "HOANG_SA" | "TRUONG_SA";
+  minZoom?: number;
 }
 
 /**
- * 12 Thực thể địa lý trọng yếu tại Biển Đông
- * Chia thành 2 nhóm:
- * - Hoàng Sa (3 thực thể tiêu biểu: Đảo Hoàng Sa, Đảo Phú Lâm, Đảo Tri Tôn)
- * - Trường Sa (9 thực thể tiêu biểu: 6 thực thể Việt Nam kiểm soát + 3 thực thể TQ chiếm đóng trái phép)
+ * Các thực thể địa lý trọng yếu tại Quần đảo Hoàng Sa & Quần đảo Trường Sa
  */
 export const VN_SOVEREIGNTY_SPOTS: IVNIslandSpot[] = [
   // --- QUẦN ĐẢO HOÀNG SA (TP. ĐÀ NẴNG) ---
@@ -677,8 +756,9 @@ export const VN_SOVEREIGNTY_SPOTS: IVNIslandSpot[] = [
     nameEn: "Pattle Island",
     occupied: true,
     archipelago: "HOANG_SA",
+    minZoom: 7,
     adminUnit: "Huyện Hoàng Sa, TP. Đà Nẵng, Việt Nam",
-    noteVi: "Thuộc cụm đảo Lưỡi Liềm, Hoàng Sa. Trung Quốc chiếm đóng trái phép từ năm 1974.",
+    noteVi: "Thuộc nhóm đảo Lưỡi Liềm, Hoàng Sa. Trung Quốc chiếm đóng trái phép từ năm 1974.",
     noteEn: "Paracel Islands. Under illegal Chinese occupation since 1974.",
   },
   {
@@ -689,8 +769,9 @@ export const VN_SOVEREIGNTY_SPOTS: IVNIslandSpot[] = [
     nameEn: "Woody Island",
     occupied: true,
     archipelago: "HOANG_SA",
+    minZoom: 7,
     adminUnit: "Huyện Hoàng Sa, TP. Đà Nẵng, Việt Nam",
-    noteVi: "Thuộc cụm đảo An Vĩnh, Hoàng Sa. Trung Quốc chiếm đóng trái phép từ năm 1956.",
+    noteVi: "Đảo lớn nhất thuộc nhóm đảo An Vĩnh, Hoàng Sa. Trung Quốc chiếm đóng trái phép từ năm 1956.",
     noteEn: "Paracel Islands. Under illegal Chinese occupation since 1956.",
   },
   {
@@ -701,9 +782,127 @@ export const VN_SOVEREIGNTY_SPOTS: IVNIslandSpot[] = [
     nameEn: "Triton Island",
     occupied: true,
     archipelago: "HOANG_SA",
+    minZoom: 7,
     adminUnit: "Huyện Hoàng Sa, TP. Đà Nẵng, Việt Nam",
-    noteVi: "Đảo cực nam của Quần đảo Hoàng Sa. Trung Quốc chiếm đóng trái phép từ năm 1974.",
-    noteEn: "Southernmost island of Paracel Islands. Under illegal Chinese occupation since 1974.",
+    noteVi: "Đảo cực tây nam của Quần đảo Hoàng Sa. Trung Quốc chiếm đóng trái phép từ năm 1974.",
+    noteEn: "Southwesternmost island of Paracel Islands. Under illegal Chinese occupation since 1974.",
+  },
+  {
+    id: "hs-lincoln",
+    lat: 16.6667,
+    lng: 112.7333,
+    nameVi: "Đảo Linh Côn",
+    nameEn: "Lincoln Island",
+    occupied: true,
+    archipelago: "HOANG_SA",
+    minZoom: 7,
+    adminUnit: "Huyện Hoàng Sa, TP. Đà Nẵng, Việt Nam",
+    noteVi: "Đảo cực đông của Quần đảo Hoàng Sa, thuộc nhóm đảo An Vĩnh.",
+    noteEn: "Easternmost island of Paracel Islands, An Vinh group.",
+  },
+  {
+    id: "hs-duncan",
+    lat: 16.45,
+    lng: 111.7083,
+    nameVi: "Đảo Quang Hòa",
+    nameEn: "Duncan Island",
+    occupied: true,
+    archipelago: "HOANG_SA",
+    minZoom: 8,
+    adminUnit: "Huyện Hoàng Sa, TP. Đà Nẵng, Việt Nam",
+    noteVi: "Đảo lớn thuộc nhóm đảo Lưỡi Liềm, Quần đảo Hoàng Sa.",
+    noteEn: "Crescent Group, Paracel Islands.",
+  },
+  {
+    id: "hs-drummond",
+    lat: 16.4633,
+    lng: 111.7433,
+    nameVi: "Đảo Duy Mộng",
+    nameEn: "Drummond Island",
+    occupied: true,
+    archipelago: "HOANG_SA",
+    minZoom: 9,
+    adminUnit: "Huyện Hoàng Sa, TP. Đà Nẵng, Việt Nam",
+    noteVi: "Thuộc nhóm đảo Lưỡi Liềm, Quần đảo Hoàng Sa.",
+    noteEn: "Crescent Group, Paracel Islands.",
+  },
+  {
+    id: "hs-robert",
+    lat: 16.505,
+    lng: 111.5867,
+    nameVi: "Đảo Hữu Nhật",
+    nameEn: "Robert Island",
+    occupied: true,
+    archipelago: "HOANG_SA",
+    minZoom: 9,
+    adminUnit: "Huyện Hoàng Sa, TP. Đà Nẵng, Việt Nam",
+    noteVi: "Thuộc nhóm đảo Lưỡi Liềm, nằm gần đảo Hoàng Sa.",
+    noteEn: "Crescent Group, Paracel Islands.",
+  },
+  {
+    id: "hs-money",
+    lat: 16.4467,
+    lng: 111.505,
+    nameVi: "Đảo Quang Ảnh",
+    nameEn: "Money Island",
+    occupied: true,
+    archipelago: "HOANG_SA",
+    minZoom: 8,
+    adminUnit: "Huyện Hoàng Sa, TP. Đà Nẵng, Việt Nam",
+    noteVi: "Nằm ở phía tây nhóm đảo Lưỡi Liềm, Quần đảo Hoàng Sa.",
+    noteEn: "Western Crescent Group, Paracel Islands.",
+  },
+  {
+    id: "hs-passu-keah",
+    lat: 16.0583,
+    lng: 111.7667,
+    nameVi: "Đảo Bạch Quy",
+    nameEn: "Passu Keah",
+    occupied: true,
+    archipelago: "HOANG_SA",
+    minZoom: 8,
+    adminUnit: "Huyện Hoàng Sa, TP. Đà Nẵng, Việt Nam",
+    noteVi: "Đảo cát san hô nằm ở phía nam nhóm đảo Lưỡi Liềm, Hoàng Sa.",
+    noteEn: "Southern Paracel Islands.",
+  },
+  {
+    id: "hs-tree",
+    lat: 16.98,
+    lng: 112.2717,
+    nameVi: "Đảo Cây",
+    nameEn: "Tree Island",
+    occupied: true,
+    archipelago: "HOANG_SA",
+    minZoom: 8,
+    adminUnit: "Huyện Hoàng Sa, TP. Đà Nẵng, Việt Nam",
+    noteVi: "Thuộc cụm Bắc Đảo, nhóm đảo An Vĩnh, Quần đảo Hoàng Sa.",
+    noteEn: "Amphitrite Group, Paracel Islands.",
+  },
+  {
+    id: "hs-bombay-reef",
+    lat: 16.04,
+    lng: 112.52,
+    nameVi: "Đá Bông Bay",
+    nameEn: "Bombay Reef",
+    occupied: true,
+    archipelago: "HOANG_SA",
+    minZoom: 8,
+    adminUnit: "Huyện Hoàng Sa, TP. Đà Nẵng, Việt Nam",
+    noteVi: "Rạn san hô vòng lớn ở phía đông nam Quần đảo Hoàng Sa.",
+    noteEn: "Southeastern atoll of Paracel Islands.",
+  },
+  {
+    id: "hs-north-reef",
+    lat: 17.0833,
+    lng: 111.5,
+    nameVi: "Đá Bắc",
+    nameEn: "North Reef",
+    occupied: true,
+    archipelago: "HOANG_SA",
+    minZoom: 8,
+    adminUnit: "Huyện Hoàng Sa, TP. Đà Nẵng, Việt Nam",
+    noteVi: "Rạn san hô vòng ở cực bắc Quần đảo Hoàng Sa.",
+    noteEn: "Northernmost atoll of Paracel Islands.",
   },
 
   // --- QUẦN ĐẢO TRƯỜNG SA (TỈNH KHÁNH HÒA) ---
@@ -711,10 +910,11 @@ export const VN_SOVEREIGNTY_SPOTS: IVNIslandSpot[] = [
     id: "ts-spratly",
     lat: 8.6444,
     lng: 111.9194,
-    nameVi: "Đảo Trường Sa (Trường Sa Lớn)",
+    nameVi: "Đảo Trường Sa Lớn",
     nameEn: "Spratly Island",
     occupied: false,
     archipelago: "TRUONG_SA",
+    minZoom: 7,
     adminUnit: "Thị trấn Trường Sa, Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
     noteVi: "Trung tâm hành chính của huyện đảo Trường Sa. Việt Nam quản lý và bảo vệ vững chắc.",
     noteEn: "Administrative center of Truong Sa district, Vietnam-administered.",
@@ -727,6 +927,7 @@ export const VN_SOVEREIGNTY_SPOTS: IVNIslandSpot[] = [
     nameEn: "Southwest Cay",
     occupied: false,
     archipelago: "TRUONG_SA",
+    minZoom: 7,
     adminUnit: "Xã Song Tử Tây, Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
     noteVi: "Đảo tiền tiêu phía bắc Quần đảo Trường Sa. Việt Nam quản lý với trạm hải đăng và dân cư.",
     noteEn: "Northern outpost of Spratly Islands, Vietnam-administered.",
@@ -739,9 +940,23 @@ export const VN_SOVEREIGNTY_SPOTS: IVNIslandSpot[] = [
     nameEn: "Sin Cowe Island",
     occupied: false,
     archipelago: "TRUONG_SA",
+    minZoom: 7,
     adminUnit: "Xã Sinh Tồn, Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
     noteVi: "Thuộc cụm đảo Sinh Tồn, Trường Sa. Việt Nam quản lý và duy trì dân cư, trường học.",
     noteEn: "Sin Cowe island group, Vietnam-administered.",
+  },
+  {
+    id: "ts-sin-cowe-east",
+    lat: 9.9036,
+    lng: 114.5636,
+    nameVi: "Đảo Sinh Tồn Đông",
+    nameEn: "Grierson Reef",
+    occupied: false,
+    archipelago: "TRUONG_SA",
+    minZoom: 8,
+    adminUnit: "Xã Sinh Tồn, Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
+    noteVi: "Thuộc cụm Sinh Tồn, Quần đảo Trường Sa. Việt Nam quản lý và bảo vệ vững chắc.",
+    noteEn: "Sin Cowe group, Spratly Islands, Vietnam-administered.",
   },
   {
     id: "ts-namyit",
@@ -751,6 +966,7 @@ export const VN_SOVEREIGNTY_SPOTS: IVNIslandSpot[] = [
     nameEn: "Namyit Island",
     occupied: false,
     archipelago: "TRUONG_SA",
+    minZoom: 7,
     adminUnit: "Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
     noteVi: "Đảo có thảm thực vật phong phú và cây phong ba cổ thụ. Việt Nam bảo vệ vững chắc.",
     noteEn: "Spratly Islands, Vietnam-administered.",
@@ -763,6 +979,7 @@ export const VN_SOVEREIGNTY_SPOTS: IVNIslandSpot[] = [
     nameEn: "Sand Cay",
     occupied: false,
     archipelago: "TRUONG_SA",
+    minZoom: 7,
     adminUnit: "Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
     noteVi: "Đảo rợp bóng cây xanh và công viên Đại tướng Võ Nguyên Giáp. Việt Nam quản lý.",
     noteEn: "Spratly Islands, Vietnam-administered.",
@@ -775,9 +992,114 @@ export const VN_SOVEREIGNTY_SPOTS: IVNIslandSpot[] = [
     nameEn: "Pearson Reef",
     occupied: false,
     archipelago: "TRUONG_SA",
+    minZoom: 7,
     adminUnit: "Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
     noteVi: "Đặt theo tên Anh hùng LLVTND Nguyễn Phan Vinh (thuyền trưởng tàu không số). Việt Nam quản lý.",
     noteEn: "Spratly Islands, Vietnam-administered.",
+  },
+  {
+    id: "ts-amboyna-cay",
+    lat: 7.8906,
+    lng: 112.9214,
+    nameVi: "Đảo An Bang",
+    nameEn: "Amboyna Cay",
+    occupied: false,
+    archipelago: "TRUONG_SA",
+    minZoom: 7,
+    adminUnit: "Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
+    noteVi: "Đảo tiền tiêu phía nam Quần đảo Trường Sa. Việt Nam quản lý với ngọn hải đăng An Bang.",
+    noteEn: "Southern outpost of Spratly Islands, Vietnam-administered.",
+  },
+  {
+    id: "ts-central-reef",
+    lat: 8.935,
+    lng: 112.3492,
+    nameVi: "Đảo Trường Sa Đông",
+    nameEn: "Central London Reef",
+    occupied: false,
+    archipelago: "TRUONG_SA",
+    minZoom: 8,
+    adminUnit: "Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
+    noteVi: "Thuộc cụm Trường Sa, Việt Nam quản lý và bảo vệ vững chắc.",
+    noteEn: "London Reefs, Spratly Islands, Vietnam-administered.",
+  },
+  {
+    id: "ts-west-reef",
+    lat: 8.855,
+    lng: 112.2267,
+    nameVi: "Đá Tây",
+    nameEn: "West London Reef",
+    occupied: false,
+    archipelago: "TRUONG_SA",
+    minZoom: 8,
+    adminUnit: "Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
+    noteVi: "Điểm đảo có âu tàu lớn hỗ trợ ngư dân đánh bắt xa bờ. Việt Nam quản lý.",
+    noteEn: "West London Reef, Spratly Islands, Vietnam-administered.",
+  },
+  {
+    id: "ts-ladd-reef",
+    lat: 8.6667,
+    lng: 111.6667,
+    nameVi: "Đá Lát",
+    nameEn: "Ladd Reef",
+    occupied: false,
+    archipelago: "TRUONG_SA",
+    minZoom: 8,
+    adminUnit: "Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
+    noteVi: "Điểm đảo cực tây của Quần đảo Trường Sa, có hải đăng Đá Lát. Việt Nam quản lý.",
+    noteEn: "Westernmost reef of Spratly Islands, Vietnam-administered.",
+  },
+  {
+    id: "ts-collins-reef",
+    lat: 9.7717,
+    lng: 114.2567,
+    nameVi: "Đá Cô Lin",
+    nameEn: "Collins Reef",
+    occupied: false,
+    archipelago: "TRUONG_SA",
+    minZoom: 8,
+    adminUnit: "Xã Sinh Tồn, Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
+    noteVi: "Điểm đảo kiên cường thuộc cụm Sinh Tồn. Việt Nam quản lý và bảo vệ vững chắc.",
+    noteEn: "Union Banks, Spratly Islands, Vietnam-administered.",
+  },
+  {
+    id: "ts-lansdowne-reef",
+    lat: 9.7783,
+    lng: 114.37,
+    nameVi: "Đá Len Đao",
+    nameEn: "Lansdowne Reef",
+    occupied: false,
+    archipelago: "TRUONG_SA",
+    minZoom: 8,
+    adminUnit: "Xã Sinh Tồn, Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
+    noteVi: "Thuộc cụm Sinh Tồn, Quần đảo Trường Sa. Việt Nam quản lý và bảo vệ vững chắc.",
+    noteEn: "Union Banks, Spratly Islands, Vietnam-administered.",
+  },
+  {
+    id: "ts-pigeon-reef",
+    lat: 8.85,
+    lng: 114.65,
+    nameVi: "Đá Tiên Nữ",
+    nameEn: "Tennent Reef",
+    occupied: false,
+    archipelago: "TRUONG_SA",
+    minZoom: 8,
+    adminUnit: "Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
+    noteVi: "Điểm đảo đón ánh bình minh đầu tiên của Tổ quốc trên Biển Đông. Việt Nam quản lý.",
+    noteEn: "Eastern outpost of Spratly Islands, Vietnam-administered.",
+  },
+  {
+    id: "ts-barque-canada",
+    lat: 8.1833,
+    lng: 113.3,
+    nameVi: "Đá Thuyền Chài",
+    nameEn: "Barque Canada Reef",
+    occupied: false,
+    archipelago: "TRUONG_SA",
+    minZoom: 8,
+    adminUnit: "Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
+    noteVi: "Bãi san hô lớn ở phía nam Quần đảo Trường Sa. Việt Nam quản lý và bảo vệ vững chắc.",
+    noteEn: "Barque Canada Reef, Spratly Islands, Vietnam-administered.",
   },
   {
     id: "ts-fiery-cross",
@@ -787,6 +1109,7 @@ export const VN_SOVEREIGNTY_SPOTS: IVNIslandSpot[] = [
     nameEn: "Fiery Cross Reef",
     occupied: true,
     archipelago: "TRUONG_SA",
+    minZoom: 7,
     adminUnit: "Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
     noteVi: "Rạn san hô thuộc Trường Sa. Trung Quốc chiếm đóng trái phép từ năm 1988 và bồi đắp nhân tạo phi pháp.",
     noteEn: "Spratly Islands. Under illegal Chinese occupation since 1988.",
@@ -799,6 +1122,7 @@ export const VN_SOVEREIGNTY_SPOTS: IVNIslandSpot[] = [
     nameEn: "Mischief Reef",
     occupied: true,
     archipelago: "TRUONG_SA",
+    minZoom: 7,
     adminUnit: "Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
     noteVi: "Rạn san hô vòng thuộc Trường Sa. Trung Quốc chiếm đóng trái phép từ năm 1995.",
     noteEn: "Spratly Islands. Under illegal Chinese occupation since 1995.",
@@ -811,9 +1135,23 @@ export const VN_SOVEREIGNTY_SPOTS: IVNIslandSpot[] = [
     nameEn: "Subi Reef",
     occupied: true,
     archipelago: "TRUONG_SA",
+    minZoom: 7,
     adminUnit: "Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
     noteVi: "Rạn san hô vòng thuộc Trường Sa. Trung Quốc chiếm đóng trái phép từ năm 1988.",
     noteEn: "Spratly Islands. Under illegal Chinese occupation since 1988.",
+  },
+  {
+    id: "ts-johnson-south",
+    lat: 9.715,
+    lng: 114.2867,
+    nameVi: "Đá Gạc Ma",
+    nameEn: "Johnson South Reef",
+    occupied: true,
+    archipelago: "TRUONG_SA",
+    minZoom: 8,
+    adminUnit: "Xã Sinh Tồn, Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam",
+    noteVi: "Nơi 64 chiến sĩ Hải quân Nhân dân Việt Nam anh dũng hy sinh bảo vệ chủ quyền ngày 14/3/1988.",
+    noteEn: "Union Banks, Spratly Islands. Occupied by China since March 14, 1988.",
   },
 ];
 

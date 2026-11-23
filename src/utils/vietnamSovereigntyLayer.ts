@@ -2,6 +2,7 @@ import L from "leaflet";
 import {
   VN_MARITIME_GEOJSON,
   VN_MARITIME_LABELS,
+  VN_OCEAN_MASK_GEOJSON,
   VN_SOVEREIGNTY_SPOTS,
 } from "@/constants/vietnamSovereignty";
 
@@ -10,28 +11,110 @@ export interface VietnamSovereigntyLayerHandle {
   cleanup: () => void;
 }
 
+/** Màu nước biển tiêu chuẩn của OpenStreetMap Carto */
+const OSM_OCEAN_WATER_HEX = "#aad3df";
+/** Màu đất đảo tiêu chuẩn của OpenStreetMap Carto */
+const OSM_ISLAND_LAND_HEX = "#f2efe9";
+
+interface ZoomAwareMarkerEntry {
+  marker: L.Marker;
+  minZoom: number;
+}
+
 /**
  * Khởi tạo Layer Chủ quyền Biển đảo Việt Nam (Hoàng Sa & Trường Sa)
- * - Vẽ ranh giới lãnh thổ vùng biển đảo (VN_MARITIME_GEOJSON)
- * - Hiển thị nhãn danh xưng chuẩn xác (VN_MARITIME_LABELS)
- * - Hiển thị 12 thực thể địa lý trọng yếu với nhãn chủ quyền song ngữ (VN_SOVEREIGNTY_SPOTS)
- * - Zoom-aware: hiển thị tối ưu theo mức zoom
+ * - Lớp phủ mặt nước biển (Water Masking Overlay #aad3df) xóa sạch 100% chữ Trung Quốc & đường biên phi pháp trên tile OSM
+ * - Vẽ thềm san hô và hình thể đảo tự nhiên tại tọa độ thực tế
+ * - Vẽ ranh giới lãnh thổ vùng biển đảo Việt Nam (VN_MARITIME_GEOJSON)
+ * - Hiển thị nhãn danh xưng chủ quyền chuẩn xác (VN_MARITIME_LABELS)
+ * - Hiển thị các thực thể đảo/đá kèm nhãn tên tiếng Việt trực tiếp trên bản đồ (VN_SOVEREIGNTY_SPOTS)
  */
 export function createVietnamSovereigntyLayer(
   map: L.Map,
 ): VietnamSovereigntyLayerHandle {
   const layerGroup = L.layerGroup();
-  const detailMarkers: L.Marker[] = [];
+  const zoomAwareMarkers: ZoomAwareMarkerEntry[] = [];
+  const reefLayers: L.Circle[] = [];
 
-  // 1. Vẽ ranh giới lãnh hải & vùng biển đảo Hoàng Sa & Trường Sa
+  // Tạo custom pane nằm ngay trên tilePane (z-index 200) và dưới overlayPane (z-index 400)
+  const maskPaneName = "vnOceanMaskPane";
+  let maskPane = map.getPane(maskPaneName);
+  if (!maskPane) {
+    maskPane = map.createPane(maskPaneName);
+    maskPane.style.zIndex = "250";
+    maskPane.style.pointerEvents = "none";
+  }
+
+  // 1. Lớp phủ mặt nước biển (Water Masking Overlay) che triệt để chữ Trung Quốc trên tile PNG
+  try {
+    L.geoJSON(VN_OCEAN_MASK_GEOJSON, {
+      pane: maskPaneName,
+      style: {
+        color: OSM_OCEAN_WATER_HEX,
+        weight: 6,
+        opacity: 1,
+        fillColor: OSM_OCEAN_WATER_HEX,
+        fillOpacity: 1,
+      },
+      interactive: false,
+    }).addTo(layerGroup);
+
+    // Phủ bổ sung theo đúng biên đa giác Hoàng Sa & Trường Sa để khử hoàn toàn viền xám của OSM
+    L.geoJSON(VN_MARITIME_GEOJSON, {
+      pane: maskPaneName,
+      style: {
+        color: OSM_OCEAN_WATER_HEX,
+        weight: 10,
+        opacity: 1,
+        fillColor: OSM_OCEAN_WATER_HEX,
+        fillOpacity: 1,
+      },
+      interactive: false,
+    }).addTo(layerGroup);
+  } catch (err) {
+    console.warn("Không thể khởi tạo lớp phủ mặt nước VN_OCEAN_MASK_GEOJSON:", err);
+  }
+
+  // 1.5. Vẽ thềm san hô & thực thể đảo tự nhiên trên nền nước biển đã làm sạch
+  VN_SOVEREIGNTY_SPOTS.forEach((spot) => {
+    const isMajorIsland = (spot.minZoom ?? 7) <= 7;
+    // Thềm san hô nông quanh đảo
+    const reefCircle = L.circle([spot.lat, spot.lng], {
+      pane: maskPaneName,
+      radius: isMajorIsland ? 3200 : 2100,
+      color: "#96c4d4",
+      weight: 1,
+      opacity: 0.7,
+      fillColor: "#b7dce8",
+      fillOpacity: 0.65,
+      interactive: false,
+    });
+    // Phần nổi thực thể đảo
+    const landCircle = L.circle([spot.lat, spot.lng], {
+      pane: maskPaneName,
+      radius: isMajorIsland ? 1250 : 780,
+      color: "#d4cec3",
+      weight: 1,
+      opacity: 0.9,
+      fillColor: OSM_ISLAND_LAND_HEX,
+      fillOpacity: 0.95,
+      interactive: false,
+    });
+
+    reefLayers.push(reefCircle, landCircle);
+    reefCircle.addTo(layerGroup);
+    landCircle.addTo(layerGroup);
+  });
+
+  // 2. Vẽ ranh giới lãnh hải & vùng biển đảo Hoàng Sa & Trường Sa của Việt Nam
   try {
     L.geoJSON(VN_MARITIME_GEOJSON, {
       style: {
         color: "#2563EB",
-        weight: 1.5,
-        opacity: 0.75,
+        weight: 1.6,
+        opacity: 0.78,
         fillColor: "#60A5FA",
-        fillOpacity: 0.03,
+        fillOpacity: 0.04,
         dashArray: "6, 6",
       },
       interactive: false,
@@ -40,50 +123,76 @@ export function createVietnamSovereigntyLayer(
     console.warn("Không thể vẽ ranh giới VN_MARITIME_GEOJSON:", err);
   }
 
-  // 2. Tạo các nhãn danh xưng chủ quyền biển đảo (VN_MARITIME_LABELS)
+  // 3. Tạo các nhãn danh xưng chủ quyền biển đảo (VN_MARITIME_LABELS)
   VN_MARITIME_LABELS.forEach((label) => {
     const isTitle = label.styleType === "title";
+    const isSubgroup = label.styleType === "subgroup";
 
     const labelHtml = `
       <div style="
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         width: 100%;
         height: 100%;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        font-size: ${isTitle ? "12px" : "11px"};
-        font-weight: ${isTitle ? "600" : "500"};
-        color: #000000;
-        text-shadow:
-          -1px -1px 0 #ffffff,
-           1px -1px 0 #ffffff,
-          -1px  1px 0 #ffffff,
-           1px  1px 0 #ffffff,
-           0px  0px 3px #ffffff,
-           0px  0px 4px #ffffff;
+        font-family: system-ui, -apple-system, sans-serif;
+        text-align: center;
         white-space: nowrap;
         user-select: none;
         cursor: pointer;
         pointer-events: auto;
-        letter-spacing: 0.2px;
-        line-height: 1.2;
       ">
-        ${label.text}
+        <span style="
+          font-size: ${isTitle ? "12.5px" : isSubgroup ? "10.5px" : "11px"};
+          font-weight: ${isTitle ? "700" : "600"};
+          font-style: ${isSubgroup ? "italic" : "normal"};
+          color: ${isTitle ? "#0F172A" : "#1E3A8A"};
+          text-shadow:
+            -1.5px -1.5px 0 #ffffff,
+             1.5px -1.5px 0 #ffffff,
+            -1.5px  1.5px 0 #ffffff,
+             1.5px  1.5px 0 #ffffff,
+             0px    0px   4px #ffffff,
+             0px    0px   6px #ffffff;
+          letter-spacing: ${isTitle ? "0.3px" : "0.15px"};
+          line-height: 1.25;
+        ">
+          ${label.text}
+        </span>
+        ${
+          label.subText
+            ? `<span style="
+                font-size: 10px;
+                font-weight: 600;
+                color: #1D4ED8;
+                text-shadow:
+                  -1px -1px 0 #ffffff,
+                   1px -1px 0 #ffffff,
+                  -1px  1px 0 #ffffff,
+                   1px  1px 0 #ffffff,
+                   0px  0px 3px #ffffff;
+                line-height: 1.2;
+                margin-top: 1px;
+              ">
+                (${label.subText})
+              </span>`
+            : ""
+        }
       </div>
     `;
 
     const labelIcon = L.divIcon({
       className: "",
       html: labelHtml,
-      iconSize: isTitle ? [140, 20] : [100, 18],
-      iconAnchor: isTitle ? [70, 10] : [50, 9],
+      iconSize: isTitle ? [180, 34] : [130, 20],
+      iconAnchor: isTitle ? [90, 17] : [65, 10],
     });
 
     const labelMarker = L.marker([label.lat, label.lng], {
       icon: labelIcon,
       interactive: true,
-      zIndexOffset: isTitle ? 500 : 400,
+      zIndexOffset: isTitle ? 500 : 420,
     });
 
     if (label.tooltip) {
@@ -94,12 +203,13 @@ export function createVietnamSovereigntyLayer(
       });
     }
 
-    const adminUnit =
-      label.id === "label-hoang-sa"
-        ? "Huyện Hoàng Sa, TP. Đà Nẵng, Việt Nam"
-        : label.id === "label-truong-sa"
-        ? "Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam"
-        : "Khu vực biển đảo Tỉnh Khánh Hòa, Việt Nam";
+    const isHoangSa = label.id.includes("hoang-sa");
+    const isTruongSa = label.id.includes("truong-sa");
+    const adminUnit = isHoangSa
+      ? "Huyện Hoàng Sa, TP. Đà Nẵng, Việt Nam"
+      : isTruongSa
+      ? "Huyện Trường Sa, Tỉnh Khánh Hòa, Việt Nam"
+      : "Khu vực biển đảo Tỉnh Khánh Hòa, Việt Nam";
 
     const popupHtml = `
       <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 220px; padding: 4px 2px;">
@@ -111,11 +221,11 @@ export function createVietnamSovereigntyLayer(
             }</div>
             <div style="font-size: 11px; color: #64748B;">
               ${
-                label.id === "label-hoang-sa"
-                  ? "Paracel Islands"
-                  : label.id === "label-truong-sa"
-                  ? "Spratly Islands"
-                  : "Khanh Hoa Province"
+                isHoangSa
+                  ? "Paracel Islands — Vietnam"
+                  : isTruongSa
+                  ? "Spratly Islands — Vietnam"
+                  : "Khanh Hoa Province — Vietnam"
               }
             </div>
           </div>
@@ -123,7 +233,7 @@ export function createVietnamSovereigntyLayer(
         <div style="font-size: 11.5px; color: #1E293B; font-weight: 600; margin-bottom: 4px;">
           ${adminUnit}
         </div>
-        <div style="font-size: 11px; color: #475569; line-height: 1.45; background: #F8FAFC; padding: 6px 8px; border-radius: 6px; border-left: 3px solid #DC2626;">
+        <div style="font-size: 11px; color: #475569; line-height: 1.45; background: #F8FAFC; padding: 6px 8px; border-radius: 6px; border: 1px solid #FECACA;">
           Chủ quyền lịch sử và pháp lý không thể tranh cãi của Nước Cộng hòa Xã hội Chủ nghĩa Việt Nam.
         </div>
       </div>
@@ -136,72 +246,104 @@ export function createVietnamSovereigntyLayer(
     });
 
     labelMarker.on("click", () => {
-      map.flyTo([label.lat, label.lng], 7, {
-        duration: 1.2,
+      map.flyTo([label.lat, label.lng], Math.max(map.getZoom(), 7), {
+        duration: 1.1,
         easeLinearity: 0.25,
       });
     });
 
+    if (label.minZoom && label.minZoom > 1) {
+      zoomAwareMarkers.push({
+        marker: labelMarker,
+        minZoom: label.minZoom,
+      });
+    }
+
     labelMarker.addTo(layerGroup);
   });
 
-  // 3. Tạo 12 Marker cho các thực thể đảo & rạn san hô trọng yếu (VN_SOVEREIGNTY_SPOTS)
+  // 4. Tạo Marker kèm nhãn tên tiếng Việt hiển thị trực tiếp cho các đảo & rạn san hô (VN_SOVEREIGNTY_SPOTS)
   VN_SOVEREIGNTY_SPOTS.forEach((spot) => {
     const isOccupied = spot.occupied;
     const dotColor = isOccupied ? "#DC2626" : "#059669";
     const dotBg = isOccupied
-      ? "rgba(220, 38, 38, 0.15)"
-      : "rgba(5, 150, 105, 0.15)";
+      ? "rgba(220, 38, 38, 0.16)"
+      : "rgba(5, 150, 105, 0.16)";
 
     const spotHtml = `
       <div style="
-        position: relative;
-        width: 14px;
-        height: 14px;
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        justify-content: center;
         cursor: pointer;
         pointer-events: auto;
+        user-select: none;
+        transform: translate(-9px, -9px);
       ">
-        <span style="
-          position: absolute;
+        <div style="
+          position: relative;
           width: 18px;
           height: 18px;
-          border-radius: 50%;
-          background: ${dotBg};
-        "></span>
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <span style="
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: ${dotBg};
+          "></span>
+          <span style="
+            position: relative;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: ${dotColor};
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            border: 1.5px solid #FFFFFF;
+          "></span>
+        </div>
         <span style="
-          position: relative;
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: ${dotColor};
-          box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-          border: 1.5px solid #FFFFFF;
-        "></span>
+          margin-left: 4px;
+          font-family: system-ui, -apple-system, sans-serif;
+          font-size: 11px;
+          font-weight: 600;
+          color: #172033;
+          text-shadow:
+            -1.2px -1.2px 0 #FFFFFF,
+             1.2px -1.2px 0 #FFFFFF,
+            -1.2px  1.2px 0 #FFFFFF,
+             1.2px  1.2px 0 #FFFFFF,
+             0px    0px   4px #FFFFFF;
+          white-space: nowrap;
+          line-height: 1.2;
+        ">
+          ${spot.nameVi}
+        </span>
       </div>
     `;
 
     const spotIcon = L.divIcon({
       className: "",
       html: spotHtml,
-      iconSize: [18, 18],
-      iconAnchor: [9, 9],
+      iconSize: [140, 20],
+      iconAnchor: [0, 0],
     });
 
     const spotMarker = L.marker([spot.lat, spot.lng], {
       icon: spotIcon,
       interactive: true,
-      zIndexOffset: 300,
+      zIndexOffset: 320,
     });
 
     const statusBadge = isOccupied
       ? `<span style="display: inline-block; background: rgba(239,68,68,0.12); color: #DC2626; border: 1px solid rgba(220,38,38,0.25); padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">
-           Trung Quốc chiếm đóng trái phép · Vietnam sovereignty disputed
+           Trung Quốc chiếm đóng trái phép · Vietnam sovereignty
          </span>`
       : `<span style="display: inline-block; background: rgba(16,185,129,0.12); color: #059669; border: 1px solid rgba(5,150,105,0.25); padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">
-           Việt Nam kiểm soát · Vietnam-administered
+           Việt Nam quản lý &amp; bảo vệ · Vietnam-administered
          </span>`;
 
     const popupContent = `
@@ -233,32 +375,33 @@ export function createVietnamSovereigntyLayer(
       autoPan: true,
     });
 
-    spotMarker.bindTooltip(spot.nameVi, {
+    spotMarker.bindTooltip(`${spot.nameVi} (${spot.adminUnit})`, {
       direction: "top",
-      offset: [0, -8],
+      offset: [0, -10],
       className: "vn-sovereignty-tooltip",
       opacity: 0.95,
     });
 
-    detailMarkers.push(spotMarker);
+    zoomAwareMarkers.push({
+      marker: spotMarker,
+      minZoom: spot.minZoom ?? 7,
+    });
     spotMarker.addTo(layerGroup);
   });
 
-  // 4. Zoom-aware listener: chỉ hiển thị chi tiết 12 đảo khi zoom >= 7
+  // 5. Zoom-aware listener: hiển thị phân tầng nhãn đảo theo mức zoom để bản đồ luôn thoáng và rõ
   const updateVisibility = () => {
     const currentZoom = map.getZoom();
-    const showDetails = currentZoom >= 7;
 
-    detailMarkers.forEach((marker) => {
+    zoomAwareMarkers.forEach(({ marker, minZoom }) => {
       const el = marker.getElement();
       if (el) {
-        el.style.display = showDetails ? "" : "none";
+        el.style.display = currentZoom >= minZoom ? "" : "none";
       }
     });
   };
 
   map.on("zoomend", updateVisibility);
-  // Khởi tạo trạng thái ban đầu
   setTimeout(updateVisibility, 50);
 
   return {
