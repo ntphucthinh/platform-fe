@@ -37,11 +37,11 @@ interface PlatformBrandLogoProps {
 const PlatformBrandLogo: React.FC<PlatformBrandLogoProps> = ({
   size = "medium",
 }) => {
-  const iconSize = size === "large" ? { xs: 36, sm: 40 } : { xs: 34, sm: 36 };
+  const iconSize = size === "large" ? { xs: 34, sm: 38, md: 40 } : { xs: 28, sm: 36 };
   const fontSize =
     size === "large"
-      ? { xs: "1.45rem", sm: "1.65rem" }
-      : { xs: "1.35rem", sm: "1.5rem" };
+      ? { xs: "1.35rem", sm: "1.5rem", md: "1.65rem" }
+      : { xs: "1.2rem", sm: "1.5rem" };
 
   return (
     <Box
@@ -92,9 +92,8 @@ export const Login: React.FC = () => {
   const [forgotPasswordNotice, setForgotPasswordNotice] = useState(false);
 
   // Extract return path if redirected from AdminAuthGuard
-  const stateFrom = (
-    location.state as { from?: Location | string } | null
-  )?.from;
+  const stateFrom = (location.state as { from?: Location | string } | null)
+    ?.from;
   const redirectPath = stateFrom
     ? typeof stateFrom === "string"
       ? stateFrom
@@ -155,7 +154,7 @@ export const Login: React.FC = () => {
       component="main"
       sx={{
         position: "relative",
-        minHeight: "100vh",
+        minHeight: { xs: "100dvh", md: "100vh" },
         width: "100%",
         overflowX: "hidden",
         display: "flex",
@@ -163,7 +162,11 @@ export const Login: React.FC = () => {
         justifyContent: "center",
         background:
           "linear-gradient(135deg, #E5F0FD 0%, #F7F9FC 48%, #FFFFFF 100%)",
-        py: { xs: 3, sm: 4, md: 5 },
+        py: {
+          xs: "calc(16px + env(safe-area-inset-top, 0px))",
+          sm: "calc(24px + env(safe-area-inset-top, 0px))",
+          md: 5,
+        },
         px: { xs: 2, sm: 3, md: 4, lg: 6 },
       }}
     >
@@ -216,7 +219,7 @@ export const Login: React.FC = () => {
             md: "minmax(0, 1.08fr) minmax(380px, 460px)",
           },
           alignItems: "center",
-          gap: { xs: 2, sm: 3, md: 5, lg: 7 },
+          gap: { xs: 2, sm: 2.5, md: 5, lg: 7 },
         }}
       >
         {/* Left / Top Zone: Platform Brand + System Administration Illustration */}
@@ -226,7 +229,7 @@ export const Login: React.FC = () => {
             flexDirection: "column",
             alignItems: { xs: "center", md: "flex-start" },
             justifyContent: "space-between",
-            gap: { xs: 1.5, sm: 2, md: 3 },
+            gap: { xs: 1.25, sm: 1.75, md: 3 },
             width: "100%",
           }}
         >
@@ -259,7 +262,7 @@ export const Login: React.FC = () => {
             sx={{
               width: "100%",
               maxWidth: { xs: 440, md: 460 },
-              p: { xs: 2.75, sm: 4, md: 4.5 },
+              p: { xs: 2.75, sm: 3.5, md: 4.5 },
               borderRadius: "14px",
               border: "1px solid #E7ECF2",
               bgcolor: "background.paper",
@@ -283,13 +286,13 @@ export const Login: React.FC = () => {
             <Typography
               component="h1"
               sx={{
-                fontSize: { xs: "1.375rem", sm: "1.5rem", md: "1.6rem" },
+                fontSize: { xs: "1.35rem", sm: "1.45rem", md: "1.6rem" },
                 fontWeight: 700,
                 color: "text.primary",
                 textAlign: "center",
                 letterSpacing: "-0.02em",
                 lineHeight: 1.3,
-                mb: { xs: 2.5, sm: 3 },
+                mb: { xs: 2.25, sm: 2.5, md: 3 },
               }}
             >
               Đăng nhập hệ thống

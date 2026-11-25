@@ -17,7 +17,7 @@ export const LoginIllustration: React.FC<LoginIllustrationProps> = ({ sx }) => {
       aria-hidden="true"
       sx={{
         width: "100%",
-        maxWidth: { xs: 265, sm: 330, md: 490, lg: 530 },
+        maxWidth: { xs: 155, sm: 210, md: 490, lg: 530 },
         mx: "auto",
         display: "flex",
         alignItems: "center",
