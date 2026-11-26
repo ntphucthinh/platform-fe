@@ -2,6 +2,7 @@ import L from "leaflet";
 import {
   VN_MARITIME_GEOJSON,
   VN_MARITIME_LABELS,
+  VN_NATURAL_ISLANDS_GEOJSON,
   VN_OCEAN_MASK_GEOJSON,
   VN_SOVEREIGNTY_SPOTS,
 } from "@/constants/vietnamSovereignty";
@@ -34,7 +35,6 @@ export function createVietnamSovereigntyLayer(
 ): VietnamSovereigntyLayerHandle {
   const layerGroup = L.layerGroup();
   const zoomAwareMarkers: ZoomAwareMarkerEntry[] = [];
-  const reefLayers: L.Circle[] = [];
 
   // Tạo custom pane nằm ngay trên tilePane (z-index 200) và dưới overlayPane (z-index 400)
   const maskPaneName = "vnOceanMaskPane";
@@ -75,36 +75,53 @@ export function createVietnamSovereigntyLayer(
     console.warn("Không thể khởi tạo lớp phủ mặt nước VN_OCEAN_MASK_GEOJSON:", err);
   }
 
-  // 1.5. Vẽ thềm san hô & thực thể đảo tự nhiên trên nền nước biển đã làm sạch
-  VN_SOVEREIGNTY_SPOTS.forEach((spot) => {
-    const isMajorIsland = (spot.minZoom ?? 7) <= 7;
-    // Thềm san hô nông quanh đảo
-    const reefCircle = L.circle([spot.lat, spot.lng], {
+  // 1.5. Vẽ thềm san hô & thực thể đảo tự nhiên trên nền nước biển đã làm sạch (thay thế vòng tròn L.circle)
+  try {
+    L.geoJSON(VN_NATURAL_ISLANDS_GEOJSON, {
       pane: maskPaneName,
-      radius: isMajorIsland ? 3200 : 2100,
-      color: "#96c4d4",
-      weight: 1,
-      opacity: 0.7,
-      fillColor: "#b7dce8",
-      fillOpacity: 0.65,
+      style: (feature) => {
+        const featType = feature?.properties?.type;
+        if (featType === "reef") {
+          return {
+            color: "#96c4d4",
+            weight: 1.2,
+            opacity: 0.75,
+            fillColor: "#b7dce8",
+            fillOpacity: 0.7,
+          };
+        }
+        if (featType === "lagoon") {
+          return {
+            color: "#8bc2d6",
+            weight: 0.8,
+            opacity: 0.5,
+            fillColor: "#9ecfdf",
+            fillOpacity: 0.5,
+          };
+        }
+        if (featType === "vegetation") {
+          return {
+            color: "#9bc29e",
+            weight: 0.8,
+            opacity: 0.75,
+            fillColor: "#cbe2ce",
+            fillOpacity: 0.85,
+          };
+        }
+        // Default: "land" - màu đất bãi cát đảo tự nhiên chuẩn OpenStreetMap
+        return {
+          color: "#d4cec3",
+          weight: 1.1,
+          opacity: 0.95,
+          fillColor: OSM_ISLAND_LAND_HEX,
+          fillOpacity: 0.98,
+        };
+      },
       interactive: false,
-    });
-    // Phần nổi thực thể đảo
-    const landCircle = L.circle([spot.lat, spot.lng], {
-      pane: maskPaneName,
-      radius: isMajorIsland ? 1250 : 780,
-      color: "#d4cec3",
-      weight: 1,
-      opacity: 0.9,
-      fillColor: OSM_ISLAND_LAND_HEX,
-      fillOpacity: 0.95,
-      interactive: false,
-    });
-
-    reefLayers.push(reefCircle, landCircle);
-    reefCircle.addTo(layerGroup);
-    landCircle.addTo(layerGroup);
-  });
+    }).addTo(layerGroup);
+  } catch (err) {
+    console.warn("Không thể vẽ hình thể đảo tự nhiên VN_NATURAL_ISLANDS_GEOJSON:", err);
+  }
 
   // 2. Vẽ ranh giới lãnh hải & vùng biển đảo Hoàng Sa & Trường Sa của Việt Nam
   try {

@@ -4,6 +4,9 @@
  */
 import type { FeatureCollection, MultiPolygon } from "geojson";
 
+export { VN_NATURAL_ISLANDS_GEOJSON } from "./vietnamNaturalIslands";
+export type { IVNNaturalIslandProperties } from "./vietnamNaturalIslands";
+
 export interface IVNMaritimeLabel {
   id: string;
   lat: number;
